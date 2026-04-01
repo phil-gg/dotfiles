@@ -336,8 +336,8 @@ ${WSL_PREFS}
 EOF
 )
 
-if [[ ! -f /etc/apt/preferences.d/01-pin-prefs || \
-! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs ]];
+if [[ ! -f /etc/apt/preferences.d/01-pin-prefs ]] || \
+! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs;
 then
 echo -e "\n${cyanbold}Updating /etc/apt/preferences.d/01-pin-prefs${normal}"
 echo -e "$ echo -e \"\${PIN_PREFS}\" | \
