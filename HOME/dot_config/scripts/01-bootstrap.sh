@@ -25,15 +25,32 @@ redbold=$(printf '\033[91;1m')
 greenbold=$(printf '\033[92;1m')
 cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
-scriptused=0
-sudo_vault="54sdig4tb7p4cd2upehoa4qooe"
-sudo_item="uenihzentw3pm2vbzu4n73jjny"
-sudo_field="password"
+pkgarch=$(dpkg --print-architecture)
+
+# Now running `${filename}`
+
+echo -e "\n${bluebold}Now running ‘${filename}’${normal}"
+
+# Make folder(s) if they don't exist
+
+if [ ! -d "${HOME}/git/${github_username}/${github_project}/tmp" ]; then
+echo -e "\n$ mkdir -p ~/git/${github_username}/${github_project}/tmp"
+mkdir -p "${HOME}/git/${github_username}/${github_project}/tmp"
+fi
+
+# Navigate to working directory
+
+echo -e "\n$ cd ~/git/${github_username}/${github_project}/tmp"
+cd "${HOME}/git/${github_username}/${github_project}/tmp" 2> /dev/null \
+|| { echo -e "${redbold}> Failed to change directory, exiting${normal}\n"\
+; exit 101; }
 
 # install chezmoi
 
-chezmoi_v=$(lynx -dump https://github.com/twpayne/chezmoi/releases/latest \
+chezmoi_version=$(lynx -dump -nolink \
+https://github.com/twpayne/chezmoi/releases/latest \
 | grep -E "^v[0-9.]+$" | head -n 1 | cut -c 2-)
+
 
 
 ################################################################################
