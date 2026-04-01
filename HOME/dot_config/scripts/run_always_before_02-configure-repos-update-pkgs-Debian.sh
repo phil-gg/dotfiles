@@ -526,22 +526,16 @@ equivs
 foot
 )
 
-# Double-check this has been updated correctly with an array
-# shellcheck disable=SC2086
-# DPKG_OUTPUT=$(dpkg -l ${PACKAGES} 2> /dev/null)
-DPKG_OUTPUT=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' "${PACKAGES[@]}" 2> /dev/null)
+DPKG_OUTPUT=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' \
+"${PACKAGES[@]}" 2> /dev/null)
 DPKG_ERROR=$?
 if [[ "${DPKG_ERROR}" -eq 0 ]]; then
-START_LINE=$(echo "$DPKG_OUTPUT" | awk '/^\+\+\+-=/ {print NR + 1; exit}')
-# shellcheck disable=SC2086
-DPKG_TAIL=$(echo "${DPKG_OUTPUT}" | tail -n +${START_LINE})
-APT_REQD=$(echo "${DPKG_TAIL}" | awk '!/^(ii |hi )/ {print substr($0, 1, 2)}')
+APT_REQD=$(echo "${DPKG_OUTPUT}" | awk '$1 != "installed" {print $2}')
 fi
 
 if [[ -n "${APT_REQD}" || "${DPKG_ERROR}" -ne 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
 echo -e "$ sudo apt install -y ${PACKAGES[@]}"
-# shellcheck disable=SC2086
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
