@@ -2,9 +2,9 @@
 
 ## Bootstrap
 
-    ```
-    TMPDIR=$(mktemp -d) && /usr/lib/apt/apt-helper download-file "https://raw.githubusercontent.com/phil-gg/dotfiles/refs/heads/main/HOME/dot_config/scripts/run_always_before_02-configure-repos-update-pkgs-Debian.sh" ${TMPDIR}/ba.sh" && bash "${TMPDIR}/ba.sh"; [ -n "${TMPDIR}" ] && rm -rf "${TMPDIR}"
-    ```
+```
+TMPDIR=$(mktemp -d) && /usr/lib/apt/apt-helper download-file "https://raw.githubusercontent.com/phil-gg/dotfiles/refs/heads/main/HOME/dot_config/scripts/run_always_before_02-configure-repos-update-pkgs-Debian.sh" ${TMPDIR}/ba.sh" && bash "${TMPDIR}/ba.sh"; [ -n "${TMPDIR}" ] && rm -rf "${TMPDIR}"
+```
 
 ## Key Attributes
 
