@@ -88,13 +88,13 @@ keyring.asc 2> /dev/null | grep -oE "[0-9a-f]{64}")
 
 actualkeytrixiearchive=$(gpg --no-default-keyring --with-colons \
 --import-options show-only --import /usr/share/keyrings/trixie-debian-archive\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -c 40)
+-keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 actualkeytrixiesecurity=$(gpg --no-default-keyring --with-colons \
 --import-options show-only --import /usr/share/keyrings/trixie-security-archive\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -c 40)
+-keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 actualkeytrixierelease=$(gpg --no-default-keyring --with-colons \
 --import-options show-only --import /usr/share/keyrings/trixie-release\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -c 40)
+-keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 
 echo -e "\n 🔑 /usr/share/keyrings/trixie-debian-archive-keyring.asc"
 echo -e " 🔤 ${expectedsha256trixiearchive}"
@@ -150,77 +150,26 @@ echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 106
 fi
 
-# Update apt if last `sudo apt update` more than one hour ago
-
-now=$(date +%s)
-last_update=$(stat -c %Y /var/cache/apt/pkgcache.bin 2>/dev/null || echo 0)
-if (( now - last_update > 3600 )); then
-echo -e "\n${cyanbold}Update apt${normal}"
-echo -e "$ sudo apt update\n"
-sudo apt update
-fi
-
-# apt upgrade if needed
-
-count_upgradable_pkgs=$(apt list --upgradable 2> /dev/null | \
-grep -c -v "^Listing") 
-if (( count_upgradable_pkgs > 0 )); then
-echo -e "\n${cyanbold}Run apt upgrade${normal}"
-echo -e "$ sudo apt upgrade -y\n"
-sudo apt upgrade -y
-fi
-
-# Check for packages and install if necessary
-# Before network test, because network test uses wget
-# Include one named terminal emulator here to prevent auto-install of other
-# terminal emulator applications by x-terminal-emulator virtual package later
-# Foot is a high-performance, wayland first/only, terminal emulator
-
-PACKAGES="\
-curl \
-wget \
-git \
-gh \
-gpg \
-debsigs \
-lynx \
-equivs \
-foot"
-
-# shellcheck disable=SC2086
-DPKG_OUTPUT=$(dpkg -l ${PACKAGES} 2> /dev/null)
-DPKG_ERROR=$?
-if [ "${DPKG_ERROR}" -eq 0 ]; then
-START_LINE=$(echo "$DPKG_OUTPUT" | awk '/^\+\+\+-=/ {print NR + 1; exit}')
-# shellcheck disable=SC2086
-DPKG_TAIL=$(echo "${DPKG_OUTPUT}" | tail -n +${START_LINE})
-APT_REQD=$(echo "${DPKG_TAIL}" | awk '!/^(ii |hi )/ {print substr($0, 1, 2)}')
-fi
-
-if [ -n "${APT_REQD}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
-echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo apt install -y ${PACKAGES}"
-# shellcheck disable=SC2086
-sudo apt install -y ${PACKAGES}
-fi
-
 # Add mozilla package key (on any arch)
 
 expectedMozillaKey="35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"
 
 actualMozillaKey=$(gpg --no-default-keyring --with-colons --import-options \
 show-only --import /usr/share/keyrings/mozilla-archive-keyring.asc \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}')
+2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 
 if [[ "${actualMozillaKey}" != "${expectedMozillaKey}" ]]; then
+
 echo -e "\n${cyanbold}Add Mozilla signing key${normal}"
 echo -e "$ wget -qO- https://packages.mozilla.org/apt/repo-signing-key.gpg | \
 sudo tee /usr/share/keyrings/mozilla-archive-keyring.asc 1> /dev/null"
 wget -qO- https://packages.mozilla.org/apt/repo-signing-key.gpg | \
 sudo tee /usr/share/keyrings/mozilla-archive-keyring.asc 1> /dev/null
+
 actualMozillaKey=$(gpg --no-default-keyring --with-colons --import-options \
 show-only --import /usr/share/keyrings/mozilla-archive-keyring.asc \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}')
+2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+
 fi
 
 echo -e "\n 🔑 /usr/share/keyrings/mozilla-archive-keyring.asc"
@@ -241,7 +190,7 @@ expected1passwordKey="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
 
 actual1passwordKey=$(gpg --no-default-keyring --with-colons --import-options \
 show-only --import /usr/share/keyrings/1password-archive-keyring.gpg \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}')
+2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 
 if [[ "${actual1passwordKey}" != "${expected1passwordKey}" ]]; then
 
@@ -249,19 +198,19 @@ if [[ "${actual1passwordKey}" != "${expected1passwordKey}" ]]; then
 
 echo -e "\n${cyanbold}Add 1password signing key${normal}"
 echo -e "wget -qO- https://downloads.1password.com/linux/keys/1password.asc | \
-sudo gpg --no-default-keyring --dearmor --output \
+sudo gpg --yes --no-default-keyring --dearmor --output \
 /usr/share/keyrings/1password-archive-keyring.gpg"
 wget -qO- https://downloads.1password.com/linux/keys/1password.asc | \
-sudo gpg --no-default-keyring --dearmor --output \
+sudo gpg --yes --no-default-keyring --dearmor --output \
 /usr/share/keyrings/1password-archive-keyring.gpg
 
 actual1passwordKey=$(gpg --no-default-keyring --with-colons --import-options \
 show-only --import /usr/share/keyrings/1password-archive-keyring.gpg \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}')
+2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
 
 fi
 
-echo -e "\n 🔑 usr/share/keyrings/1password-archive-keyring.gpg"
+echo -e "\n 🔑 /usr/share/keyrings/1password-archive-keyring.gpg"
 echo -e " 🔐 ${expected1passwordKey}"
 if [[ "${expected1passwordKey}" == "${actual1passwordKey}" ]];
 then
@@ -276,10 +225,10 @@ fi
 # modernise deb package config files
 
 if [[ -f /etc/apt/sources.list
-   || ! -f /etc/apt/preferences.d/99pin-prefs
-   || ! -f /etc/apt/sources.list.d/99-sid-debian.sources
+   || ! -f /etc/apt/preferences.d/01-pin-prefs
+   || ! -f /etc/apt/sources.list.d/01-trixie-security.sources
    || ! -f /etc/apt/sources.list.d/02-trixie-debian.sources
-   || ! -f /etc/apt/sources.list.d/01-trixie-security.sources ]]; then
+   || ! -f /etc/apt/sources.list.d/99-sid-debian.sources ]]; then
 echo -e "\n${cyanbold}Updating package sources to deb822 format${normal}"
 fi
 
@@ -290,7 +239,7 @@ fi
 
 # Set apt pinning preferences
 
-if ! command -v wslinfo &> /dev/null; then
+if command -v wslinfo &> /dev/null; then
 WSL_PREFS="\
 Explanation: Don't want network manager on plasma when runing inside WSL2
 Package: plasma-nm
@@ -319,8 +268,8 @@ Explanation: NO negative pin priorities here preventing package installation
 "
 fi
 
-PIN_PREFS="\
-Explanation: This file is /etc/apt/preferences.d/99pin-prefs
+PIN_PREFS=$( cat << EOF
+Explanation: This file is /etc/apt/preferences.d/01-pin-prefs
 Explanation: https://manpages.debian.org/trixie/apt/apt_preferences.5.en.html
 Explanation: Pin-Priority is the primary form of package prioritisation
 Explanation: Thereafter install higher version of packages with same priority
@@ -384,37 +333,35 @@ Explanation: Currently NO packages are set with Pin-Priorities 1-100
 Explanation: Warning; Pin-Priority=0 has undefined behaviour; do not use
 Explanation: Negative pin priorities prevent package installation
 ${WSL_PREFS}
-")
+EOF
+)
 
-if [ ! -f /etc/apt/preferences.d/99pin-prefs ] || \
-! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/99pin-prefs;
+if [ ! -f /etc/apt/preferences.d/01-pin-prefs ] || \
+! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs;
 then
-echo -e "\n${cyanbold}Updating /etc/apt/preferences.d/99pin-prefs${normal}"
+echo -e "\n${cyanbold}Updating /etc/apt/preferences.d/01-pin-prefs${normal}"
 echo -e "$ echo -e \"\${PIN_PREFS}\" | \
-sudo tee /etc/apt/preferences.d/99pin-prefs 1> /dev/null"
+sudo tee /etc/apt/preferences.d/01-pin-prefs 1> /dev/null"
 echo -e "${PIN_PREFS}" | \
-sudo tee /etc/apt/preferences.d/99pin-prefs 1> /dev/null
+sudo tee /etc/apt/preferences.d/01-pin-prefs 1> /dev/null
 fi
 
-if [[ ! -f /etc/apt/sources.list.d/99-sid-debian.sources ]]; then
-echo -e "> Create /etc/apt/sources.list.d/99-sid-debian.sources"
+if [[ ! -f /etc/apt/sources.list.d/01-trixie-security.sources ]]; then
+echo -e "> Create /etc/apt/sources.list.d/01-trixie-security.sources"
 echo -e "\
-# Config to save at /etc/apt/sources.list.d/99-sid-debian.sources
+# Config to save at /etc/apt/sources.list.d/01-trixie-security.sources
 # This replaces /etc/apt/sources.list
 # debian repo available types: deb deb-src
-# available suites: sid
-# - Sid/Unstable has low pin priority set in apt preferences
-# - Install from sid with \"sudo apt install packagename/sid\"
-# available components: main contrib non-free-firmware non-free
-# available architectures: amd64 arm64 armhf i386 loong64 ppc64el riscv64 \
+# trixie available components: main contrib non-free-firmware non-free
+# trixie available architectures: amd64 arm64 armel armhf i386 ppc64el riscv64 \
 s390x
 Types: deb
-URIs: https://deb.debian.org/debian/
-Suites: sid
+URIs: https://security.debian.org/debian-security/
+Suites: trixie-security
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/trixie-debian-archive-keyring.asc\
-" | sudo tee /etc/apt/sources.list.d/99-sid-debian.sources 1> /dev/null
+Signed-By: /usr/share/keyrings/trixie-security-archive-keyring.asc
+" | sudo tee /etc/apt/sources.list.d/01-trixie-security.sources 1> /dev/null
 fi
 
 if [[ ! -f /etc/apt/sources.list.d/02-trixie-debian.sources ]]; then
@@ -444,22 +391,25 @@ Signed-By: /usr/share/keyrings/trixie-debian-archive-keyring.asc\
 " | sudo tee /etc/apt/sources.list.d/02-trixie-debian.sources 1> /dev/null
 fi
 
-if [[ ! -f /etc/apt/sources.list.d/01-trixie-security.sources ]]; then
-echo -e "> Create /etc/apt/sources.list.d/01-trixie-security.sources"
+if [[ ! -f /etc/apt/sources.list.d/99-sid-debian.sources ]]; then
+echo -e "> Create /etc/apt/sources.list.d/99-sid-debian.sources"
 echo -e "\
-# Config to save at /etc/apt/sources.list.d/01-trixie-security.sources
+# Config to save at /etc/apt/sources.list.d/99-sid-debian.sources
 # This replaces /etc/apt/sources.list
 # debian repo available types: deb deb-src
-# trixie available components: main contrib non-free-firmware non-free
-# trixie available architectures: amd64 arm64 armel armhf i386 ppc64el riscv64 \
+# available suites: sid
+# - Sid/Unstable has low pin priority set in apt preferences
+# - Install from sid with \"sudo apt install packagename/sid\"
+# available components: main contrib non-free-firmware non-free
+# available architectures: amd64 arm64 armhf i386 loong64 ppc64el riscv64 \
 s390x
 Types: deb
-URIs: https://security.debian.org/debian-security/
-Suites: trixie-security
+URIs: https://deb.debian.org/debian/
+Suites: sid
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/trixie-security-archive-keyring.asc
-" | sudo tee /etc/apt/sources.list.d/01-trixie-security.sources 1> /dev/null
+Signed-By: /usr/share/keyrings/trixie-debian-archive-keyring.asc\
+" | sudo tee /etc/apt/sources.list.d/99-sid-debian.sources 1> /dev/null
 fi
 
 # Install mozilla deb repo (on any arch)
@@ -467,7 +417,7 @@ fi
 if [[ ! -f /etc/apt/sources.list.d/03-mozilla.sources ]]; then
 echo -e "\n${bluebold}Create /etc/apt/sources.list.d/03-mozilla.sources\
 ${normal}\n"
-echo "\
+echo -e "\
 # Mozilla apt package repository
 Types: deb
 URIs: https://packages.mozilla.org/apt
@@ -475,25 +425,7 @@ Suites: mozilla
 Components: main
 Architectures: ${pkgarch}
 Signed-By: /usr/share/keyrings/mozilla-archive-keyring.asc\
-" | sudo tee /etc/apt/sources.list.d/03-mozilla.sources
-fi
-
-# Install firefox (on any arch)
-
-if ! command -v firefox-devedition &> /dev/null; then
-
-echo -e "\n${cyanbold}Install firefox-devedition${normal}"
-echo -e "$ sudo apt update && sudo apt -y install firefox-devedition \
-firefox-devedition-l10n-en-gb libpci3 libegl1\n"
-sudo apt update && sudo apt -y install firefox-devedition \
-firefox-devedition-l10n-en-gb libpci3 libegl1
-
-echo -e "\n${redbold}Restart needed to prevent firefox errors about \
-org.a11y.Bus${normal}
-Please run:
-
-wsl.exe --shutdown"
-
+" | sudo tee /etc/apt/sources.list.d/03-mozilla.sources 1> /dev/null
 fi
 
 # Install 1password deb repo (on amd64 arch only)
@@ -522,15 +454,14 @@ sudo tee /usr/share/keyrings/1password-archive-keyring.asc 1> /dev/null
 echo -e "deb [arch=amd64 \
 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] \
 https://downloads.1password.com/linux/debian/amd64 stable main" | \
-sudo tee /etc/apt/sources.list.d/1password.list
-fi
+sudo tee /etc/apt/sources.list.d/1password.list 1> /dev/null
 
 # Configure debsig policy for repos that support it
 # (currently only 1Password so can't be turned on globally)
 
 onepname="1password"
 onepid=$(gpg --list-packets /usr/share/keyrings/1password-archive-keyring.gpg \
-| awk '$1=="keyid:"{print$2}')
+| awk '$1=="keyid:"{print$2}' | head -n 1)
 
 if [[ ! -f "/etc/debsig/policies/${onepid}/${onepname}.pol"
    || ! -f "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
@@ -549,11 +480,69 @@ echo -e "\
         <Required Type=\"origin\" File=\"debsig.gpg\" id=\"${onepid}\"/>
     </Verification>
 </Policy>" \
-| sudo tee "/etc/debsig/policies/${onepid}/${onepname}.pol"
+| sudo tee "/etc/debsig/policies/${onepid}/${onepname}.pol" 1> /dev/null
 sudo mkdir -p "/usr/share/debsig/keyrings/${onepid}"
 echo -e "\n> Create usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 sudo cp /usr/share/keyrings/1password-archive-keyring.gpg \
 "/usr/share/debsig/keyrings/${onepid}/debsig.gpg"
+fi
+fi
+
+# Update apt if last `sudo apt update` more than one hour ago
+
+now=$(date +%s)
+last_update=$(stat -c %Y /var/cache/apt/pkgcache.bin 2>/dev/null || echo 0)
+if (( now - last_update > 3600 )); then
+echo -e "\n${cyanbold}Update apt${normal}"
+echo -e "$ sudo apt update\n"
+sudo apt update
+fi
+
+# apt upgrade if needed
+
+count_upgradable_pkgs=$(apt list --upgradable 2> /dev/null | \
+grep -c -v "^Listing") 
+if (( count_upgradable_pkgs > 0 )); then
+echo -e "\n${cyanbold}Run apt upgrade${normal}"
+echo -e "$ sudo apt upgrade -y\n"
+sudo apt upgrade -y
+fi
+
+# Check for packages and install if necessary
+# Before network test, because network test uses wget
+# Include one named terminal emulator here to prevent auto-install of other
+# terminal emulator applications by x-terminal-emulator virtual package later
+# Foot is a high-performance, wayland first/only, terminal emulator
+
+PACKAGES=(
+curl
+wget
+git
+gh
+gpg
+debsigs
+lynx
+equivs
+foot
+)
+
+# Double-check this has been updated correctly with an array
+# shellcheck disable=SC2086
+# DPKG_OUTPUT=$(dpkg -l ${PACKAGES} 2> /dev/null)
+DPKG_OUTPUT=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' "${PACKAGES[@]}" 2> /dev/null)
+DPKG_ERROR=$?
+if [[ "${DPKG_ERROR}" -eq 0 ]]; then
+START_LINE=$(echo "$DPKG_OUTPUT" | awk '/^\+\+\+-=/ {print NR + 1; exit}')
+# shellcheck disable=SC2086
+DPKG_TAIL=$(echo "${DPKG_OUTPUT}" | tail -n +${START_LINE})
+APT_REQD=$(echo "${DPKG_TAIL}" | awk '!/^(ii |hi )/ {print substr($0, 1, 2)}')
+fi
+
+if [[ -n "${APT_REQD}" || "${DPKG_ERROR}" -ne 0 ]]; then
+echo -e "\n${cyanbold}Installing packages${normal}"
+echo -e "$ sudo apt install -y ${PACKAGES[@]}"
+# shellcheck disable=SC2086
+sudo apt install -y "${PACKAGES[@]}"
 fi
 
 # Get latest 1password versions
@@ -583,8 +572,8 @@ installedversion1p=$(apt-cache policy 1password | grep Installed | \
 awk -F ': ' '{print $2}')
 installedver1pcli=$(apt-cache policy 1password-cli | grep Installed | \
 awk -F ': ' '{print $2}')
-echo -e "> ${installedversion1p:=${bluebold}(none)${normal}} = 1password"
-echo -e "> ${installedver1pcli:=${bluebold}(none)${normal}} = 1password-cli"
+echo -e "> ${installedversion1p:-${bluebold}(none)${normal}} = 1password"
+echo -e "> ${installedver1pcli:-${bluebold}(none)${normal}} = 1password-cli"
 
 # Install 1password
 
@@ -705,17 +694,29 @@ fi
 # END ARM64 ONLY SECTION #
 # ###################### #
 
-# general system update
+# Install firefox (on any arch)
 
-echo -e "\n${cyanbold}Check for and apply package updates${normal}"
-echo -e "$ sudo apt update && sudo apt upgrade -y\n"
-sudo apt update && sudo apt upgrade -y
+if ! command -v firefox-devedition &> /dev/null; then
+
+echo -e "\n${cyanbold}Install firefox-devedition${normal}"
+echo -e "$ sudo apt update && sudo apt -y install firefox-devedition \
+firefox-devedition-l10n-en-gb libpci3 libegl1\n"
+sudo apt update && sudo apt -y install firefox-devedition \
+firefox-devedition-l10n-en-gb libpci3 libegl1
+
+echo -e "\n${redbold}Restart needed to prevent firefox errors about \
+org.a11y.Bus${normal}
+Please run:
+
+wsl.exe --shutdown"
+
+fi
 
 # keep apt tidy
 
 echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
-echo -e "$ sudo apt-mark minimize-manual -y\n"
-sudo apt-mark minimize-manual -y
+echo -e "$ sudo apt-mark minimize-manual\n"
+sudo apt-mark minimize-manual
 echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge\n"
 sudo apt autoremove --purge
