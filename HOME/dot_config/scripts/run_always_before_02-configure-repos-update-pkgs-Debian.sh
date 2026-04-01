@@ -302,12 +302,12 @@ Pin-Priority: 980
 
 Explanation: Prioritise 1password repo just less than Trixie/Stable
 Package: *
-Pin: origin \"downloads.1password.com\"
+Pin: origin "downloads.1password.com"
 Pin-Priority: 970
 
 Explanation: Prioritise mozilla repo just less than Trixie/Stable
 Package: *
-Pin: origin \"packages.mozilla.org\"
+Pin: origin "packages.mozilla.org"
 Pin-Priority: 970
 
 Explanation: Add any more third-party repos just above here
@@ -698,11 +698,13 @@ firefox-devedition-l10n-en-gb libpci3 libegl1\n"
 sudo apt update && sudo apt -y install firefox-devedition \
 firefox-devedition-l10n-en-gb libpci3 libegl1
 
+if command -v wslinfo &> /dev/null; then
 echo -e "\n${redbold}Restart needed to prevent firefox errors about \
 org.a11y.Bus${normal}
 Please run:
 
 wsl.exe --shutdown"
+fi
 
 fi
 
