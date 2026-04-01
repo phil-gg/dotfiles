@@ -336,8 +336,8 @@ ${WSL_PREFS}
 EOF
 )
 
-if [ ! -f /etc/apt/preferences.d/01-pin-prefs ] || \
-! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs;
+if [[ ! -f /etc/apt/preferences.d/01-pin-prefs || \
+! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs ]];
 then
 echo -e "\n${cyanbold}Updating /etc/apt/preferences.d/01-pin-prefs${normal}"
 echo -e "$ echo -e \"\${PIN_PREFS}\" | \
@@ -712,8 +712,8 @@ echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
 echo -e "$ sudo apt-mark minimize-manual\n"
 sudo apt-mark minimize-manual
 echo -e "\n${cyanbold}Clean up apt packages${normal}"
-echo -e "$ sudo apt autoremove --purge\n"
-sudo apt autoremove --purge
+echo -e "$ sudo apt autoremove --purge -y\n"
+sudo apt autoremove --purge -y
 
 # Log this latest `Config` operation and display runtime
 
