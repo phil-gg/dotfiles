@@ -845,25 +845,63 @@ echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
 
-# 1password-cli signin (if installed or updated)
+# Check whether 1password-cli installed or updated
 if (( op_needs_signin == 1 )); then
 
 # Check whether signed into 1password-cli
 if ! op whoami &> /dev/null; then
 
-echo -e "\n${cyanbold}Do you want to run subsequent chezmoi scripts with secrets from 1password?${normal}"
-read -r -p "> Sign into 1password-cli now? (Y/n) " response
-# Convert the string to lowercase
-response="${response,,}"
+echo -e "\n${cyanbold}Manage 1password-cli authentication (op signin)${normal}"
 
-# Check for 'y', 'yes', or an empty string (-z)
-if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
+# Check if the token file exists
+if [[ -f "${op_token_in_ram_path}" ]]
+    
+    # Branch where prior op session token exists
+    then
+    # Read the token and export it for this script's session
+    OP_SESSION_my=$(cat "${op_token_in_ram_path}")
+    export OP_SESSION_my
+    tokenloaded="1"
+    echo -e "${greenbold}> 1password-cli session token loaded${normal}"
+    
+    # Branch where *NO* prior op session token exists
+    else
+    echo -e "${redbold}> No 1password-cli session token loaded${normal}"
+    
+    # Close whether token file exists condition
+fi
 
-then
-echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
-
-# Check whether account(s) registered in 1password-cli
-if ! op account list 2> /dev/null | grep -q "1password.com"; then
+# Now check whether you have a valid 1password-cli session
+if op whoami &> /dev/null
+    
+    # Branch where token is valid
+    then
+    echo -e "${greenbold}> op signin complete${normal}"
+    
+    # Branch where token not valid or non existent
+    else
+    # Message only if token existed but not valid
+    if (( tokenloaded == 1 )); then
+        echo -e "${redbold}> 1password-cli token expired${normal}"
+    fi
+    # Choice: message
+    read -r -p "> Authenticate 1password-cli (op signin) now? (Y/n) " response
+    # Convert the string to lowercase
+    response="${response,,}"
+    
+    # Choice: check for 'y', 'yes', or an empty string (-z)
+    if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
+        
+        # Branch where you want to create a new valid token for 1password-cli
+        then
+        (( scriptused += 1 ))
+        echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
+        
+        # Check whether account(s) registered in 1password-cli
+        if ! op account list 2> /dev/null | grep -q "1password.com"
+            
+            # Branch for account registration
+            then
 echo -e "${redbold}> No accounts registered in 1password-cli${normal}
 > sign-in address = my.1password.com
 >  email  address = p… .c…@gmail.com
@@ -875,29 +913,55 @@ echo -e "${redbold}> No accounts registered in 1password-cli${normal}
 
 $ eval \$(op account add --signin)
 "
-# shellcheck disable=SC2046
-eval $(op account add --signin)
-
-else
-echo -e "${greenbold}> Account(s) registered in 1password-cli${normal}"
-echo -e "$ op account list\n"
-op account list
-echo -e "\n${cyanbold}Now sign into 1password-cli${normal}"
-echo -e "$ eval \$(op signin)\n"
-# shellcheck disable=SC2046
-eval $(op signin)
-
-# Close check whether account(s) registered in 1password-cli
+            # shellcheck disable=SC2046
+            eval $(op account add --signin)
+            echo -e ""
+            
+            # Branch for op signin only
+            else
+            echo -e "${greenbold}> Account(s) registered in 1password-cli${normal}"
+            
+        # Close check whether account(s) registered in 1password-cli
+        fi
+        
+        # Everyone now has account(s) registered - here they are
+        echo -e "$ op account list\n"
+        op account list
+        # Now generate a new session token
+        echo -e "\n${cyanbold}Now sign into 1password-cli${normal}"
+        echo -e "$ op signin --raw > ${op_token_in_ram_path}\n"
+        raw_token=$(op signin --raw)
+        
+        # Check for errors in generating new session token
+        if [[ -n "${raw_token}" ]]
+            
+            # Branch where new token was successfully generated
+            then
+            # Write to RAM and instantly lock down file permissions
+            touch "${op_token_in_ram_path}"
+            chmod 600 "${op_token_in_ram_path}"
+            echo "${raw_token}" > "${op_token_in_ram_path}"
+            OP_SESSION_my="${raw_token}"
+            export OP_SESSION_my
+            echo -e "${greenbold}> op session token successfully stored in memory${normal}"
+            
+            # Branch to handle token generation errors
+            else
+            echo -e "${redbold}> op signin failed${normal}"
+            exit 101
+            
+        # Close check for errors in generating new session token
+        fi
+        
+        # Branch where you declined to create a new valid token for 1password-cli
+        else
+        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run.${normal}"
+        
+    # Close [Y/n] choice whether to sign into 1password
+    fi
+# Close check whether you have a valid 1password-cli session
 fi
-
-else
-echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run.${normal}"
-
-# Close [Y/n] choice whether to sign into 1password
-fi
-# Close check whether signed into 1password-cli
-fi
-# Close check whether 1password-cli was installed or updated
+# Close check whether 1password-cli installed or updated
 fi
 
 # Log this latest `Config` operation and display runtime
