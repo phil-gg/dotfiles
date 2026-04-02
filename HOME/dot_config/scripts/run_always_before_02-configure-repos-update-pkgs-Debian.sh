@@ -521,7 +521,6 @@ git
 gh
 gpg
 debsigs
-lynx
 equivs
 foot
 )
@@ -541,18 +540,101 @@ fi
 
 # Get latest 1password versions
 
+onepasswordlinuxreleases=$(
+curl -fsS "https://releases.1password.com/linux/stable/index.xml" | awk -v RS="<item>" '
+{
+    # Set default values for each variable to prevent data carry-over
+    version_str = ""; array_version = "0.0.0"; pubdate = ""
+    # Drop the XML preamble before the first <item> tag
+    if (NR == 1) next;
+    # Drop closing </item> tags and anything following them
+    sub(/<\/item>.*/, "")
+    # Match link tags then strip 6 char opening tag & 7 char closing tag
+    match($0, /<link>[^<]+<\/link>/)
+    if (RSTART > 0) {
+        version_str = substr($0, RSTART+6, RLENGTH-13)
+        # Drop the leading URL
+        sub(/https:\/\/releases\.1password\.com\/linux\/stable\//, "", version_str)
+        # Substitute all remaining / with nothing
+        gsub(/\//, "", version_str)
+        # Split version_str into 3-part array "v" at the period character
+        split(version_str, v, ".")
+        # Force integer conversion
+        array_version = (v[1]+0) "." (v[2]+0) "." (v[3]+0)
+    }
+    # Match pubDate tags then strip 9 char opening tag & 19 char closing tag
+    match($0, /<pubDate>[^<]+<\/pubDate>/)
+    if (RSTART > 0) {
+        raw_pubdate = substr($0, RSTART+9, RLENGTH-19)
+        # Drop last 15 char (time & timezone)
+        pubdate = substr(raw_pubdate, 1, length(raw_pubdate) - 15)
+        # format date (remove comma, replace space with hyphen)
+        gsub(/,/, "", pubdate); gsub(/ /, "-", pubdate)
+    } else {
+        pubdate = ""
+    }
+    # Final Output
+    if (array_version != "0.0.0") {
+        print array_version " released on " pubdate
+    }
+}'
+)
+latestonepasswordlinuxrelease=$(
+echo "${onepasswordlinuxreleases}" \
+| sort -t'.' -k1,1nr -k2,2nr -k3,3nr \
+| head -n 1
+)
+echo -e "> See https://releases.1password.com/linux/stable/"
 echo -e "\n${cyanbold}Latest status message for 1password linux stable${normal}"
-echo -e "> See https://releases.1password.com/linux/stable"
-longversion1p=$(lynx -dump https://releases.1password.com/linux/stable \
-| grep -oE "Updated\sto.*$")
-shortversion1p=$(echo -e "${longversion1p}" | grep -oE "[0-9]+\.[0-9\.]+")
-echo -e "> ${longversion1p}"
+echo -e "> ${latestonepasswordlinuxrelease}"
 
+opclireleases=$(
+curl -fsS "https://releases.1password.com/developers/cli/index.xml" | awk -v RS="<item>" '
+{
+    # Set default values for each variable to prevent data carry-over
+    version_str = ""; array_version = "0.0.0"; pubdate = ""
+    # Drop the XML preamble before the first <item> tag
+    if (NR == 1) next;
+    # Drop closing </item> tags and anything following them
+    sub(/<\/item>.*/, "")
+    # Match link tags then strip 6 char opening tag & 7 char closing tag
+    match($0, /<link>[^<]+<\/link>/)
+    if (RSTART > 0) {
+        version_str = substr($0, RSTART+6, RLENGTH-13)
+        # Drop the leading URL
+        sub(/https:\/\/releases\.1password\.com\/developers\/cli\//, "", version_str)
+        # Substitute all remaining / with nothing
+        gsub(/\//, "", version_str)
+        # Split version_str into 3-part array "v" at the period character
+        split(version_str, v, ".")
+        # Force integer conversion
+        array_version = (v[1]+0) "." (v[2]+0) "." (v[3]+0)
+    }
+    # Match pubDate tags then strip 9 char opening tag & 19 char closing tag
+    match($0, /<pubDate>[^<]+<\/pubDate>/)
+    if (RSTART > 0) {
+        raw_pubdate = substr($0, RSTART+9, RLENGTH-19)
+        # Drop last 15 char (time & timezone)
+        pubdate = substr(raw_pubdate, 1, length(raw_pubdate) - 15)
+        # format date (remove comma, replace space with hyphen)
+        gsub(/,/, "", pubdate); gsub(/ /, "-", pubdate)
+    } else {
+        pubdate = ""
+    }
+    # Final Output
+    if (array_version != "0.0.0") {
+        print array_version " released on " pubdate
+    }
+}'
+)
+latestopclirelease=$(
+echo "${opclireleases}" \
+| sort -t'.' -k1,1nr -k2,2nr -k3,3nr \
+| head -n 1
+)
 echo -e "\n${cyanbold}Latest status message for 1password-cli${normal}"
-echo -e "> See https://app-updates.agilebits.com"
-shortver1pcli=$(lynx -dump https://app-updates.agilebits.com | grep -C 2 -E \
-"^\s*?1Password CLI\s*?$" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
-echo -e "> ${shortver1pcli}"
+echo -e "> See https://releases.1password.com/developers/cli/"
+echo -e "> ${latestopclirelease}"
 
 # ################## #
 # ON AMD64 ARCH ONLY #
