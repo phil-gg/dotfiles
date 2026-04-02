@@ -955,11 +955,14 @@ $ eval \$(op account add --signin)
         
         # Branch where you declined to create a new valid token for 1password-cli
         else
-        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run.${normal}"
+        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run${normal}"
         
     # Close [Y/n] choice whether to sign into 1password
     fi
 # Close check whether you have a valid 1password-cli session
+fi
+
+# Close check whether signed into 1password-cli
 fi
 # Close check whether 1password-cli installed or updated
 fi
@@ -968,7 +971,7 @@ fi
 
 echo -e "\n${bluebold}${local_filename} run at${normal}"
 echo -e "> ${runtime}\n"
-mkdir -p "${HOME}/git/${github_username}/${github_project}"
+mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 
