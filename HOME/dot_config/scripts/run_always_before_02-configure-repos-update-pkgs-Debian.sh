@@ -239,7 +239,7 @@ fi
 
 # Set apt pinning preferences
 
-if command -v wslinfo &> /dev/null; then
+if [[ -d "/run/WSL" ]] &> /dev/null; then
 WSL_PREFS="\
 Explanation: Don't want network manager on plasma when runing inside WSL2
 Package: plasma-nm
@@ -513,6 +513,12 @@ fi
 # Include one named terminal emulator here to prevent auto-install of other
 # terminal emulator applications by x-terminal-emulator virtual package later
 # Foot is a high-performance, wayland first/only, terminal emulator
+# Include firefox and three supporting packages
+
+firefoxnotinstalled="0"
+if ! command -v firefox-devedition &> /dev/null; then
+firefoxnotinstalled="1"
+fi
 
 PACKAGES=(
 curl
@@ -523,8 +529,11 @@ gpg
 debsigs
 equivs
 foot
+firefox-devedition
+firefox-devedition-l10n-en-gb
+libpci3
+libegl1
 )
-
 DPKG_OUTPUT=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' \
 "${PACKAGES[@]}" 2> /dev/null)
 DPKG_ERROR=$?
@@ -536,6 +545,14 @@ if [[ -n "${APT_REQD}" || "${DPKG_ERROR}" -ne 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
 echo -e "$ sudo apt install -y ${PACKAGES[@]}"
 sudo apt install -y "${PACKAGES[@]}"
+fi
+
+if (( firefoxnotinstalled == 1 )) && [[ -d "/run/WSL" ]] &> /dev/null; then
+echo -e "\n${redbold}Restart needed to prevent firefox errors about \
+org.a11y.Bus${normal}
+Please run:
+
+wsl.exe --shutdown"
 fi
 
 # Get latest 1password versions
@@ -662,32 +679,38 @@ if [[ "${pkgarch}" == "amd64" ]]; then
 # debian packages available on amd64 only
 
 echo -e "\n${cyanbold}Installed 1password debian package versions${normal}"
-installedversion1p=$(apt-cache policy 1password | grep Installed | \
-awk -F ': ' '{print $2}')
-installedver1pcli=$(apt-cache policy 1password-cli | grep Installed | \
-awk -F ': ' '{print $2}')
+
+installedversion1p=$(
+apt-cache policy 1password | grep Installed | awk -F ': ' '{print $2}'
+)
+installedver1pcli=$(
+apt-cache policy 1password-cli | grep Installed | awk -F ': ' '{print $2}'
+)
 echo -e "> ${installedversion1p:-${bluebold}(none)${normal}} = 1password"
 echo -e "> ${installedver1pcli:-${bluebold}(none)${normal}} = 1password-cli"
 
 # Install 1password
 
 echo -e "\n${cyanbold}Checking if 1password is upgradable${normal}"
-echo -e "$ sudo apt update"
 
-opguidpkgcheck=$(dpkg -s 1password 2> /dev/null | grep "Package: 1password")
-opclidpkgcheck=$(dpkg -s 1password-cli 2> /dev/null \
-| grep "Package: 1password-cli")
-opupdatecheck=$(apt list --upgradable 2>&1 \
+opguiinstallcheck=$(
+dpkg -s 1password 2> /dev/null | grep "Package: 1password"
+)
+opcliinstallcheck=$(
+dpkg -s 1password-cli 2> /dev/null | grep "Package: 1password-cli"
+)
+opupdatecheck=$(
+apt list --upgradable 2>&1 \
 | grep -vE "Use with caution in scripts|Listing" \
 | grep -o "1password" \
-| head -c 9)
-
+| head -c 9
+)
 if [[ "${opupdatecheck}" == "1password"
-   || "${opguidpkgcheck}" != "Package: 1password"
-   || "${opclidpkgcheck}" != "Package: 1password-cli" ]]; then
+   || "${opguiinstallcheck}" != "Package: 1password"
+   || "${opcliinstallcheck}" != "Package: 1password-cli" ]]; then
 echo -e "\n${cyanbold}Installing 1password${normal}"
-echo -e "$ sudo apt update && sudo apt -y install 1password 1password-cli\n"
-sudo apt update && sudo apt -y install 1password 1password-cli
+echo -e "$ sudo apt -y install 1password 1password-cli\n"
+sudo apt -y install 1password 1password-cli
 else
 echo -e "${greenbold}> 1password & 1password-cli are up-to-date${normal}"
 fi
@@ -788,25 +811,8 @@ fi
 # END ARM64 ONLY SECTION #
 # ###################### #
 
-# Install firefox (on any arch)
-
-if ! command -v firefox-devedition &> /dev/null; then
-
-echo -e "\n${cyanbold}Install firefox-devedition${normal}"
-echo -e "$ sudo apt update && sudo apt -y install firefox-devedition \
-firefox-devedition-l10n-en-gb libpci3 libegl1\n"
-sudo apt update && sudo apt -y install firefox-devedition \
-firefox-devedition-l10n-en-gb libpci3 libegl1
-
-if command -v wslinfo &> /dev/null; then
-echo -e "\n${redbold}Restart needed to prevent firefox errors about \
-org.a11y.Bus${normal}
-Please run:
-
-wsl.exe --shutdown"
-fi
-
-fi
+# Install / Update chezmoi (on any arch)
+# TO-DO
 
 # keep apt tidy
 
