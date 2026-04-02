@@ -835,7 +835,7 @@ echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
 echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
 
-if [[ ${} != ${} ]]; then
+if [[ ${chezmoi_installedver} != ${chezmoi_latestver} ]]; then
 echo -e "\n${cyanbold}Install/update chezmoi${normal}"
 # TO-DO1: Install chezmoi from deb package here
 # TO-DO2: Also continue moving from multi-line echo to heredocs
