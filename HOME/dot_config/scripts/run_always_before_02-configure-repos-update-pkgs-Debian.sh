@@ -705,9 +705,11 @@ apt list --upgradable 2>&1 \
 | grep -o "1password" \
 | head -c 9
 )
+op_needs_signin="0"
 if [[ "${opupdatecheck}" == "1password"
    || "${opguiinstallcheck}" != "Package: 1password"
    || "${opcliinstallcheck}" != "Package: 1password-cli" ]]; then
+op_needs_signin="1"
 echo -e "\n${cyanbold}Installing 1password${normal}"
 echo -e "$ sudo apt -y install 1password 1password-cli\n"
 sudo apt -y install 1password 1password-cli
@@ -812,7 +814,27 @@ fi
 # ###################### #
 
 # Install / Update chezmoi (on any arch)
-# TO-DO
+
+chezmoi_release_url="https://github.com/twpayne/chezmoi/releases/latest"
+chezmoi_json=$(
+curl -fsSL -H "Accept: application/json" "${chezmoi_release_url}"
+)
+chezmoi_tag=$(
+printf '%s\n' "${json}" \
+| tr -s '\n' ' ' \
+| sed 's/.*"tag_name":"//' \
+| sed 's/".*//'
+)
+chezmoi_latestver=${chezmoi_tag#v}
+chezmoi_installedver=$(
+apt-cache policy chezmoi | grep Installed | awk -F ': ' '{print $2}'
+)
+
+echo -e "\n${cyanbold}Check chezmoi${normal}"
+echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
+echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
+
+
 
 # keep apt tidy
 
@@ -823,20 +845,25 @@ echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
 
-# Log this latest `Config` operation and display runtime
+# 1password-cli signin (if installed or updated)
+if (( op_needs_signin == 1 )); then
 
-echo -e "\n${bluebold}${local_filename} run at${normal}"
-echo -e "> ${runtime}\n"
-mkdir -p "${HOME}/git/${github_username}/${github_project}"
-echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
->> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+# Check whether signed into 1password-cli
+if ! op whoami &> /dev/null; then
 
-# Configure 1password-cli
+echo -e "\n${cyanbold}Do you want to run subsequent chezmoi scripts with secrets from 1password?${normal}"
+read -r -p "> Sign into 1password-cli now? (Y/n) " response
+# Convert the string to lowercase
+response="${response,,}"
 
-echo -e "${cyanbold}Checking whether account registered in 1password-cli\
-${normal}"
-opclicheck1=$(op account list | grep -o "1password.com" 2> /dev/null)
-if [[ "${opclicheck1}" != "1password.com" ]]; then
+# Check for 'y', 'yes', or an empty string (-z)
+if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
+
+then
+echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
+
+# Check whether account(s) registered in 1password-cli
+if ! op account list 2> /dev/null | grep -q "1password.com"; then
 echo -e "${redbold}> No accounts registered in 1password-cli${normal}
 > sign-in address = my.1password.com
 >  email  address = p… .c…@gmail.com
@@ -846,27 +873,40 @@ echo -e "${redbold}> No accounts registered in 1password-cli${normal}
 > Next enter master password
 > Finally enter TOTP from another 1password instance
 
-RUN THIS NEXT:
-
-eval \$(op account add --signin)
+$ eval \$(op account add --signin)
 "
-exit 112
+# shellcheck disable=SC2046
+eval $(op account add --signin)
+
 else
-echo -e "${greenbold}> Account(s) registered in 1password-cli${normal}\n"
-echo -e "$ op account list\n"
+echo -e "${greenbold}> Account(s) registered in 1password-cli${normal}"
+echo -e "\n$ op account list\n"
 op account list
-echo -e "\n${cyanbold}Checking whether logged into 1password-cli${normal}"
+echo -e "\n${cyanbold}Now sign into 1password-cli${normal}"
+echo -e "\n$ eval \$(op signin)\n"
+# shellcheck disable=SC2046
+eval $(op signin)
 
-if ! op account get &> /dev/null; then
-echo -e "${redbold}> Not logged into 1password-cli${normal}\n
-RUN THIS NEXT:\n
-eval \$(op signin)\n"
-exit 113
+# Close check whether account(s) registered in 1password-cli
+fi
+
 else
-echo -e "${greenbold}> Logged into 1password-cli${normal}\n"
+echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run.${normal}"
+
+# Close [Y/n] choice whether to sign into 1password
+fi
+# Close check whether signed into 1password-cli
+fi
+# Close check whether 1password-cli was installed or updated
 fi
 
-fi
+# Log this latest `Config` operation and display runtime
+
+echo -e "\n${bluebold}${local_filename} run at${normal}"
+echo -e "> ${runtime}\n"
+mkdir -p "${HOME}/git/${github_username}/${github_project}"
+echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
+>> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 
 ################################################################################
 #
