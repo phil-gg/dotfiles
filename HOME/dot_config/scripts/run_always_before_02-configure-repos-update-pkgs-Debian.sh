@@ -27,6 +27,7 @@ greenbold=$(printf '\033[92;1m')
 cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
 pkgarch=$(dpkg --print-architecture)
+op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
 
 # Now running `${local_filename}`
 
