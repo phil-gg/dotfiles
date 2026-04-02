@@ -191,10 +191,10 @@ if sudo -n true 2>/dev/null
             then
             echo -e "> Authenticating sudo with 1password…"
             # Don't show real credential commands in dummy command
-            echo -e "$ op read \"op://\${vault}/\${item}/\${field}\" | sudo -S -v 1> /dev/null"
+            echo -e "$ op read \"op://\${vault}/\${item}/\${field}\" | sudo -S -v &> /dev/null"
             
             # Check for failure with 1password-cli authenticating sudo
-            if op read "op://${sudo_vault}/${sudo_item}/${sudo_field}" | sudo -S -v 1> /dev/null; then
+            if op read "op://${sudo_vault}/${sudo_item}/${sudo_field}" | sudo -S -v &> /dev/null; then
                 echo -e "${greenbold}> Sudo successfully authenticated${normal}"
                 else
                 echo -e "${redbold}> 1Password authentication failed. Falling back to interactive prompt:${normal}"
@@ -229,11 +229,12 @@ if sudo -n true 2>/dev/null
 # Close check whether sudo is already warm
 fi
 
-# Log this latest `Config` operation and display runtime
+# Display runtime & conditionally log this latest `Config` operation
 
-if (( scriptused > 0 )); then
 echo -e "\n${bluebold}${local_filename} run at${normal}"
-echo -e "> ${runtime}\n"
+echo -e "> ${runtime}"
+echo -e "> ${scriptused}\n"
+if (( scriptused > 0 )); then
 mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
