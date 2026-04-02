@@ -233,14 +233,13 @@ fi
 
 echo -e "\n${bluebold}${local_filename} run at${normal}"
 echo -e "> ${runtime}"
-echo -e "> ${scriptused}"
 if (( scriptused > 0 )); then
 mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
-echo -e "> run logged\n"
+echo -e "> ${scriptused} - run logged\n"
 else
-echo -e "> run not logged\n"
+echo -e "> ${scriptused} - run not logged\n"
 # Close conditional logging
 fi
 
