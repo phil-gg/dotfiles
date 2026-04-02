@@ -34,7 +34,7 @@ redbold=$(printf '\033[91;1m')
 greenbold=$(printf '\033[92;1m')
 cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
-op_token_in_ram_path="/dev/shm/op_session_token"
+op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
 tokenloaded="0"
 scriptused="0"
 sudo_vault="54sdig4tb7p4cd2upehoa4qooe"
@@ -151,54 +151,81 @@ $ eval \$(op account add --signin)
         
         # Branch where you declined to create a new valid token for 1password-cli
         else
-        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run.${normal}"
+        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run${normal}"
         
     # Close [Y/n] choice whether to sign into 1password
     fi
 # Close check whether you have a valid 1password-cli session
 fi
 
+# Manage sudo authentication
+
+echo -e "\n${cyanbold}Manage sudo authentication${normal}"
+
 # Check whether sudo is already warm
-if ! sudo -n true 2>/dev/null; then
-
-echo -e "\n${cyanbold}Do you want to run these chezmoi scripts with sudo privileges?${normal}"
-read -r -p "> Run ‘sudo -v’ now? (Y/n) " response
-# Convert the string to lowercase
-response="${response,,}"
-
-# Check for 'y', 'yes', or an empty string (-z)
-if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
-
-then
-(( scriptused += 2 ))
-
-# Check if 1password-cli signed in (for autofill vs interactive sudo)
-if op whoami &> /dev/null; then
-echo -e "> Authenticating sudo with 1password…"
-# Don't show real credential commands in dummy command
-echo -e "$ op read \"op://\${vault}/\${item}/\${field}\" | sudo -S -v &> /dev/null"
-
-# Check for failure with 1password-cli authenticating sudo
-if op read "op://${sudo_vault}/${sudo_item}/${sudo_field}" | sudo -S -v &> /dev/null; then
-echo -e "${greenbold}> Sudo successfully authenticated.${normal}"
-else
-echo -e "${redbold}> 1Password authentication failed. Falling back to interactive prompt:${normal}"
-echo -e "$ sudo -v"
-sudo -v
-# Close check for failure with 1password authenticating sudo
-fi
-
-else
-echo -e "$ sudo -v"
-sudo -v
-# Close check if 1password-cli signed in (for autofill vs interactive sudo)
-fi
-
-else
-echo -e "${redbold}> You chose no. Certain scripts will still prompt you for sudo later…${normal}"
-
-# Close [Y/n] choice whether to warm sudo
-fi
+if sudo -n true 2>/dev/null
+    
+    # Branch where sudo is already warm
+    then
+    echo -e "${greenbold}> sudo is pre-authenticated${normal}"
+    
+    # Branch with no pre-existing sudo rights
+    else
+    echo -e "${redbold}> no sudo privileges granted (yet)${normal}"
+    # Choice: message
+    read -r -p "> Run ‘sudo -v’ now? (Y/n) " response
+    # Convert the string to lowercase
+    response="${response,,}"
+    
+    # Choice: check for 'y', 'yes', or an empty string (-z)
+    if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
+        
+        # Branch where you want to warm sudo
+        then
+        (( scriptused += 2 ))
+        
+        # Check if 1password-cli signed in (for autofill vs interactive sudo)
+        if op whoami &> /dev/null
+            
+            # Branch where 1password-cli credentials can warm sudo
+            then
+            echo -e "> Authenticating sudo with 1password…"
+            # Don't show real credential commands in dummy command
+            echo -e "$ op read \"op://\${vault}/\${item}/\${field}\" | sudo -S -v 1> /dev/null"
+            
+            # Check for failure with 1password-cli authenticating sudo
+            if op read "op://${sudo_vault}/${sudo_item}/${sudo_field}" | sudo -S -v 1> /dev/null; then
+                echo -e "${greenbold}> Sudo successfully authenticated${normal}"
+                else
+                echo -e "${redbold}> 1Password authentication failed. Falling back to interactive prompt:${normal}"
+                echo -e "$ sudo -v"
+                if sudo -v; then
+                    echo -e "${greenbold}> Sudo successfully authenticated${normal}"
+                else
+                    echo -e "${redbold}> Sudo authentication failed${normal}"
+                    exit 102
+                fi
+            # Close check for failure with 1password authenticating sudo
+            fi
+            
+            # Branch where no 1password-cli credentials are available
+            else
+            echo -e "$ sudo -v"
+            if sudo -v; then
+                echo -e "${greenbold}> Sudo successfully authenticated${normal}"
+            else
+                echo -e "${redbold}> Sudo authentication failed${normal}"
+                exit 103
+            fi
+        # Close check if 1password-cli signed in (for autofill vs interactive sudo)
+        fi
+        
+        # Branch where you declined to warm sudo
+        else
+        echo -e "${redbold}> You chose no. Certain scripts will still prompt you for sudo later…${normal}"
+        
+    # Close [Y/n] choice whether to warm sudo
+    fi
 # Close check whether sudo is already warm
 fi
 
@@ -207,7 +234,7 @@ fi
 if (( scriptused > 0 )); then
 echo -e "\n${bluebold}${local_filename} run at${normal}"
 echo -e "> ${runtime}\n"
-mkdir -p "${HOME}/git/${github_username}/${github_project}"
+mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 # Close conditional logging
