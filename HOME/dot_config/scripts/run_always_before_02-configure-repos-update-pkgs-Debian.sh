@@ -831,11 +831,15 @@ chezmoi_installedver=$(
 apt-cache policy chezmoi | grep Installed | awk -F ': ' '{print $2}'
 )
 
-echo -e "\n${cyanbold}Check chezmoi${normal}"
+echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
 echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
 
-
+if [[ ${} != ${} ]]; then
+echo -e "\n${cyanbold}Install/update chezmoi${normal}"
+# TO-DO1: Install chezmoi from deb package here
+# TO-DO2: Also continue moving from multi-line echo to heredocs
+fi
 
 # keep apt tidy
 
