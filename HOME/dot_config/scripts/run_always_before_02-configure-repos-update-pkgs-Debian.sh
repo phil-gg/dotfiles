@@ -575,7 +575,7 @@ curl -fsS "https://releases.1password.com/linux/stable/index.xml" | awk -v RS="<
     }
     # Final Output
     if (array_version != "0.0.0") {
-        print array_version " released on " pubdate
+        print array_version " | " pubdate
     }
 }'
 )
@@ -584,9 +584,18 @@ echo "${onepasswordlinuxreleases}" \
 | sort -t'.' -k1,1nr -k2,2nr -k3,3nr \
 | head -n 1
 )
+onepasswordlinuxlatestversion=$(
+echo "${latestonepasswordlinuxrelease}" \
+| cut -d '|' -f1 | xargs
+)
+onepasswordlinuxreleasedate=$(
+echo "${latestonepasswordlinuxrelease}" \
+| cut -d '|' -f2 | xargs
+)
+echo -e "\n${cyanbold}Latest release info for 1password linux stable${normal}"
 echo -e "> See https://releases.1password.com/linux/stable/"
-echo -e "\n${cyanbold}Latest status message for 1password linux stable${normal}"
-echo -e "> ${latestonepasswordlinuxrelease}"
+echo -e "> ${onepasswordlinuxlatestversion}"
+echo -e "> ${onepasswordlinuxreleasedate}"
 
 opclireleases=$(
 curl -fsS "https://releases.1password.com/developers/cli/index.xml" | awk -v RS="<item>" '
@@ -623,7 +632,7 @@ curl -fsS "https://releases.1password.com/developers/cli/index.xml" | awk -v RS=
     }
     # Final Output
     if (array_version != "0.0.0") {
-        print array_version " released on " pubdate
+        print array_version " | " pubdate
     }
 }'
 )
@@ -632,9 +641,18 @@ echo "${opclireleases}" \
 | sort -t'.' -k1,1nr -k2,2nr -k3,3nr \
 | head -n 1
 )
-echo -e "\n${cyanbold}Latest status message for 1password-cli${normal}"
+opclilatestversion=$(
+echo "${latestopclirelease}" \
+| cut -d '|' -f1 | xargs
+)
+opclireleasedate=$(
+echo "${latestopclirelease}" \
+| cut -d '|' -f2 | xargs
+)
+echo -e "\n${cyanbold}Latest release info for 1password-cli${normal}"
 echo -e "> See https://releases.1password.com/developers/cli/"
-echo -e "> ${latestopclirelease}"
+echo -e "> ${opclilatestversion}"
+echo -e "> ${opclireleasedate}"
 
 # ################## #
 # ON AMD64 ARCH ONLY #
