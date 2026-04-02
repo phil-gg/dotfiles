@@ -821,7 +821,7 @@ chezmoi_json=$(
 curl -fsSL -H "Accept: application/json" "${chezmoi_release_url}"
 )
 chezmoi_tag=$(
-printf '%s\n' "${json}" \
+printf '%s\n' "${chezmoi_json}" \
 | tr -s '\n' ' ' \
 | sed 's/.*"tag_name":"//' \
 | sed 's/".*//'
