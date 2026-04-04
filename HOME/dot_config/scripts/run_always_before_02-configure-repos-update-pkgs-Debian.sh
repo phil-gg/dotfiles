@@ -69,12 +69,9 @@ fi
 
 echo -e "\n${cyanbold}Checking debian package signing keys${normal}"
 
-expectedsha256trixiearchive="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026\
-d1eeaadcbffb0da7"
-expectedsha256trixiesecurity="844c07d242db37f283afab9d5531270a0550841e90f9f1a9\
-c3bd599722b808b7"
-expectedsha256trixierelease="4d097bb93f83d731f475c5b92a0c2fcf108cfce1d4932792\
-fca72d00b48d198b"
+expectedsha256trixiearchive="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
+expectedsha256trixiesecurity="844c07d242db37f283afab9d5531270a0550841e90f9f1a9c3bd599722b808b7"
+expectedsha256trixierelease="4d097bb93f83d731f475c5b92a0c2fcf108cfce1d4932792fca72d00b48d198b"
 
 expectedkeytrixiearchive="04B54C3CDCA79751B16BC6B5225629DF75B188BD"
 expectedkeytrixiesecurity="5E04A1E3223A19A20706E20F9904613D4CCE68C6"
@@ -468,7 +465,12 @@ if [[ ! -f "/etc/debsig/policies/${onepid}/${onepname}.pol"
    || ! -f "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
 echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}\n"
 echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg\n"
+
+# Catch errors with 1password key
+if [[ -z "${onepid}" ]]; then exit 109; fi
+# Create folder with key fingerprint
 sudo mkdir -p "/etc/debsig/policies/${onepid}"
+
 echo -e "\
 <?xml version=\"1.0\"?>
 <!DOCTYPE Policy SYSTEM \"https://www.debian.org/debsig/1.0/policy.dtd\">
@@ -544,7 +546,7 @@ fi
 
 if [[ -n "${APT_REQD}" || "${DPKG_ERROR}" -ne 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo apt install -y ${PACKAGES[@]}"
+echo -e "$ sudo apt install -y ${PACKAGES[*]}"
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
@@ -794,7 +796,7 @@ fi
 # echo -e "$ cd ~/git/${github_username}/${github_project}/tmp"
 # cd "${HOME}/git/${github_username}/${github_project}/tmp" 2> /dev/null \
 # || { echo -e "${redbold}> Failed to change directory, exiting${normal}\n"\
-# ; exit 109; }
+# ; exit 110; }
 # 
 # # get latest 1password amd64 deb package
 # 
@@ -828,17 +830,25 @@ printf '%s\n' "${chezmoi_json}" \
 )
 chezmoi_latestver=${chezmoi_tag#v}
 chezmoi_installedver=$(
-apt-cache policy chezmoi | grep Installed | awk -F ': ' '{print $2}'
+chezmoi --version 2>/dev/null | awk '{print $3}' | tr -d 'v,'
 )
+chezmoi_pkg="https://github.com/twpayne/chezmoi/releases/download\
+/v${chezmoi_latestver}/chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
 
 echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
 echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
 
-if [[ ${chezmoi_installedver} != ${chezmoi_latestver} ]]; then
+if [[ "${chezmoi_installedver}" != "${chezmoi_latestver}" ]]; then
 echo -e "\n${cyanbold}Install/update chezmoi${normal}"
-# TO-DO1: Install chezmoi from deb package here
-# TO-DO2: Also continue moving from multi-line echo to heredocs
+# Ensure availability of working folder for deb package installation
+mkdir -p "${HOME}/git/${github_username}/${github_project}/tmp"
+
+# TO-DO1: Download chezmoi deb package into working folder
+# TO-DO2: How do I us chezmoi_2.70.0_checksums.txt and/or chezmoi_2.70.0_checksums.txt.sig to check the integrity of the deb package?
+# TO-DO3: install downloaded deb in working folder only if signature checks pass
+
+# TO-DO4: Also continue moving from multi-line echo to heredocs
 fi
 
 # keep apt tidy
@@ -953,7 +963,7 @@ $ eval \$(op account add --signin)
             # Branch to handle token generation errors
             else
             echo -e "${redbold}> op signin failed${normal}"
-            exit 101
+            exit 111
             
         # Close check for errors in generating new session token
         fi
@@ -971,6 +981,13 @@ fi
 fi
 # Close check whether 1password-cli installed or updated
 fi
+
+# Replicate the fully evaluated script to your target directory
+
+echo -e "\n${cyanbold}Save a copy of  ‘${local_filename}’${normal}"
+mkdir -p "${HOME}/.config/scripts"
+echo -e "$ cp \"\$0\" \"~/.config/scripts/${local_filename}\""
+cp "$0" "${HOME}/.config/scripts/${local_filename}"
 
 # Log this latest `Config` operation and display runtime
 
