@@ -503,9 +503,10 @@ fi
 
 # apt upgrade if needed
 
-count_upgradable_pkgs=$(apt list --upgradable 2> /dev/null | \
-grep -c -v "^Listing") 
-if (( count_upgradable_pkgs > 0 )); then
+count_upgrade_pkgs=$(apt list --upgradable 2> /dev/null | grep -c -v "^Listing")
+# Yes, apt list format is not stable but confident it will always be 1 line/pkg!
+# Thus don't want to use any alternative above!
+if (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
 echo -e "$ sudo apt upgrade -y\n"
 sudo apt upgrade -y
@@ -706,8 +707,10 @@ opupdatecheck=$(
 apt list --upgradable 2>&1 \
 | grep -vE "Use with caution in scripts|Listing" \
 | grep -o "1password" \
-| head -c 9
+| head -n 1
 )
+# Yes, apt list format is not stable but confident it will always name upgrades!
+# Thus don't want to use any alternative above!
 op_needs_signin="0"
 if [[ "${opupdatecheck}" == "1password"
    || "${opguiinstallcheck}" != "Package: 1password"
@@ -832,23 +835,58 @@ chezmoi_latestver=${chezmoi_tag#v}
 chezmoi_installedver=$(
 chezmoi --version 2>/dev/null | awk '{print $3}' | tr -d 'v,'
 )
-chezmoi_pkg="https://github.com/twpayne/chezmoi/releases/download\
-/v${chezmoi_latestver}/chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
-
 echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
 echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
 
+# Check if chezmoi needs installing / updating
 if [[ "${chezmoi_installedver}" != "${chezmoi_latestver}" ]]; then
 echo -e "\n${cyanbold}Install/update chezmoi${normal}"
+
+# Define working directory and target file names
+tmp_dir="${HOME}/git/${github_username}/${github_project}/tmp"
+deb_file="chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
+chk_file="chezmoi_${chezmoi_latestver}_checksums.txt"
+sig_file="${chk_file}.sig"
+base_url="https://github.com/twpayne/chezmoi/releases/download/v${chezmoi_latestver}"
+
 # Ensure availability of working folder for deb package installation
-mkdir -p "${HOME}/git/${github_username}/${github_project}/tmp"
+mkdir -p "${tmp_dir}"
 
-# TO-DO1: Download chezmoi deb package into working folder
-# TO-DO2: How do I us chezmoi_2.70.0_checksums.txt and/or chezmoi_2.70.0_checksums.txt.sig to check the integrity of the deb package?
-# TO-DO3: install downloaded deb in working folder only if signature checks pass
+echo -e "> Downloading chezmoi v${chezmoi_latestver} package and verification files"
+curl -fsSL "${base_url}/${deb_file}" -o "${tmp_dir}/${deb_file}"
+curl -fsSL "${base_url}/${chk_file}" -o "${tmp_dir}/${chk_file}"
+curl -fsSL "${base_url}/${sig_file}" -o "${tmp_dir}/${sig_file}"
 
-# TO-DO4: Also continue moving from multi-line echo to heredocs
+echo -e "> Verifying release signature"
+# Download the author's public key to a temporary keyring to keep system keyring pristine
+curl -fsSL https://github.com/twpayne.gpg | \
+gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" --import - 2>/dev/null
+
+# Check the GPG signature of the checksums file
+if gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" \
+--verify "${tmp_dir}/${sig_file}" "${tmp_dir}/${chk_file}" 2>/dev/null; then
+    echo -e "${greenbold} ✅ Checksum file signature verified${normal}"
+    echo -e "> Verifying deb package integrity"
+
+# Check the sha256 of the deb pkg
+    if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c "${chk_file}" 2>/dev/null | grep -q "OK" ); then
+        echo -e "${greenbold} ✅ deb package integrity verified${normal}"
+        echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
+        sudo apt install -y "${tmp_dir}/${deb_file}"
+    else
+        echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
+        exit 110
+    fi
+else
+    echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
+    exit 111
+fi
+
+# Clean up the working folder
+rm -rf "${tmp_dir}"
+
+# Close check whether chezmoi needed installing / updating
 fi
 
 # keep apt tidy
@@ -963,7 +1001,7 @@ $ eval \$(op account add --signin)
             # Branch to handle token generation errors
             else
             echo -e "${redbold}> op signin failed${normal}"
-            exit 111
+            exit 201
             
         # Close check for errors in generating new session token
         fi
