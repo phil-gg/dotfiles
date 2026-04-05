@@ -864,6 +864,8 @@ curl -fsSL https://github.com/twpayne.gpg | \
 gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" --import - 2>/dev/null
 
 # Check the GPG signature of the checksums file
+echo -e "$ gpg --no-default-keyring --keyring \"${tmp_dir}/twpayne.gpg\" \
+--verify \"${tmp_dir}/${sig_file}\" \"${tmp_dir}/${chk_file}\""
 if gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" \
 --verify "${tmp_dir}/${sig_file}" "${tmp_dir}/${chk_file}" 2>/dev/null; then
     echo -e "${greenbold} ✅ Checksum file signature verified${normal}"
