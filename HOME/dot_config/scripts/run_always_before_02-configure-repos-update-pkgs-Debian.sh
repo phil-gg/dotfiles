@@ -896,6 +896,9 @@ fi
 # Clean up the working folder
 rm -rf "${tmp_dir}"
 
+else
+echo -e "${greenbold}> chezmoi is already up-to-date${normal}"
+
 # Close check whether chezmoi needed installing / updating
 fi
 
