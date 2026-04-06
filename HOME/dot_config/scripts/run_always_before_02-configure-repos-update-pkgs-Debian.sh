@@ -876,6 +876,7 @@ if cosign verify-blob \
     echo -e "> Verifying deb package integrity"
     
     # Check the sha256 of the deb pkg
+    echo -e "$ cd ${tmp_dir} && sha256sum --ignore-missing -c ${chk_file}"
     if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
         echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
