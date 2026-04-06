@@ -881,8 +881,6 @@ if cosign verify-blob \
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
         echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
         sudo apt install -y "${tmp_dir}/${deb_file}"
-        echo -e "$ chezmoi init https://github.com/${github_username}/${github_project}.git"
-        chezmoi init "https://github.com/${github_username}/${github_project}.git"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
         exit 110
@@ -894,8 +892,27 @@ else
 # Close cosign check
 fi
 
-# Clean up the working folder
-rm -rf "${tmp_dir}"
+# Temporarily store config-runs.log up one level
+if [ -f "${HOME}/git/${github_username}/${github_project}/config-runs.log" ];
+then
+mv "${HOME}/git/${github_username}/${github_project}/config-runs.log" \
+"${HOME}/git/${github_username}/config-runs.log"
+fi
+
+# clear tmp and everything else too
+find "${HOME}/git/${github_username}/${github_project}" -mindepth 1 -delete
+
+# chezmoi initial config
+echo -e "$ chezmoi init https://github.com/${github_username}/${github_project}.git"
+chezmoi init "https://github.com/${github_username}/${github_project}.git"
+
+# Move config-runs.log back into project folder
+if [ -f "${HOME}/git/${github_username}/config-runs.log" ]; then
+mv "${HOME}/git/${github_username}/config-runs.log" \
+"${HOME}/git/${github_username}/${github_project}/config-runs.log"
+fi
+
+echo -e "${greenbold} ✅ chezmoi init complete${normal}"
 
 else
 echo -e "${greenbold}> chezmoi is already up-to-date${normal}"
