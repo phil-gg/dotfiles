@@ -237,7 +237,7 @@ fi
 
 # Set apt pinning preferences
 
-if [[ -d "/run/WSL" ]] &> /dev/null; then
+if [[ -d "/run/WSL" ]]; then
 WSL_PREFS="\
 Explanation: Don't want network manager on plasma when runing inside WSL2
 Package: plasma-nm
@@ -530,6 +530,7 @@ wget
 git
 gh
 gpg
+cosign
 debsigs
 equivs
 foot
@@ -551,7 +552,7 @@ echo -e "$ sudo apt install -y ${PACKAGES[*]}"
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
-if (( firefoxnotinstalled == 1 )) && [[ -d "/run/WSL" ]] &> /dev/null; then
+if (( firefoxnotinstalled == 1 )) && [[ -d "/run/WSL" ]]; then
 echo -e "\n${redbold}Restart needed to prevent firefox errors about \
 org.a11y.Bus${normal}
 Please run:
@@ -833,7 +834,7 @@ printf '%s\n' "${chezmoi_json}" \
 )
 chezmoi_latestver=${chezmoi_tag#v}
 chezmoi_installedver=$(
-chezmoi --version 2>/dev/null | awk '{print $3}' | tr -d 'v,'
+chezmoi --version 2> /dev/null | awk '{print $3}' | tr -d 'v,'
 )
 echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
@@ -848,6 +849,7 @@ tmp_dir="${HOME}/git/${github_username}/${github_project}/tmp"
 deb_file="chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
 chk_file="chezmoi_${chezmoi_latestver}_checksums.txt"
 sig_file="${chk_file}.sig"
+pub_file="chezmoi_cosign.pub"
 base_url="https://github.com/twpayne/chezmoi/releases/download/v${chezmoi_latestver}"
 
 # Ensure availability of working folder for deb package installation
@@ -857,32 +859,36 @@ echo -e "> Downloading chezmoi v${chezmoi_latestver} package and verification fi
 curl -fsSL "${base_url}/${deb_file}" -o "${tmp_dir}/${deb_file}"
 curl -fsSL "${base_url}/${chk_file}" -o "${tmp_dir}/${chk_file}"
 curl -fsSL "${base_url}/${sig_file}" -o "${tmp_dir}/${sig_file}"
+curl -fsSL "${base_url}/${pub_file}" -o "${tmp_dir}/${pub_file}"
 
-echo -e "> Verifying release signature"
-# Download the author's public key to a temporary keyring to keep system keyring pristine
-curl -fsSL https://github.com/twpayne.gpg | \
-gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" --import - 2>/dev/null
-
-# Check the GPG signature of the checksums file
-echo -e "$ gpg --no-default-keyring --keyring \"${tmp_dir}/twpayne.gpg\" \
---verify \"${tmp_dir}/${sig_file}\" \"${tmp_dir}/${chk_file}\""
-if gpg --no-default-keyring --keyring "${tmp_dir}/twpayne.gpg" \
---verify "${tmp_dir}/${sig_file}" "${tmp_dir}/${chk_file}" 2>/dev/null; then
+# Verify the checksum file with cosign
+echo -e "> Verifying release with cosign"
+echo -e "$ cosign verify-blob \
+--key \"${tmp_dir}/chezmoi_cosign.pub\" \
+--signature \"${tmp_dir}/${sig_file}\" \
+\"${tmp_dir}/${chk_file}\""
+if cosign verify-blob \
+    --key "${tmp_dir}/chezmoi_cosign.pub" \
+    --signature "${tmp_dir}/${sig_file}" \
+    "${tmp_dir}/${chk_file}" &> /dev/null; then
+    
     echo -e "${greenbold} ✅ Checksum file signature verified${normal}"
     echo -e "> Verifying deb package integrity"
-
-# Check the sha256 of the deb pkg
-    if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c "${chk_file}" 2>/dev/null | grep -q "OK" ); then
+    
+    # Check the sha256 of the deb pkg
+    if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
         echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
         sudo apt install -y "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
         exit 110
+    # Close sha256sum check
     fi
 else
     echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
     exit 111
+# Close cosign check
 fi
 
 # Clean up the working folder
@@ -916,7 +922,6 @@ if [[ -f "${op_token_in_ram_path}" ]]
     # Read the token and export it for this script's session
     OP_SESSION_my=$(cat "${op_token_in_ram_path}")
     export OP_SESSION_my
-    tokenloaded="1"
     echo -e "${greenbold}> 1password-cli session token loaded${normal}"
     
     # Branch where *NO* prior op session token exists
@@ -949,7 +954,6 @@ if op whoami &> /dev/null
         
         # Branch where you want to create a new valid token for 1password-cli
         then
-        (( scriptused += 1 ))
         echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
         
         # Check whether account(s) registered in 1password-cli
