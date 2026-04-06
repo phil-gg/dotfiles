@@ -880,6 +880,8 @@ if cosign verify-blob \
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
         echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
         sudo apt install -y "${tmp_dir}/${deb_file}"
+        echo -e "$ chezmoi init https://github.com/${github_username}/${github_project}.git"
+        chezmoi init "https://github.com/${github_username}/${github_project}.git"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
         exit 110
