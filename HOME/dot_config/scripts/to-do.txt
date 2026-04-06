@@ -1,0 +1,12 @@
+Move to heredocs instead of multi-line echo
+
+import script 03 onwards from configure-wsl2
+look at to-do from configure-wsl2
+
+https://github.com/dotphiles/dotphiles/blob/master/wget/wgetrc
+
+Terminal colour scheme
+https://www.sap.com/design-system/fiori-design-web/foundations/visual/colors/colors
+Foot config
+
+https://www.binarylane.com.au/vps-hosting/linux-vps
