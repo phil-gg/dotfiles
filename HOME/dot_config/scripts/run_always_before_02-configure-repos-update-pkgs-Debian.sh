@@ -879,8 +879,8 @@ if cosign verify-blob \
     echo -e "$ cd ${tmp_dir} && sha256sum --ignore-missing -c ${chk_file}"
     if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
-        echo -e "$ sudo apt install -y ${tmp_dir}/${deb_file}"
-        sudo apt install -y "${tmp_dir}/${deb_file}"
+        echo -e "$ sudo dpkg -i ${tmp_dir}/${deb_file}"
+        sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
         exit 110
@@ -903,7 +903,7 @@ fi
 find "${HOME}/git/${github_username}/${github_project}" -mindepth 1 -delete
 
 # chezmoi initial config
-echo -e "$ chezmoi init https://github.com/${github_username}/${github_project}.git"
+echo -e "\n$ chezmoi init https://github.com/${github_username}/${github_project}.git\n"
 chezmoi init "https://github.com/${github_username}/${github_project}.git"
 
 # Move config-runs.log back into project folder
@@ -912,7 +912,7 @@ mv "${HOME}/git/${github_username}/config-runs.log" \
 "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 fi
 
-echo -e "${greenbold} ✅ chezmoi init complete${normal}"
+echo -e "\n${greenbold} ✅ chezmoi init complete${normal}"
 
 else
 echo -e "${greenbold}> chezmoi is already up-to-date${normal}"
@@ -1051,7 +1051,7 @@ fi
 
 # Replicate the fully evaluated script to your target directory
 
-echo -e "\n${cyanbold}Save a copy of  ‘${local_filename}’${normal}"
+echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
 mkdir -p "${HOME}/.config/scripts"
 echo -e "$ cp \"\$0\" \"~/.config/scripts/${local_filename}\""
 cp "$0" "${HOME}/.config/scripts/${local_filename}"
