@@ -103,6 +103,7 @@ echo -e "${redbold}> No accounts registered in 1password-cli${normal}
 
 $ eval \$(op account add --signin)
 "
+            # Word-splitting is not a problem here
             # shellcheck disable=SC2046
             eval $(op account add --signin)
             echo -e ""
