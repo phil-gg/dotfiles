@@ -737,6 +737,8 @@ if (( nordvpnconfigneeded == 3 )); then
 echo -e "\n${cyanbold}Configuring nordvpn${normal}"
 echo -e "$ sudo usermod -aG nordvpn \"${USER}\""
 sudo usermod -aG nordvpn "${USER}"
+echo -e "$ xdg-mime default nordvpn.desktop x-scheme-handler/nordvpn"
+xdg-mime default nordvpn.desktop x-scheme-handler/nordvpn
 echo -e "
 ${redbold}Restart needed for nordvpn to work${normal}
 Please run one of:
