@@ -33,41 +33,16 @@ op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
-# Get debian package keys
-
-if [[ ! -f /usr/share/keyrings/trixie-debian-archive-keyring.asc
-   || ! -f /usr/share/keyrings/trixie-security-archive-keyring.asc
-   || ! -f /usr/share/keyrings/trixie-release-keyring.asc ]]; then
-echo -e "\n${cyanbold}Downloading debian signing keys${normal}"
-fi
-
-if [[ ! -f /usr/share/keyrings/trixie-debian-archive-keyring.asc ]]; then
-echo -e "$ \
-wget -qO- https://ftp-master.debian.org/keys/archive-key-13.asc | \
-sudo tee /usr/share/keyrings/trixie-debian-archive-keyring.asc 1> /dev/null"
-wget -qO- https://ftp-master.debian.org/keys/archive-key-13.asc | \
-sudo tee /usr/share/keyrings/trixie-debian-archive-keyring.asc 1> /dev/null
-fi
-
-if [[ ! -f /usr/share/keyrings/trixie-security-archive-keyring.asc ]]; then
-echo -e "$ \
-wget -qO- https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
-sudo tee /usr/share/keyrings/trixie-security-archive-keyring.asc 1> /dev/null"
-wget -qO- https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
-sudo tee /usr/share/keyrings/trixie-security-archive-keyring.asc 1> /dev/null
-fi
-
-if [[ ! -f /usr/share/keyrings/trixie-release-keyring.asc ]]; then
-echo -e "$ \
-wget -qO- https://ftp-master.debian.org/keys/release-13.asc | \
-sudo tee /usr/share/keyrings/trixie-release-keyring.asc 1> /dev/null"
-wget -qO- https://ftp-master.debian.org/keys/release-13.asc | \
-sudo tee /usr/share/keyrings/trixie-release-keyring.asc 1> /dev/null
-fi
-
 # Check debian package keys
 
 echo -e "\n${cyanbold}Checking debian package signing keys${normal}"
+
+# Manually find signing keys announcement when updating from Trixie (like this):
+# https://lists.debian.org/debian-devel-announce/2025/04/msg00001.html
+
+debianarchivekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-stable.asc"
+debiansecuritykeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-security-automatic.asc"
+debianreleasekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-automatic.asc"
 
 expectedsha256trixiearchive="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
 expectedsha256trixiesecurity="844c07d242db37f283afab9d5531270a0550841e90f9f1a9c3bd599722b808b7"
@@ -77,30 +52,46 @@ expectedkeytrixiearchive="04B54C3CDCA79751B16BC6B5225629DF75B188BD"
 expectedkeytrixiesecurity="5E04A1E3223A19A20706E20F9904613D4CCE68C6"
 expectedkeytrixierelease="41587F7DB8C774BCCF131416762F67A0B2C39DE4"
 
-actualsha256trixiearchive=$(sha256sum /usr/share/keyrings/trixie-debian-\
-archive-keyring.asc 2> /dev/null | grep -oE "[0-9a-f]{64}")
-actualsha256trixiesecurity=$(sha256sum /usr/share/keyrings/trixie-security-\
-archive-keyring.asc 2> /dev/null | grep -oE "[0-9a-f]{64}")
-actualsha256trixierelease=$(sha256sum /usr/share/keyrings/trixie-release-\
-keyring.asc 2> /dev/null | grep -oE "[0-9a-f]{64}")
+actualsha256trixiearchive=$(
+sha256sum "${debianarchivekeyfile}" 2> /dev/null \
+| grep -oE "[0-9a-f]{64}"
+)
+actualsha256trixiesecurity=$(
+sha256sum "${debiansecuritykeyfile}" 2> /dev/null \
+| grep -oE "[0-9a-f]{64}"
+)
+actualsha256trixierelease=$(
+sha256sum "${debianreleasekeyfile}" 2> /dev/null \
+| grep -oE "[0-9a-f]{64}"
+)
 
-actualkeytrixiearchive=$(gpg --no-default-keyring --with-colons \
---import-options show-only --import /usr/share/keyrings/trixie-debian-archive\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
-actualkeytrixiesecurity=$(gpg --no-default-keyring --with-colons \
---import-options show-only --import /usr/share/keyrings/trixie-security-archive\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
-actualkeytrixierelease=$(gpg --no-default-keyring --with-colons \
---import-options show-only --import /usr/share/keyrings/trixie-release\
--keyring.asc 2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+actualkeytrixiearchive=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${debianarchivekeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+actualkeytrixiesecurity=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${debiansecuritykeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+actualkeytrixierelease=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${debianreleasekeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
 
-echo -e "\n 🔑 /usr/share/keyrings/trixie-debian-archive-keyring.asc"
+echo -e "\n 🔑 ${debianarchivekeyfile}"
 echo -e " 🔤 ${expectedsha256trixiearchive}"
 if [[ "${expectedsha256trixiearchive}" == "${actualsha256trixiearchive}" ]];
 then
 echo -e "${greenbold} ✅ The SHA256 hash matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
+echo -e "${redbold} ⛔ ${actualsha256trixiearchive}
+ ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
 exit 101
 fi
 echo -e " 🔐 ${expectedkeytrixiearchive}"
@@ -108,17 +99,19 @@ if [[ "${expectedkeytrixiearchive}" == "${actualkeytrixiearchive}" ]];
 then
 echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
+echo -e "${redbold} ⛔ ${actualkeytrixiearchive}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 102
 fi
 
-echo -e "\n 🔑 /usr/share/keyrings/trixie-security-archive-keyring.asc"
+echo -e "\n 🔑 ${debiansecuritykeyfile}"
 echo -e " 🔤 ${expectedsha256trixiesecurity}"
 if [[ "${expectedsha256trixiesecurity}" == "${actualsha256trixiesecurity}" ]];
 then
 echo -e "${greenbold} ✅ The SHA256 hash matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
+echo -e "${redbold} ⛔ ${actualsha256trixiesecurity}
+ ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
 exit 103
 fi
 echo -e " 🔐 ${expectedkeytrixiesecurity}"
@@ -126,17 +119,19 @@ if [[ "${expectedkeytrixiesecurity}" == "${actualkeytrixiesecurity}" ]];
 then
 echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
+echo -e "${redbold} ⛔ ${actualkeytrixiesecurity}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 104
 fi
 
-echo -e "\n 🔑 /usr/share/keyrings/trixie-release-keyring.asc"
+echo -e "\n 🔑 ${debianreleasekeyfile}"
 echo -e " 🔤 ${expectedsha256trixierelease}"
 if [[ "${expectedsha256trixierelease}" == "${actualsha256trixierelease}" ]];
 then
 echo -e "${greenbold} ✅ The SHA256 hash matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
+echo -e "${redbold} ⛔ ${actualsha256trixierelease}
+ ⚠️ WARNING: unexpected SHA256 hash${normal}\n"
 exit 105
 fi
 echo -e " 🔐 ${expectedkeytrixierelease}"
@@ -144,39 +139,48 @@ if [[ "${expectedkeytrixierelease}" == "${actualkeytrixierelease}" ]];
 then
 echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
+echo -e "${redbold} ⛔ ${actualkeytrixierelease}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 106
 fi
 
 # Add mozilla package key (on any arch)
 
-expectedMozillaKey="35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"
+mozillakeyfile="/etc/apt/trusted.gpg.d/mozilla-repo-signing-key.asc"
+expectedmozillakey="35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"
 
-actualMozillaKey=$(gpg --no-default-keyring --with-colons --import-options \
-show-only --import /usr/share/keyrings/mozilla-archive-keyring.asc \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+actualmozillakey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${mozillakeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
 
-if [[ "${actualMozillaKey}" != "${expectedMozillaKey}" ]]; then
-
+if [[ "${actualmozillakey}" != "${expectedmozillakey}" ]];
+then
 echo -e "\n${cyanbold}Add Mozilla signing key${normal}"
-echo -e "$ wget -qO- https://packages.mozilla.org/apt/repo-signing-key.gpg | \
-sudo tee /usr/share/keyrings/mozilla-archive-keyring.asc 1> /dev/null"
-wget -qO- https://packages.mozilla.org/apt/repo-signing-key.gpg | \
-sudo tee /usr/share/keyrings/mozilla-archive-keyring.asc 1> /dev/null
+echo -e "$ curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
+| sudo tee \"${mozillakeyfile}\" 1> /dev/null"
+curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
+| sudo tee "${mozillakeyfile}" 1> /dev/null
 
-actualMozillaKey=$(gpg --no-default-keyring --with-colons --import-options \
-show-only --import /usr/share/keyrings/mozilla-archive-keyring.asc \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+actualmozillakey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${mozillakeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
 
 fi
 
-echo -e "\n 🔑 /usr/share/keyrings/mozilla-archive-keyring.asc"
-echo -e " 🔐 ${expectedMozillaKey}"
-if [[ "${expectedMozillaKey}" == "${actualMozillaKey}" ]];
+echo -e "\n 🔑 ${mozillakeyfile}"
+echo -e " 🔐 ${expectedmozillakey}"
+if [[ "${expectedmozillakey}" == "${actualmozillakey}" ]];
 then
 echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
+echo -e "${redbold} ⛔ ${actualmozillakey}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 107
 fi
 
@@ -184,37 +188,43 @@ fi
 
 if [[ "${pkgarch}" == "amd64" ]]; then
 
-expected1passwordKey="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
+# gpg not asc key, in legacy location, to match built-in 1password config
+# https://support.1password.com/install-linux/#debian-or-ubuntu
+opkeyfile="/usr/share/keyrings/1password-archive-keyring.gpg"
+expected1opkey="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
 
-actual1passwordKey=$(gpg --no-default-keyring --with-colons --import-options \
-show-only --import /usr/share/keyrings/1password-archive-keyring.gpg \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+actualopkey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${opkeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
 
-if [[ "${actual1passwordKey}" != "${expected1passwordKey}" ]]; then
-
-# gpg not asc key to match built-in 1password config
-
+if [[ "${actualopkey}" != "${expected1opkey}" ]];
+then
 echo -e "\n${cyanbold}Add 1password signing key${normal}"
-echo -e "wget -qO- https://downloads.1password.com/linux/keys/1password.asc | \
-sudo gpg --yes --no-default-keyring --dearmor --output \
-/usr/share/keyrings/1password-archive-keyring.gpg"
-wget -qO- https://downloads.1password.com/linux/keys/1password.asc | \
-sudo gpg --yes --no-default-keyring --dearmor --output \
-/usr/share/keyrings/1password-archive-keyring.gpg
+echo -e "curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+| sudo gpg --yes --no-default-keyring --dearmor --output ${opkeyfile}"
+curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+| sudo gpg --yes --no-default-keyring --dearmor --output "${opkeyfile}"
 
-actual1passwordKey=$(gpg --no-default-keyring --with-colons --import-options \
-show-only --import /usr/share/keyrings/1password-archive-keyring.gpg \
-2> /dev/null | awk -F':' '$1=="fpr"{print $10}' | head -n 1)
+actualopkey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${opkeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
 
 fi
 
-echo -e "\n 🔑 /usr/share/keyrings/1password-archive-keyring.gpg"
-echo -e " 🔐 ${expected1passwordKey}"
-if [[ "${expected1passwordKey}" == "${actual1passwordKey}" ]];
+echo -e "\n 🔑 /${opkeyfile}"
+echo -e " 🔐 ${expected1opkey}"
+if [[ "${expected1opkey}" == "${actualopkey}" ]];
 then
 echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
-echo -e "${redbold} ⚠️ WARNING: unexpected fingerprint${normal}\n"
+echo -e "${redbold} ⛔ ${actualopkey}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
 exit 108
 fi
 
@@ -222,17 +232,40 @@ fi
 
 # modernise deb package config files
 
-if [[ -f /etc/apt/sources.list
-   || ! -f /etc/apt/preferences.d/01-pin-prefs
-   || ! -f /etc/apt/sources.list.d/01-trixie-security.sources
-   || ! -f /etc/apt/sources.list.d/02-trixie-debian.sources
-   || ! -f /etc/apt/sources.list.d/99-sid-debian.sources ]]; then
+sourceslistfile="/etc/apt/sources.list"
+pinprefsfile="/etc/apt/preferences.d/01-pin-prefs"
+debiansecuritysourcesfile="/etc/apt/sources.list.d/01-trixie-security.sources"
+debianstablesourcesfile="/etc/apt/sources.list.d/02-trixie-debian.sources"
+debiansidsourcesfile="/etc/apt/sources.list.d/99-sid-debian.sources"
+
+if [[ -f "${sourceslistfile}"
+   || ! -f "${pinprefsfile}"
+   || ! -f "${debiansecuritysourcesfile}"
+   || ! -f "${debianstablesourcesfile}"
+   || ! -f "${debiansidsourcesfile}" ]]; then
 echo -e "\n${cyanbold}Updating package sources to deb822 format${normal}"
 fi
 
-if [[ -f /etc/apt/sources.list ]]; then
-echo -e "$ sudo rm /etc/apt/sources.list"
-sudo rm /etc/apt/sources.list
+# Remove legacy single sources file
+
+if [[ -f "${sourceslistfile}" ]]; then
+echo -e "$ sudo rm ${sourceslistfile}"
+sudo rm "${sourceslistfile}"
+fi
+
+# Remove legacy apt keys
+
+legacy_key_file_count=$(
+sudo find /etc/apt/trusted.gpg.d/ -type f \
+\( -name "*-bookworm-*.asc" -o -name "*-bullseye-*.asc" \) 2>/dev/null \
+| wc -l
+)
+if [[ "${legacy_key_file_count}" -gt 0 ]]; then
+echo -e "\n${bluebold}Found ${legacy_key_file_count} legacy key(s)${normal}"
+echo -e "$ sudo find /etc/apt/trusted.gpg.d/ -type f \
+\( -name \"*-bookworm-*.asc\" -o -name \"*-bullseye-*.asc\" \) -delete"
+sudo find /etc/apt/trusted.gpg.d/ -type f \
+\( -name "*-bookworm-*.asc" -o -name "*-bullseye-*.asc" \) -delete
 fi
 
 # Set apt pinning preferences
@@ -266,7 +299,7 @@ Explanation: NO negative pin priorities here preventing package installation
 "
 fi
 
-PIN_PREFS=$( cat << EOF
+PIN_PREFS="\
 Explanation: This file is /etc/apt/preferences.d/01-pin-prefs
 Explanation: https://manpages.debian.org/trixie/apt/apt_preferences.5.en.html
 Explanation: Pin-Priority is the primary form of package prioritisation
@@ -300,12 +333,12 @@ Pin-Priority: 980
 
 Explanation: Prioritise 1password repo just less than Trixie/Stable
 Package: *
-Pin: origin "downloads.1password.com"
+Pin: origin \"downloads.1password.com\"
 Pin-Priority: 970
 
 Explanation: Prioritise mozilla repo just less than Trixie/Stable
 Package: *
-Pin: origin "packages.mozilla.org"
+Pin: origin \"packages.mozilla.org\"
 Pin-Priority: 970
 
 Explanation: Add any more third-party repos just above here
@@ -331,22 +364,16 @@ Explanation: Currently NO packages are set with Pin-Priorities 1-100
 Explanation: Warning; Pin-Priority=0 has undefined behaviour; do not use
 Explanation: Negative pin priorities prevent package installation
 ${WSL_PREFS}
-EOF
-)
+"
 
-if [[ ! -f /etc/apt/preferences.d/01-pin-prefs ]] || \
-! cmp -s <(echo -e "${PIN_PREFS}") /etc/apt/preferences.d/01-pin-prefs;
+if ! cmp -s <(echo "${PIN_PREFS}") "${pinprefsfile}";
 then
-echo -e "\n${cyanbold}Updating /etc/apt/preferences.d/01-pin-prefs${normal}"
-echo -e "$ echo -e \"\${PIN_PREFS}\" | \
-sudo tee /etc/apt/preferences.d/01-pin-prefs 1> /dev/null"
-echo -e "${PIN_PREFS}" | \
-sudo tee /etc/apt/preferences.d/01-pin-prefs 1> /dev/null
+echo -e "\n${bluebold}Create/update ${pinprefsfile}${normal}"
+echo -e "$ echo \"\${PIN_PREFS}\" | sudo tee ${pinprefsfile} 1> /dev/null"
+echo "${PIN_PREFS}" | sudo tee "${pinprefsfile}" 1> /dev/null
 fi
 
-if [[ ! -f /etc/apt/sources.list.d/01-trixie-security.sources ]]; then
-echo -e "> Create /etc/apt/sources.list.d/01-trixie-security.sources"
-echo -e "\
+SECURITY_SOURCES="\
 # Config to save at /etc/apt/sources.list.d/01-trixie-security.sources
 # This replaces /etc/apt/sources.list
 # debian repo available types: deb deb-src
@@ -358,13 +385,17 @@ URIs: https://security.debian.org/debian-security/
 Suites: trixie-security
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/trixie-security-archive-keyring.asc
-" | sudo tee /etc/apt/sources.list.d/01-trixie-security.sources 1> /dev/null
+Signed-By: ${debiansecuritykeyfile}
+"
+
+if ! cmp -s <(echo "${SECURITY_SOURCES}") "${debiansecuritysourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${debiansecuritysourcesfile}${normal}"
+echo -e "$ echo \"\${SECURITY_SOURCES}\" | sudo tee ${debiansecuritysourcesfile} 1> /dev/null"
+echo "${SECURITY_SOURCES}" | sudo tee "${debiansecuritysourcesfile}" 1> /dev/null
 fi
 
-if [[ ! -f /etc/apt/sources.list.d/02-trixie-debian.sources ]]; then
-echo -e "> Create /etc/apt/sources.list.d/02-trixie-debian.sources"
-echo -e "\
+STABLE_SOURCES="\
 # Config to save at /etc/apt/sources.list.d/02-trixie-debian.sources
 # This replaces /etc/apt/sources.list
 # debian repo available types: deb deb-src
@@ -385,13 +416,17 @@ Suites: trixie trixie-updates trixie-proposed-updates trixie-backports \
 trixie-backports-sloppy
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/trixie-debian-archive-keyring.asc\
-" | sudo tee /etc/apt/sources.list.d/02-trixie-debian.sources 1> /dev/null
+Signed-By: ${debianarchivekeyfile}
+"
+
+if ! cmp -s <(echo "${STABLE_SOURCES}") "${debianstablesourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${debianstablesourcesfile}${normal}"
+echo -e "$ echo \"\${STABLE_SOURCES}\" | sudo tee ${debianstablesourcesfile} 1> /dev/null"
+echo "${STABLE_SOURCES}" | sudo tee "${debianstablesourcesfile}" 1> /dev/null
 fi
 
-if [[ ! -f /etc/apt/sources.list.d/99-sid-debian.sources ]]; then
-echo -e "> Create /etc/apt/sources.list.d/99-sid-debian.sources"
-echo -e "\
+SID_SOURCES="\
 # Config to save at /etc/apt/sources.list.d/99-sid-debian.sources
 # This replaces /etc/apt/sources.list
 # debian repo available types: deb deb-src
@@ -406,32 +441,40 @@ URIs: https://deb.debian.org/debian/
 Suites: sid
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/trixie-debian-archive-keyring.asc\
-" | sudo tee /etc/apt/sources.list.d/99-sid-debian.sources 1> /dev/null
+Signed-By: ${debiansidsourcesfile}
+"
+
+if ! cmp -s <(echo "${SID_SOURCES}") "${debiansidsourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${debiansidsourcesfile}${normal}"
+echo -e "$ echo \"\${SID_SOURCES}\" | sudo tee ${debiansidsourcesfile} 1> /dev/null"
+echo "${SID_SOURCES}" | sudo tee "${debiansidsourcesfile}" 1> /dev/null
 fi
 
 # Install mozilla deb repo (on any arch)
 
-if [[ ! -f /etc/apt/sources.list.d/03-mozilla.sources ]]; then
-echo -e "\n${bluebold}Create /etc/apt/sources.list.d/03-mozilla.sources\
-${normal}\n"
-echo -e "\
+mozillasourcesfile="/etc/apt/sources.list.d/03-mozilla.sources"
+MOZILLA_SOURCES="\
 # Mozilla apt package repository
 Types: deb
 URIs: https://packages.mozilla.org/apt
 Suites: mozilla
 Components: main
 Architectures: ${pkgarch}
-Signed-By: /usr/share/keyrings/mozilla-archive-keyring.asc\
-" | sudo tee /etc/apt/sources.list.d/03-mozilla.sources 1> /dev/null
+Signed-By: ${mozillakeyfile}
+"
+
+if ! cmp -s <(echo "${MOZILLA_SOURCES}") "${mozillasourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${mozillasourcesfile}${normal}"
+echo -e "$ echo \"\${MOZILLA_SOURCES}\" | sudo tee ${mozillasourcesfile} 1> /dev/null"
+echo "${MOZILLA_SOURCES}" | sudo tee "${mozillasourcesfile}" 1> /dev/null
 fi
 
 # Install 1password deb repo (on amd64 arch only)
+if [[ "${pkgarch}" == "amd64" ]]; then
 
-if [[ "${pkgarch}" == "amd64" && ! -f /etc/apt/sources.list.d/1password.list ]];
-then
-echo -e "\n${bluebold}Create /etc/apt/sources.list.d/1password.list\
-${normal}\n"
+opsourcesfile="/etc/apt/sources.list.d/1password.list"
 
 # Can't use this new format until built-in 1password config updates
 : ' deb822 CONFIG
@@ -442,24 +485,29 @@ URIs: https://downloads.1password.com/linux/debian/amd64
 Suites: stable
 Components: main
 Architectures: amd64
-Signed-By: /usr/share/keyrings/1password-archive-keyring.asc
+Signed-By: ${opkeyfile}
 '
-: ' MATCHING KEY
-wget -qO- https://downloads.1password.com/linux/keys/1password.asc | \
-sudo tee /usr/share/keyrings/1password-archive-keyring.asc 1> /dev/null
-'
+OP_SOURCES="\
+deb [arch=amd64 signed-by=${opkeyfile}] \
+https://downloads.1password.com/linux/debian/amd64 stable main\
+"
 
-echo -e "deb [arch=amd64 \
-signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] \
-https://downloads.1password.com/linux/debian/amd64 stable main" | \
-sudo tee /etc/apt/sources.list.d/1password.list 1> /dev/null
+if ! cmp -s <(echo "${OP_SOURCES}") "${opsourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${opsourcesfile}${normal}"
+echo -e "$ echo \"\${OP_SOURCES}\" | sudo tee ${opsourcesfile} 1> /dev/null"
+echo "${OP_SOURCES}" | sudo tee "${opsourcesfile}" 1> /dev/null
+fi
 
 # Configure debsig policy for repos that support it
-# (currently only 1Password so can't be turned on globally)
+# (only 1Password so can't be turned on globally)
 
 onepname="1password"
-onepid=$(gpg --list-packets /usr/share/keyrings/1password-archive-keyring.gpg \
-| awk '$1=="keyid:"{print$2}' | head -n 1)
+onepid=$(
+gpg --list-packets /usr/share/keyrings/1password-archive-keyring.gpg \
+| awk '$1=="keyid:"{print$2}' \
+| head -n 1
+)
 
 if [[ ! -f "/etc/debsig/policies/${onepid}/${onepname}.pol"
    || ! -f "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
@@ -471,7 +519,8 @@ if [[ -z "${onepid}" ]]; then exit 109; fi
 # Create folder with key fingerprint
 sudo mkdir -p "/etc/debsig/policies/${onepid}"
 
-echo -e "\
+opdebsigfile="/etc/debsig/policies/${onepid}/${onepname}.pol"
+OP_DEBSIG="\
 <?xml version=\"1.0\"?>
 <!DOCTYPE Policy SYSTEM \"https://www.debian.org/debsig/1.0/policy.dtd\">
 <Policy xmlns=\"https://www.debian.org/debsig/1.0/\">
@@ -482,19 +531,30 @@ echo -e "\
     <Verification MinOptional=\"0\">
         <Required Type=\"origin\" File=\"debsig.gpg\" id=\"${onepid}\"/>
     </Verification>
-</Policy>" \
-| sudo tee "/etc/debsig/policies/${onepid}/${onepname}.pol" 1> /dev/null
+</Policy>
+"
+
+if [[ ! -f "${opdebsigfile}" ]];
+then
+echo -e "\n${bluebold}Create ${opdebsigfile}${normal}"
+echo -e "$ echo \"\${OP_DEBSIG}\" | sudo tee ${opdebsigfile} 1> /dev/null"
+echo "${OP_DEBSIG}" | sudo tee "${opdebsigfile}" 1> /dev/null
 sudo mkdir -p "/usr/share/debsig/keyrings/${onepid}"
 echo -e "\n> Create usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 sudo cp /usr/share/keyrings/1password-archive-keyring.gpg \
 "/usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 fi
+
+# Close checks for debsig files
+fi
+
+# Close check for amd64 arch only
 fi
 
 # Update apt if last `sudo apt update` more than one hour ago
 
 now=$(date +%s)
-last_update=$(stat -c %Y /var/cache/apt/pkgcache.bin 2>/dev/null || echo 0)
+last_update=$(stat -c %Y /var/lib/apt/lists/ 2>/dev/null || echo 0)
 if (( now - last_update > 3600 )); then
 echo -e "\n${cyanbold}Update apt${normal}"
 echo -e "$ sudo apt update\n"
@@ -503,8 +563,7 @@ fi
 
 # apt upgrade if needed
 
-count_upgrade_pkgs=$(apt list --upgradable 2> /dev/null | grep -c -v "^Listing")
-# Yes, apt list format is not stable but confident it will always be 1 line/pkg!
+count_upgrade_pkgs=$(apt-get -s upgrade | grep -P -c '^Inst ')
 # Thus don't want to use any alternative above!
 if (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
@@ -513,17 +572,22 @@ sudo apt upgrade -y
 fi
 
 # Check for packages and install if necessary
-# Before network test, because network test uses wget
-# Include one named terminal emulator here to prevent auto-install of other
-# terminal emulator applications by x-terminal-emulator virtual package later
-# Foot is a high-performance, wayland first/only, terminal emulator
-# Include firefox and three supporting packages
 
+# Firefox comes from chezmoi template; message to show if/when it is installed
 firefoxnotinstalled="0"
 if ! command -v firefox-devedition &> /dev/null; then
 firefoxnotinstalled="1"
 fi
 
+# PACKAGES come from chezmoi template with fixed bootstrap fallback list
+aptpkglistfile="${HOME}/.config/apt-pkg.list"
+if [[ -f "${aptpkglistfile}" ]];
+then
+mapfile -t PACKAGES < "${aptpkglistfile}"
+else
+# Include one named terminal emulator here to prevent auto-install of another
+# terminal emulator application by x-terminal-emulator virtual package later
+# Foot is a high-performance, wayland first/only, terminal emulator
 PACKAGES=(
 curl
 wget
@@ -534,21 +598,15 @@ cosign
 debsigs
 equivs
 foot
-firefox-devedition
-firefox-devedition-l10n-en-gb
-libpci3
-libegl1
 )
-DPKG_OUTPUT=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' \
-"${PACKAGES[@]}" 2> /dev/null)
-DPKG_ERROR=$?
-if [[ "${DPKG_ERROR}" -eq 0 ]]; then
-APT_REQD=$(echo "${DPKG_OUTPUT}" | awk '$1 != "installed" {print $2}')
 fi
 
-if [[ -n "${APT_REQD}" || "${DPKG_ERROR}" -ne 0 ]]; then
+dpkg-query -W "${PACKAGES[@]}" &> /dev/null
+DPKG_ERROR=$?
+
+if [[ "${DPKG_ERROR}" -ne 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo apt install -y ${PACKAGES[*]}"
+echo -e "$ sudo apt install -y ${PACKAGES[@]}"
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
@@ -694,33 +752,20 @@ apt-cache policy 1password-cli | grep Installed | awk -F ': ' '{print $2}'
 echo -e "> ${installedversion1p:-${bluebold}(none)${normal}} = 1password"
 echo -e "> ${installedver1pcli:-${bluebold}(none)${normal}} = 1password-cli"
 
-# Install 1password
+# Install 1password if needed
 
-echo -e "\n${cyanbold}Checking if 1password is upgradable${normal}"
+opinstallcheck=$(
+apt-get -s install 1password 1password-cli 2>/dev/null \
+| grep -P '^Inst 1password'
+)
 
-opguiinstallcheck=$(
-dpkg -s 1password 2> /dev/null | grep "Package: 1password"
-)
-opcliinstallcheck=$(
-dpkg -s 1password-cli 2> /dev/null | grep "Package: 1password-cli"
-)
-opupdatecheck=$(
-apt list --upgradable 2>&1 \
-| grep -vE "Use with caution in scripts|Listing" \
-| grep -o "1password" \
-| head -n 1
-)
-# Yes, apt list format is not stable but confident it will always name upgrades!
-# Thus don't want to use any alternative above!
-op_needs_signin="0"
-if [[ "${opupdatecheck}" == "1password"
-   || "${opguiinstallcheck}" != "Package: 1password"
-   || "${opcliinstallcheck}" != "Package: 1password-cli" ]]; then
+if [[ -n "${opinstallcheck}" ]]; then
 op_needs_signin="1"
-echo -e "\n${cyanbold}Installing 1password${normal}"
+echo -e "\n${cyanbold}Install/upgrade 1password${normal}"
 echo -e "$ sudo apt -y install 1password 1password-cli\n"
 sudo apt -y install 1password 1password-cli
 else
+op_needs_signin="0"
 echo -e "${greenbold}> 1password & 1password-cli are up-to-date${normal}"
 fi
 
@@ -822,17 +867,11 @@ fi
 
 # Install / Update chezmoi (on any arch)
 
-chezmoi_release_url="https://github.com/twpayne/chezmoi/releases/latest"
-chezmoi_json=$(
-curl -fsSL -H "Accept: application/json" "${chezmoi_release_url}"
+chezmoi_latestver=$(
+curl -ILsS -w "%{url_effective}" -o /dev/null \
+"https://github.com/twpayne/chezmoi/releases/latest" \
+| sed 's|.*/v\?||'
 )
-chezmoi_tag=$(
-printf '%s\n' "${chezmoi_json}" \
-| tr -s '\n' ' ' \
-| sed 's/.*"tag_name":"//' \
-| sed 's/".*//'
-)
-chezmoi_latestver=${chezmoi_tag#v}
 chezmoi_installedver=$(
 chezmoi --version 2> /dev/null | awk '{print $3}' | tr -d 'v,'
 )
@@ -945,10 +984,12 @@ if [[ -f "${op_token_in_ram_path}" ]]
     # Read the token and export it for this script's session
     OP_SESSION_my=$(cat "${op_token_in_ram_path}")
     export OP_SESSION_my
+    tokenloaded="1"
     echo -e "${greenbold}> 1password-cli session token loaded${normal}"
     
     # Branch where *NO* prior op session token exists
     else
+    tokenloaded="0"
     echo -e "${redbold}> No 1password-cli session token loaded${normal}"
     
     # Close whether token file exists condition
@@ -977,6 +1018,7 @@ if op whoami &> /dev/null
         
         # Branch where you want to create a new valid token for 1password-cli
         then
+        # No scriptused variable this time
         echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
         
         # Check whether account(s) registered in 1password-cli
