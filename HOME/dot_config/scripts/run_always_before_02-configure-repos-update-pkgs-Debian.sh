@@ -188,7 +188,7 @@ fi
 
 if [[ "${pkgarch}" == "amd64" ]]; then
 
-# gpg not asc key, in legacy location, to match built-in 1password config
+# gpg not asc key to match built-in 1password config
 # https://support.1password.com/install-linux/#debian-or-ubuntu
 opkeyfile="/usr/share/keyrings/1password-archive-keyring.gpg"
 expected1opkey="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
@@ -477,7 +477,7 @@ if [[ "${pkgarch}" == "amd64" ]]; then
 opsourcesfile="/etc/apt/sources.list.d/1password.list"
 
 # Can't use this new format until built-in 1password config updates
-: ' deb822 CONFIG
+: " deb822 CONFIG
 # /etc/apt/sources.list.d/1password.sources
 # 1password debian repository
 Types: deb
@@ -486,7 +486,7 @@ Suites: stable
 Components: main
 Architectures: amd64
 Signed-By: ${opkeyfile}
-'
+"
 OP_SOURCES="\
 deb [arch=amd64 signed-by=${opkeyfile}] \
 https://downloads.1password.com/linux/debian/amd64 stable main\
@@ -606,7 +606,7 @@ DPKG_ERROR=$?
 
 if [[ "${DPKG_ERROR}" -ne 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo apt install -y ${PACKAGES[@]}"
+echo -e "$ sudo apt install -y ${PACKAGES[*]}"
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
