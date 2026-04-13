@@ -48,7 +48,7 @@ fi
 if [[ ! -f "${debianarchivekeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
-sudo tee ${debianarchivekeyfile} 1> /dev/null"
+sudo tee \"${debianarchivekeyfile}\" 1> /dev/null"
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
 sudo tee "${debianarchivekeyfile}" 1> /dev/null
 fi
@@ -56,7 +56,7 @@ fi
 if [[ ! -f "${debiansecuritykeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
-sudo tee ${debiansecuritykeyfile} 1> /dev/null"
+sudo tee \"${debiansecuritykeyfile}\" 1> /dev/null"
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
 sudo tee "${debiansecuritykeyfile}" 1> /dev/null
 fi
@@ -64,7 +64,7 @@ fi
 if [[ ! -f "${debianreleasekeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/release-13.asc | \
-sudo tee ${debianreleasekeyfile} 1> /dev/null"
+sudo tee \"${debianreleasekeyfile}\" 1> /dev/null"
 curl -fsSL https://ftp-master.debian.org/keys/release-13.asc | \
 sudo tee "${debianreleasekeyfile}" 1> /dev/null
 fi
@@ -279,7 +279,7 @@ if [[ "${actualopkey}" != "${expected1opkey}" ]];
 then
 echo -e "\n${cyanbold}Add 1password signing key${normal}"
 echo -e "curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
-| sudo gpg --yes --no-default-keyring --dearmor --output ${opkeyfile}"
+| sudo gpg --yes --no-default-keyring --dearmor --output \"${opkeyfile}\""
 curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
 | sudo gpg --yes --no-default-keyring --dearmor --output "${opkeyfile}"
 
@@ -324,7 +324,7 @@ fi
 # Remove legacy single sources file
 
 if [[ -f "${sourceslistfile}" ]]; then
-echo -e "$ sudo rm ${sourceslistfile}"
+echo -e "$ sudo rm \"${sourceslistfile}\""
 sudo rm "${sourceslistfile}"
 fi
 
@@ -446,7 +446,7 @@ ${WSL_PREFS}
 if ! cmp -s <(echo "${PIN_PREFS}") "${pinprefsfile}";
 then
 echo -e "\n${bluebold}Create/update ${pinprefsfile}${normal}"
-echo -e "$ echo \"\${PIN_PREFS}\" | sudo tee ${pinprefsfile} 1> /dev/null"
+echo -e "$ echo \"\${PIN_PREFS}\" | sudo tee \"${pinprefsfile}\" 1> /dev/null"
 echo "${PIN_PREFS}" | sudo tee "${pinprefsfile}" 1> /dev/null
 fi
 
@@ -468,7 +468,7 @@ Signed-By: ${debiansecuritykeyfile}
 if ! cmp -s <(echo "${SECURITY_SOURCES}") "${debiansecuritysourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${debiansecuritysourcesfile}${normal}"
-echo -e "$ echo \"\${SECURITY_SOURCES}\" | sudo tee ${debiansecuritysourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${SECURITY_SOURCES}\" | sudo tee \"${debiansecuritysourcesfile}\" 1> /dev/null"
 echo "${SECURITY_SOURCES}" | sudo tee "${debiansecuritysourcesfile}" 1> /dev/null
 fi
 
@@ -499,7 +499,7 @@ Signed-By: ${debianarchivekeyfile}
 if ! cmp -s <(echo "${STABLE_SOURCES}") "${debianstablesourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${debianstablesourcesfile}${normal}"
-echo -e "$ echo \"\${STABLE_SOURCES}\" | sudo tee ${debianstablesourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${STABLE_SOURCES}\" | sudo tee \"${debianstablesourcesfile}\" 1> /dev/null"
 echo "${STABLE_SOURCES}" | sudo tee "${debianstablesourcesfile}" 1> /dev/null
 fi
 
@@ -524,7 +524,7 @@ Signed-By: ${debianarchivekeyfile}
 if ! cmp -s <(echo "${SID_SOURCES}") "${debiansidsourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${debiansidsourcesfile}${normal}"
-echo -e "$ echo \"\${SID_SOURCES}\" | sudo tee ${debiansidsourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${SID_SOURCES}\" | sudo tee \"${debiansidsourcesfile}\" 1> /dev/null"
 echo "${SID_SOURCES}" | sudo tee "${debiansidsourcesfile}" 1> /dev/null
 fi
 
@@ -544,7 +544,7 @@ Signed-By: ${mozillakeyfile}
 if ! cmp -s <(echo "${MOZILLA_SOURCES}") "${mozillasourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${mozillasourcesfile}${normal}"
-echo -e "$ echo \"\${MOZILLA_SOURCES}\" | sudo tee ${mozillasourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${MOZILLA_SOURCES}\" | sudo tee \"${mozillasourcesfile}\" 1> /dev/null"
 echo "${MOZILLA_SOURCES}" | sudo tee "${mozillasourcesfile}" 1> /dev/null
 fi
 
@@ -564,7 +564,7 @@ Signed-By: ${nordvpnkeyfile}
 if ! cmp -s <(echo "${NORDVPN_SOURCES}") "${nordvpnsourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${nordvpnsourcesfile}${normal}"
-echo -e "$ echo \"\${NORDVPN_SOURCES}\" | sudo tee ${nordvpnsourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${NORDVPN_SOURCES}\" | sudo tee \"${nordvpnsourcesfile}\" 1> /dev/null"
 echo "${NORDVPN_SOURCES}" | sudo tee "${nordvpnsourcesfile}" 1> /dev/null
 fi
 
@@ -592,7 +592,7 @@ https://downloads.1password.com/linux/debian/amd64 stable main\
 if ! cmp -s <(echo "${OP_SOURCES}") "${opsourcesfile}";
 then
 echo -e "\n${bluebold}Create/update ${opsourcesfile}${normal}"
-echo -e "$ echo \"\${OP_SOURCES}\" | sudo tee ${opsourcesfile} 1> /dev/null"
+echo -e "$ echo \"\${OP_SOURCES}\" | sudo tee \"${opsourcesfile}\" 1> /dev/null"
 echo "${OP_SOURCES}" | sudo tee "${opsourcesfile}" 1> /dev/null
 fi
 
@@ -634,7 +634,7 @@ OP_DEBSIG="\
 if [[ ! -f "${opdebsigfile}" ]];
 then
 echo -e "\n${bluebold}Create ${opdebsigfile}${normal}"
-echo -e "$ echo \"\${OP_DEBSIG}\" | sudo tee ${opdebsigfile} 1> /dev/null"
+echo -e "$ echo \"\${OP_DEBSIG}\" | sudo tee \"${opdebsigfile}\" 1> /dev/null"
 echo "${OP_DEBSIG}" | sudo tee "${opdebsigfile}" 1> /dev/null
 sudo mkdir -p "/usr/share/debsig/keyrings/${onepid}"
 echo -e "\n> Create usr/share/debsig/keyrings/${onepid}/debsig.gpg"
@@ -704,10 +704,12 @@ foot
 )
 fi
 
-dpkg-query -W "${PACKAGES[@]}" &> /dev/null
-DPKG_ERROR=$?
+APT_LINE_COUNT=$(
+apt-get -s install "${PACKAGES[@]}" 2>/dev/null \
+| grep -cE '^(Inst|Conf)\b'
+)
 
-if [[ "${DPKG_ERROR}" -ne 0 ]]; then
+if [[ "${APT_LINE_COUNT}" -gt 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
 echo -e "$ sudo apt install -y ${PACKAGES[*]}"
 sudo apt install -y "${PACKAGES[@]}"
@@ -733,7 +735,7 @@ fi
 
 if (( nordvpnconfigneeded == 3 )); then
 echo -e "\n${cyanbold}Configuring nordvpn${normal}"
-echo -e "$ sudo usermod -aG nordvpn ${USER}"
+echo -e "$ sudo usermod -aG nordvpn \"${USER}\""
 sudo usermod -aG nordvpn "${USER}"
 fi
 
@@ -1034,10 +1036,10 @@ if cosign verify-blob \
     echo -e "> Verifying deb package integrity"
     
     # Check the sha256 of the deb pkg
-    echo -e "$ cd ${tmp_dir} && sha256sum --ignore-missing -c ${chk_file}"
+    echo -e "$ cd \"${tmp_dir}\" && sha256sum --ignore-missing -c \"${chk_file}\""
     if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
         echo -e "${greenbold} ✅ deb package integrity verified${normal}"
-        echo -e "$ sudo dpkg -i ${tmp_dir}/${deb_file}"
+        echo -e "$ sudo dpkg -i \"${tmp_dir}/${deb_file}\""
         sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
