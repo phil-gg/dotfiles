@@ -33,6 +33,42 @@ op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
+debianarchivekeyfile="/usr/share/keyrings/debian-archive-trixie-automatic.asc"
+debiansecuritykeyfile="/usr/share/keyrings/debian-archive-trixie-security-automatic.asc"
+debianreleasekeyfile="/usr/share/keyrings/debian-archive-trixie-stable.asc"
+
+# Get debian package keys
+
+if [[ ! -f "${debianarchivekeyfile}"
+   || ! -f "${debiansecuritykeyfile}"
+   || ! -f "${debianreleasekeyfile}" ]]; then
+echo -e "\n${cyanbold}Downloading debian signing keys${normal}"
+fi
+
+if [[ ! -f "${debianarchivekeyfile}" ]]; then
+echo -e "$ \
+curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
+sudo tee ${debianarchivekeyfile} 1> /dev/null"
+curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
+sudo tee "${debianarchivekeyfile}" 1> /dev/null
+fi
+
+if [[ ! -f "${debiansecuritykeyfile}" ]]; then
+echo -e "$ \
+curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
+sudo tee ${debiansecuritykeyfile} 1> /dev/null"
+curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
+sudo tee "${debiansecuritykeyfile}" 1> /dev/null
+fi
+
+if [[ ! -f "${debianreleasekeyfile}" ]]; then
+echo -e "$ \
+curl -fsSL https://ftp-master.debian.org/keys/release-13.asc | \
+sudo tee ${debianreleasekeyfile} 1> /dev/null"
+curl -fsSL https://ftp-master.debian.org/keys/release-13.asc | \
+sudo tee "${debianreleasekeyfile}" 1> /dev/null
+fi
+
 # Check debian package keys
 
 echo -e "\n${cyanbold}Checking debian package signing keys${normal}"
@@ -40,10 +76,6 @@ echo -e "\n${cyanbold}Checking debian package signing keys${normal}"
 # Manually find signing keys announcement when updating from Trixie (like this):
 # https://lists.debian.org/debian-devel-announce/2025/04/msg00001.html
 # (and https://ftp-master.debian.org/keys.html for release key)
-
-debianarchivekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-automatic.asc"
-debiansecuritykeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-security-automatic.asc"
-debianreleasekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-stable.asc"
 
 expectedsha256trixiearchive="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
 expectedsha256trixiesecurity="844c07d242db37f283afab9d5531270a0550841e90f9f1a9c3bd599722b808b7"
@@ -147,7 +179,7 @@ fi
 
 # Add mozilla package key (on any arch)
 
-mozillakeyfile="/etc/apt/trusted.gpg.d/mozilla-repo-signing-key.asc"
+mozillakeyfile="/usr/share/keyrings/mozilla-repo-signing-key.asc"
 expectedmozillakey="35BAA0B33E9EB396F59CA838C0BA5CE6DC6315A3"
 
 actualmozillakey=$(
@@ -187,7 +219,7 @@ fi
 
 # Add nordvpn package key (on any arch)
 
-nordvpnkeyfile="/etc/apt/trusted.gpg.d/nordvpn-repo-signing-key.asc"
+nordvpnkeyfile="/usr/share/keyrings/nordvpn-repo-signing-key.asc"
 expectednordvpnkey="BC5480EFEC5C081CE5BCFBE26B219E535C964CA1"
 
 actualnordvpnkey=$(
@@ -299,16 +331,13 @@ fi
 # Remove legacy apt keys
 
 legacy_key_file_count=$(
-sudo find /etc/apt/trusted.gpg.d/ -type f \
-\( -name "*-bookworm-*.asc" -o -name "*-bullseye-*.asc" \) 2>/dev/null \
+sudo find /etc/apt/trusted.gpg.d/ -type f 2>/dev/null \
 | wc -l
 )
 if [[ "${legacy_key_file_count}" -gt 0 ]]; then
 echo -e "\n${bluebold}Found ${legacy_key_file_count} legacy key(s)${normal}"
-echo -e "$ sudo find /etc/apt/trusted.gpg.d/ -type f \
-\( -name \"*-bookworm-*.asc\" -o -name \"*-bullseye-*.asc\" \) -delete"
-sudo find /etc/apt/trusted.gpg.d/ -type f \
-\( -name "*-bookworm-*.asc" -o -name "*-bullseye-*.asc" \) -delete
+echo -e "$ sudo find /etc/apt/trusted.gpg.d/ -type f -delete"
+sudo find /etc/apt/trusted.gpg.d/ -type f -delete
 fi
 
 # Set apt pinning preferences
@@ -644,7 +673,13 @@ fi
 # Firefox comes from chezmoi template; message to show if/when it is installed
 firefoxnotinstalled="0"
 if ! command -v firefox-devedition &> /dev/null; then
-firefoxnotinstalled="1"
+(( firefoxnotinstalled += 1 ))
+fi
+
+# nordvpn comes from chezmoi template; config required to use this software
+nordvpnconfigneeded="0"
+if ! command -v nordvpn &> /dev/null; then
+(( nordvpnconfigneeded += 1 ))
 fi
 
 # PACKAGES come from chezmoi template with fixed bootstrap fallback list
@@ -678,12 +713,28 @@ echo -e "$ sudo apt install -y ${PACKAGES[*]}"
 sudo apt install -y "${PACKAGES[@]}"
 fi
 
-if (( firefoxnotinstalled == 1 )) && [[ -d "/run/WSL" ]]; then
-echo -e "\n${redbold}Restart needed to prevent firefox errors about \
-org.a11y.Bus${normal}
+# Firefox comes from chezmoi template; message to show if/when it is installed
+if command -v firefox-devedition &> /dev/null; then
+(( firefoxnotinstalled += 2 ))
+fi
+
+# nordvpn comes from chezmoi template; config required to use this software
+if command -v nordvpn &> /dev/null; then
+(( nordvpnconfigneeded += 2 ))
+fi
+
+if (( firefoxnotinstalled == 3 )) && [[ -d "/run/WSL" ]]; then
+echo -e "
+${redbold}Restart needed to prevent firefox errors about org.a11y.Bus${normal}
 Please run:
 
 wsl.exe --shutdown"
+fi
+
+if (( nordvpnconfigneeded == 3 )); then
+echo -e "\n${cyanbold}Configuring nordvpn${normal}"
+echo -e "$ sudo usermod -aG nordvpn ${USER}"
+sudo usermod -aG nordvpn "${USER}"
 fi
 
 # Get latest 1password versions
