@@ -737,6 +737,12 @@ if (( nordvpnconfigneeded == 3 )); then
 echo -e "\n${cyanbold}Configuring nordvpn${normal}"
 echo -e "$ sudo usermod -aG nordvpn \"${USER}\""
 sudo usermod -aG nordvpn "${USER}"
+echo -e "
+${redbold}Restart needed for nordvpn to work${normal}
+Please run one of:
+sudo reboot
+OR
+wsl.exe --shutdown"
 fi
 
 # Get latest 1password versions
