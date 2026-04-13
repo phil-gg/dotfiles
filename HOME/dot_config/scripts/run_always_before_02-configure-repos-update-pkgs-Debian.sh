@@ -44,13 +44,13 @@ debianarchivekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-stable.asc"
 debiansecuritykeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-security-automatic.asc"
 debianreleasekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-automatic.asc"
 
-expectedsha256trixiearchive="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
+expectedsha256trixiearchive="4d097bb93f83d731f475c5b92a0c2fcf108cfce1d4932792fca72d00b48d198b"
 expectedsha256trixiesecurity="844c07d242db37f283afab9d5531270a0550841e90f9f1a9c3bd599722b808b7"
-expectedsha256trixierelease="4d097bb93f83d731f475c5b92a0c2fcf108cfce1d4932792fca72d00b48d198b"
+expectedsha256trixierelease="6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
 
-expectedkeytrixiearchive="04B54C3CDCA79751B16BC6B5225629DF75B188BD"
+expectedkeytrixiearchive="41587F7DB8C774BCCF131416762F67A0B2C39DE4"
 expectedkeytrixiesecurity="5E04A1E3223A19A20706E20F9904613D4CCE68C6"
-expectedkeytrixierelease="41587F7DB8C774BCCF131416762F67A0B2C39DE4"
+expectedkeytrixierelease="04B54C3CDCA79751B16BC6B5225629DF75B188BD"
 
 actualsha256trixiearchive=$(
 sha256sum "${debianarchivekeyfile}" 2> /dev/null \
