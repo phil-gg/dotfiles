@@ -489,7 +489,7 @@ URIs: https://deb.debian.org/debian/
 Suites: sid
 Components: main contrib non-free-firmware non-free
 Architectures: ${pkgarch}
-Signed-By: ${debiansidsourcesfile}
+Signed-By: ${debianarchivekeyfile}
 "
 
 if ! cmp -s <(echo "${SID_SOURCES}") "${debiansidsourcesfile}";
