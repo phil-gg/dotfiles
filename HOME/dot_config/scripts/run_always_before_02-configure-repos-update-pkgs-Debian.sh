@@ -39,6 +39,7 @@ echo -e "\n${cyanbold}Checking debian package signing keys${normal}"
 
 # Manually find signing keys announcement when updating from Trixie (like this):
 # https://lists.debian.org/debian-devel-announce/2025/04/msg00001.html
+# (and https://ftp-master.debian.org/keys.html for release key)
 
 debianarchivekeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-automatic.asc"
 debiansecuritykeyfile="/etc/apt/trusted.gpg.d/debian-archive-trixie-security-automatic.asc"
