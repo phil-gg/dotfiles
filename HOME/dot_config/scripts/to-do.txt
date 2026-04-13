@@ -1,5 +1,3 @@
-Move to heredocs instead of multi-line echo
-
 import script 03 onwards from configure-wsl2
 look at to-do from configure-wsl2
 
