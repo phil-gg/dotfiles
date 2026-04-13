@@ -185,6 +185,48 @@ echo -e "${redbold} ⛔ ${actualmozillakey}
 exit 107
 fi
 
+# Add nordvpn package key (on any arch)
+
+nordvpnkeyfile="/etc/apt/trusted.gpg.d/nordvpn-repo-signing-key.asc"
+expectednordvpnkey="BC5480EFEC5C081CE5BCFBE26B219E535C964CA1"
+
+actualnordvpnkey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${nordvpnkeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+
+if [[ "${actualnordvpnkey}" != "${expectednordvpnkey}" ]];
+then
+echo -e "\n${cyanbold}Add nordvpn signing key${normal}"
+echo -e "$ curl -fsSL \
+https://repo.nordvpn.com/deb/nordvpn/debian/dists/stable/public_key.asc \
+| sudo tee \"${nordvpnkeyfile}\" 1> /dev/null"
+curl -fsSL \
+https://repo.nordvpn.com/deb/nordvpn/debian/dists/stable/public_key.asc \
+| sudo tee "${nordvpnkeyfile}" 1> /dev/null
+
+actualnordvpnkey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${nordvpnkeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+
+fi
+
+echo -e "\n 🔑 ${nordvpnkeyfile}"
+echo -e " 🔐 ${expectednordvpnkey}"
+if [[ "${expectednordvpnkey}" == "${actualnordvpnkey}" ]];
+then
+echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
+else
+echo -e "${redbold} ⛔ ${actualnordvpnkey}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
+exit 108
+fi
+
 # Add 1password package key (on amd64 arch only)
 
 if [[ "${pkgarch}" == "amd64" ]]; then
@@ -226,7 +268,7 @@ echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
 echo -e "${redbold} ⛔ ${actualopkey}
  ⚠️ WARNING: unexpected fingerprint${normal}\n"
-exit 108
+exit 109
 fi
 
 fi
@@ -340,6 +382,11 @@ Pin-Priority: 970
 Explanation: Prioritise mozilla repo just less than Trixie/Stable
 Package: *
 Pin: origin \"packages.mozilla.org\"
+Pin-Priority: 970
+
+Explanation: Prioritise nordvpn repo just less than Trixie/Stable
+Package: *
+Pin: origin \"repo.nordvpn.com\"
 Pin-Priority: 970
 
 Explanation: Add any more third-party repos just above here
@@ -472,6 +519,26 @@ echo -e "$ echo \"\${MOZILLA_SOURCES}\" | sudo tee ${mozillasourcesfile} 1> /dev
 echo "${MOZILLA_SOURCES}" | sudo tee "${mozillasourcesfile}" 1> /dev/null
 fi
 
+# Install nordvpn deb repo (on any arch)
+
+nordvpnsourcesfile="/etc/apt/sources.list.d/04-nordvpn.sources"
+NORDVPN_SOURCES="\
+# Nordvpn apt package repository
+Types: deb
+URIs: https://repo.nordvpn.com/deb/nordvpn/debian/
+Suites: stable
+Components: main
+Architectures: ${pkgarch}
+Signed-By: ${nordvpnkeyfile}
+"
+
+if ! cmp -s <(echo "${NORDVPN_SOURCES}") "${nordvpnsourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${nordvpnsourcesfile}${normal}"
+echo -e "$ echo \"\${NORDVPN_SOURCES}\" | sudo tee ${nordvpnsourcesfile} 1> /dev/null"
+echo "${NORDVPN_SOURCES}" | sudo tee "${nordvpnsourcesfile}" 1> /dev/null
+fi
+
 # Install 1password deb repo (on amd64 arch only)
 if [[ "${pkgarch}" == "amd64" ]]; then
 
@@ -516,7 +583,7 @@ echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}\n"
 echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg\n"
 
 # Catch errors with 1password key
-if [[ -z "${onepid}" ]]; then exit 109; fi
+if [[ -z "${onepid}" ]]; then exit 110; fi
 # Create folder with key fingerprint
 sudo mkdir -p "/etc/debsig/policies/${onepid}"
 
@@ -846,7 +913,7 @@ fi
 # echo -e "$ cd ~/git/${github_username}/${github_project}/tmp"
 # cd "${HOME}/git/${github_username}/${github_project}/tmp" 2> /dev/null \
 # || { echo -e "${redbold}> Failed to change directory, exiting${normal}\n"\
-# ; exit 110; }
+# ; exit 111; }
 # 
 # # get latest 1password amd64 deb package
 # 
@@ -923,12 +990,12 @@ if cosign verify-blob \
         sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
-        exit 110
+        exit 111
     # Close sha256sum check
     fi
 else
     echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
-    exit 111
+    exit 112
 # Close cosign check
 fi
 
