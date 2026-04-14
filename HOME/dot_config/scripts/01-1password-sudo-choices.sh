@@ -58,7 +58,7 @@ if [[ -f "${op_token_in_ram_path}" ]]
     tokenloaded="0"
     echo -e "${redbold}> No 1password-cli session token loaded${normal}"
     
-    # Close whether token file exists condition
+# Close whether token file exists condition
 fi
 
 # Now check whether you have a valid 1password-cli session
