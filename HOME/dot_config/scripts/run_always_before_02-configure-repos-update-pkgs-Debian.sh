@@ -1233,7 +1233,7 @@ cp "$0" "${HOME}/.config/scripts/${local_filename}"
 echo -e "\n${bluebold}${local_filename} run at${normal}"
 echo -e "> ${runtime}\n"
 mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
-echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
+echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 
 ################################################################################
