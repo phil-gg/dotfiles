@@ -1,0 +1,168 @@
+{{- $gitConfig := "" -}}
+{{- if lookPath "git" -}}
+{{- $gitConfig = output "git" "config" "--list" -}}
+{{- end -}}
+{{- $hasMainBranch := regexMatch "(?m)^init\\.defaultbranch=main\\r?$" $gitConfig -}}
+{{- $hasUserName := regexMatch "(?m)^user\\.name=.+" $gitConfig -}}
+{{- $hasUserEmail := regexMatch "(?m)^user\\.email=.+" $gitConfig -}}
+{{- $hasCredentialHelper := regexMatch "(?m)^credential\\." $gitConfig -}}
+{{- if not (and $hasMainBranch $hasUserName $hasUserEmail $hasCredentialHelper) -}} 
+
+#!/bin/bash
+
+################################################################################
+# Configure git on Debian in an idempotent manner.
+#
+# See `#term-Idempotency` definition at:
+# https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html
+#
+# This shell script attempts to comply with:
+# https://google.github.io/styleguide/shellguide.html
+#
+# Should (hopefully, mostly) pass analysis with ShellCheck, too:
+# https://www.shellcheck.net
+################################################################################
+
+# Set non-sensitive variables
+# NOTE: Sensitive variables are further below
+
+github_username="phil-gg"
+github_project="dotfiles"
+github_branch="main"
+git_filename="run_always_before_03-configure-git.sh.tmpl"
+local_filename="03-configure-git.sh"
+runtime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+normal=$(printf '\033[0m')
+redbold=$(printf '\033[91;1m')
+greenbold=$(printf '\033[92;1m')
+cyanbold=$(printf '\033[96;1m')
+bluebold=$(printf '\033[94;1m')
+op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
+
+# Now running `${local_filename}`
+
+echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
+
+# Manage 1password-cli signin
+
+echo -e "\n${cyanbold}Manage 1password-cli authentication (op signin)${normal}"
+
+# Check if the token file exists
+if [[ -f "${op_token_in_ram_path}" ]]
+    # Branch where prior op session token exists
+    then
+    # Read the token and export it for this script's session
+    OP_SESSION_my=$(cat "${op_token_in_ram_path}")
+    export OP_SESSION_my
+    echo -e "${greenbold}> 1password-cli session token loaded${normal}"
+    # Now check whether you have a valid 1password-cli session
+    if op whoami &> /dev/null
+        # Branch where token is valid
+        then
+        echo -e "${greenbold}> op signin complete${normal}"
+    # Close check whether you have a valid 1password-cli session
+    fi
+    # Branch with invalid or non-existent op session token
+    else
+    echo -e "\
+${redbold}> No valid op cli session token at ${normal}${op_token_in_ram_path}
+${redbold}> Warm op cli with script 01 to configure git.${normal} Exiting…"
+    # Exit with zero so that remaining chezmoi scripts still run
+    exit 0
+# Close whether token file exists condition
+fi
+# Set sensitive variables
+
+echo -e "\n${cyanbold}Read secrets from 1password-cli${normal}"
+
+GH_TOKEN="$(op read "op://\
+sgsub5ksyk2khnrzflt4pyziru/\
+z7x5d5r2hdnytyuulwq57lsixa/\
+ucz4cqku2w7ctc3yseteme2boe")"
+
+echo -e "> GH_TOKEN=$(echo \
+"${GH_TOKEN}" | head -c8)…$(echo "${GH_TOKEN}" | tail -c5)"
+
+GH_EMAIL="$(op read "op://\
+sgsub5ksyk2khnrzflt4pyziru/\
+z7x5d5r2hdnytyuulwq57lsixa/\
+4w3e6rvo5yag5muvhg3tm5oofi")"
+
+echo -e "> GH_EMAIL=${GH_EMAIL}"
+
+GH_USERN="$(op read "op://\
+sgsub5ksyk2khnrzflt4pyziru/\
+z7x5d5r2hdnytyuulwq57lsixa/\
+username")"
+
+echo -e "> GH_USERN=${GH_USERN}"
+
+# Check for presence of git config
+
+echo -e "\n${cyanbold}git config checks${normal}"
+
+branchcheck=$(git config --global init.defaultbranch)
+branchvalue="main"
+if [ "${branchcheck}" != "${branchvalue}" ];
+then
+echo -e "\n$ git config --global init.defaultbranch ${branchvalue}"
+git config --global init.defaultbranch ${branchvalue}
+fi
+
+emailcheck=$(git config --global user.email)
+if [ "${emailcheck}" != "${GH_EMAIL}" ];
+then
+echo -e "\n$ git config --global user.email \"${GH_EMAIL}\""
+git config --global user.email "${GH_EMAIL}"
+fi
+
+userncheck=$(git config --global user.name)
+if [ "${userncheck}" != "${GH_USERN}" ];
+then
+echo -e "\n$ git config --global user.name \"${GH_USERN}\""
+git config --global user.name "${GH_USERN}"
+fi
+
+authcheck=$(git config --list | grep -oF "/usr/bin/gh" | sort -u)
+authvalue="/usr/bin/gh"
+if [ "${authcheck}" != "${authvalue}" ];
+then
+echo -e "\n$ echo \"\${GH_TOKEN}\" | gh auth login --with-token --hostname \
+github.com && gh auth setup-git"
+echo "${GH_TOKEN}" | gh auth login --with-token --hostname github.com && \
+gh auth setup-git
+fi
+
+echo -e "\n$ git config --list\n"
+git config --list
+
+# Log this latest `Config` operation and display runtime
+
+echo -e "\n${bluebold}${filename} run at${normal}"
+echo -e "> ${runtime}"
+mkdir -p "${HOME}/git/${github_username}/${github_project}"
+echo -e "FILE: ${filename} | EXEC-TIME: ${runtime}" \
+>> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+
+# Verify gh auth login
+
+echo -e "\n${cyanbold}Verify gh auth login${normal}"
+echo -e "\n$ gh auth status\n"
+gh auth status
+# shellcheck disable=SC2181
+if [ $? -ne 0 ]; then
+echo -e "\n${redbold}> Failed to authenticate GitHub CLI, exiting${normal}\n"
+# Exit with zero so that remaining chezmoi scripts still run
+exit 0
+else
+echo -e "\n${greenbold}> git & gh configured with GitHub credentials${normal}"
+fi
+
+################################################################################
+#
+# Line wrap ruler
+#
+#   5   10   15   20   25   30   35   40   45   50   55   60   65   70   75   80
+#
+################################################################################
+{{- end -}}
