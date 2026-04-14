@@ -136,12 +136,19 @@ fi
 echo -e "\n$ git config --list\n"
 git config --list
 
+# Replicate the fully evaluated script to your target directory
+
+echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
+mkdir -p "${HOME}/.config/scripts"
+echo -e "$ cp \"\$0\" \"~/.config/scripts/${local_filename}\""
+cp "$0" "${HOME}/.config/scripts/${local_filename}"
+
 # Log this latest `Config` operation and display runtime
 
-echo -e "\n${bluebold}${filename} run at${normal}"
-echo -e "> ${runtime}"
-mkdir -p "${HOME}/git/${github_username}/${github_project}"
-echo -e "FILE: ${filename} | EXEC-TIME: ${runtime}" \
+echo -e "\n${bluebold}${local_filename} run at${normal}"
+echo -e "> ${runtime}\n"
+mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
+echo -e "FILE: ${local_filename} | EXEC-TIME: ${runtime}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 
 # Verify gh auth login
@@ -155,7 +162,7 @@ echo -e "\n${redbold}> Failed to authenticate GitHub CLI, exiting${normal}\n"
 # Exit with zero so that remaining chezmoi scripts still run
 exit 0
 else
-echo -e "\n${greenbold}> git & gh configured with GitHub credentials${normal}"
+echo -e "\n${greenbold}> git & gh configured with GitHub credentials${normal}\n"
 fi
 
 ################################################################################
