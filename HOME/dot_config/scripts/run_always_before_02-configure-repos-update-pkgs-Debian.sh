@@ -683,7 +683,7 @@ if ! command -v nordvpn &> /dev/null; then
 fi
 
 # PACKAGES come from chezmoi template with fixed bootstrap fallback list
-aptpkglistfile="${HOME}/.config/apt-pkg.list"
+aptpkglistfile="${HOME}/.config/scripts/apt-pkg.list"
 if [[ -f "${aptpkglistfile}" ]];
 then
 mapfile -t PACKAGES < "${aptpkglistfile}"
