@@ -705,8 +705,8 @@ apt-get -s install "${PACKAGES[@]}" 2>/dev/null \
 
 if [[ "${APT_LINE_COUNT}" -gt 0 ]]; then
 echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo apt install -y ${PACKAGES[*]}"
-sudo apt install -y "${PACKAGES[@]}"
+echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}"
+sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
 fi
 
 # Firefox comes from chezmoi template; message to show if/when it is installed
