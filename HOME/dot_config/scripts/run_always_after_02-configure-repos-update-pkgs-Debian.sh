@@ -643,13 +643,17 @@ fi
 fi
 
 # Update apt if last `sudo apt update` more than one hour ago
+# touch the lock file to capture timestamp of updates with no file changes
 
 now="$(date +%s)"
-last_update="$(stat -c %Y /var/lib/apt/lists/ 2>/dev/null || echo 0)"
-if (( now - last_update > 3600 )); then
+last_update="$(
+find /var/lib/apt/lists/ -maxdepth 1 -type f -printf '%Ts\n' 2>/dev/null |
+sort -nr | head -n 1
+)"
+if (( now - ${last_update:-0} > 3600 )); then
 echo -e "\n${cyanbold}Update apt${normal}"
 echo -e "$ sudo apt update\n"
-sudo apt update
+sudo apt update && sudo touch /var/lib/apt/lists/lock
 fi
 
 # apt upgrade if needed
