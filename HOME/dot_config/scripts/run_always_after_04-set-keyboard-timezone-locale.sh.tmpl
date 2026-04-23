@@ -197,6 +197,8 @@ if [[ "${changes_made}" == "1" ]]; then
 echo -e "\n${cyanbold}Running locale-gen${normal}"
 echo -e "$ sudo locale-gen\n"
 sudo locale-gen
+echo -e "$ sudo update-locale\n"
+sudo update-locale
 echo -e "\n$ locale -a\n"
 locale -a
 echo -e "\n$ sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales\n"
