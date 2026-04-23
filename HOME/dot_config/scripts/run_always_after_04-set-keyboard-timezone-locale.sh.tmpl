@@ -34,6 +34,44 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
 # Keyboard configuration
 
+# Work around keymaps packaging issue as documented here:
+# https://www.claudiokuenzler.com/blog/1257/how-to-fix-missing-keymaps-debian-ubuntu-localectl-failed-read-list
+
+if ! localectl list-keymaps &> /dev/null; then
+
+echo -e "\n${cyanbold}Installing keymaps${normal}"
+
+kbd_github="https://github.com/legionus/kbd/releases"
+kbd_version="$(
+curl -ILsS -w "%{url_effective}" -o /dev/null "${kbd_github}/latest" \
+| sed 's|.*/v\?||'
+)"
+kbd_releasefile="kbd-${kbd_version}.tar.xz"
+kbd_download="${kbd_github}/download/v${kbd_version}/${kbd_releasefile}"
+
+tempdir="${HOME}/git/${github_username}/${github_project}/tmp"
+destdir="/usr/share/keymaps"
+
+echo -e "$ sudo mkdir -p ${destdir}"
+sudo mkdir -p "${destdir}"
+
+echo -e "$ sudo mkdir -p ${tempdir}"
+sudo mkdir -p "${tempdir}"
+
+echo -e "$ curl -fsSL ${kbd_download} -o ${tempdir}/${kbd_releasefile}"
+curl -fsSL "${kbd_download}" -o "${tempdir}/${kbd_releasefile}"
+
+echo -e "$ tar -xf ${tempdir}/${kbd_releasefile} -C ${tempdir}"
+tar -xf "${tempdir}/${kbd_releasefile}" -C "${tempdir}"
+
+echo -e "$ cp -Rp ${tempdir}/kbd-${kbd_version}/data/keymaps/* ${destdir}"
+sudo cp -Rp "${tempdir}/kbd-${kbd_version}/data/keymaps/"* "${destdir}"
+
+echo -e "$ rm -rf ${tempdir}"
+rm -rf "${tempdir}"
+
+fi
+
 echo -e "\n${cyanbold}Configure keyboard layout${normal}"
 echo -e "$ localectl list-keymaps | grep -i UK\n"
 localectl list-keymaps | grep -i UK
