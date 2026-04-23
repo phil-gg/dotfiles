@@ -1,10 +1,13 @@
-import script 03 onwards from configure-wsl2
+Script 05-test-keyboard-timezone-locale.sh
+Scripts for plow / KDE Plasma & firefox
+
+invisible cursor theme (on WSL only)
 look at to-do from configure-wsl2
 
 https://github.com/dotphiles/dotphiles/blob/master/wget/wgetrc
 
 Terminal colour scheme
 https://www.sap.com/design-system/fiori-design-web/foundations/visual/colors/colors
-Foot config
+qterminal config
 
 https://www.binarylane.com.au/vps-hosting/linux-vps
