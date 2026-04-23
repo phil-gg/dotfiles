@@ -37,7 +37,7 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 # Work around keymaps packaging issue as documented here:
 # https://www.claudiokuenzler.com/blog/1257/how-to-fix-missing-keymaps-debian-ubuntu-localectl-failed-read-list
 
-if ! localectl list-keymaps &> /dev/null; then
+if ! localectl list-keymaps 2> /dev/null | grep -iq UK; then
 
 echo -e "\n${cyanbold}Installing keymaps${normal}"
 
@@ -71,9 +71,10 @@ sudo cp -Rp "${tempdir}/kbd-${kbd_version}/data/keymaps/"* "${destdir}"
 echo -e "$ rm -rf ${tempdir}"
 rm -rf "${tempdir}"
 
+else
+echo -e "\n${cyanbold}Listing installed UK keymaps${normal}"
 fi
 
-echo -e "\n${cyanbold}Configure keyboard layout${normal}"
 echo -e "$ localectl list-keymaps | grep -i UK\n"
 localectl list-keymaps | grep -i UK
 
@@ -81,12 +82,21 @@ localectl list-keymaps | grep -i UK
 # https://manpages.debian.org/trixie/keyboard-configuration/keyboard.5.en.html
 # Note more customisation available with KMAP variable & loadkeys
 
-if ! grep -q -i "KEYMAP=uk" /etc/vconsole.conf &> /dev/null; then
-echo -e "KEYMAP=uk" | sudo tee /etc/vconsole.conf &> /dev/null
+if ! grep -iq "uk" /etc/default/keyboard ||
+   ! grep -iq "gb" /etc/default/keyboard ||
+   ! grep -iq "extd" /etc/default/keyboard ||
+   ! grep -iq "pc105" /etc/default/keyboard ||
+   ! grep -iq "UTF-8" /etc/default/console-setup ||
+   ! grep -iq "Lat15" /etc/default/console-setup; then
+
+echo -e "\n${cyanbold}Configure keyboard layout${normal}"
+
+if ! grep -iq "KEYMAP=uk" /etc/default/keyboard &> /dev/null; then
+echo -e "KEYMAP=uk" | sudo tee /etc/default/keyboard &> /dev/null
 fi
 
-echo -e "\n$ cat /etc/vconsole.conf\n"
-cat /etc/vconsole.conf
+echo -e "$ cat /etc/default/keyboard\n"
+cat /etc/default/keyboard
 
 echo -e "\
 keyboard-configuration  keyboard-configuration/layoutcode    string  gb
@@ -111,25 +121,22 @@ echo -e "$ sudo sed -i '/^FONTFACE=/c\FONTFACE=""' /etc/default/console-setup"
 sudo sed -i '/^FONTFACE=/c\FONTFACE=""' /etc/default/console-setup
 echo -e "$ sudo sed -i '/^FONTSIZE=/c\FONTSIZE=""' /etc/default/console-setup"
 sudo sed -i '/^FONTSIZE=/c\FONTSIZE=""' /etc/default/console-setup
+echo -e "$ sudo setupcon"
+sudo setupcon
 echo -e "$ cat /etc/default/console-setup\n"
 cat /etc/default/console-setup
 
-echo -e "\n$ sudo setupcon"
-sudo setupcon
-
-echo -e "$ cat /etc/default/keyboard\n"
+echo -e "\n$ cat /etc/default/keyboard\n"
 cat /etc/default/keyboard
-
-echo -e "\n$ cat /etc/vconsole.conf\n"
-cat /etc/vconsole.conf
 
 echo -e "\n$ localectl status\n"
 localectl status
+fi
 
 # Timezone configuration
 
 echo -e "\n${cyanbold}Configure timezone${normal}"
-if ! timedatectl status | grep -q -i "Australia/Brisbane"; then
+if ! timedatectl status | grep -iq "Australia/Brisbane"; then
 echo -e "$ sudo timedatectl set-timezone \"Australia/Brisbane\""
 sudo timedatectl set-timezone "Australia/Brisbane"
 fi
@@ -206,18 +213,12 @@ wsl.exe --shutdown\n
 Afterwards, you can re-run this script to see locale test results"
 fi
 
-# Move all this testing to Script 05
-# Test locale if no changes made this run
-if [[ "${changes_made}" == "0" ]]; then
+echo -e "\n${cyanbold}Testing locale configuration in a fresh login shell${normal}"
 
-# Check for presence of python3
-if ! command -v python3 &> /dev/null; then
-echo -e "\n${cyanbold}Installing python3${normal}"
-echo -e "$ sudo apt update && sudo apt -y install python3\n"
-sudo apt update && sudo apt -y install python3
-fi
+bash -l << 'EOF'
+greenbold=$(printf '\033[92;1m')
+normal=$(printf '\033[0m')
 
-echo -e "\n${cyanbold}Testing locale configuration${normal}"
 echo -e "$ locale\n"
 locale
 
@@ -262,7 +263,7 @@ print(locale.currency(-1234567.891, grouping=True, international=True))"
 echo -e "${greenbold}> DESIRED OUTPUT:
  - AUD 1 234 567.89${normal}"
 
-fi
+EOF
 
 # Replicate the fully evaluated script to your target directory
 
