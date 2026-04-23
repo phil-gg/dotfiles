@@ -644,8 +644,8 @@ fi
 
 # Update apt if last `sudo apt update` more than one hour ago
 
-now=$(date +%s)
-last_update=$(stat -c %Y /var/lib/apt/lists/ 2>/dev/null || echo 0)
+now="$(date +%s)"
+last_update="$(stat -c %Y /var/lib/apt/lists/ 2>/dev/null || echo 0)"
 if (( now - last_update > 3600 )); then
 echo -e "\n${cyanbold}Update apt${normal}"
 echo -e "$ sudo apt update\n"
@@ -680,7 +680,7 @@ fi
 aptpkglistfile="${HOME}/.config/scripts/apt-pkg.list"
 if [[ -f "${aptpkglistfile}" ]];
 then
-mapfile -t PACKAGES < "${aptpkglistfile}"
+PACKAGES=( $(< "${aptpkglistfile}") )
 else
 # Include one named terminal emulator here to prevent auto-install of another
 # terminal emulator application by x-terminal-emulator virtual package later.
