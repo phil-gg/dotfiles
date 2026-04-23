@@ -571,10 +571,8 @@ fi
 # Install 1password deb repo (on amd64 arch only)
 if [[ "${pkgarch}" == "amd64" ]]; then
 
-opsourcesfile="/etc/apt/sources.list.d/1password.list"
-
-# Can't use this new format until built-in 1password config updates
-: " deb822 CONFIG
+opsourcesfile="/etc/apt/sources.list.d/1password.sources"
+OP_SOURCES="\
 # /etc/apt/sources.list.d/1password.sources
 # 1password debian repository
 Types: deb
@@ -583,10 +581,6 @@ Suites: stable
 Components: main
 Architectures: amd64
 Signed-By: ${opkeyfile}
-"
-OP_SOURCES="\
-deb [arch=amd64 signed-by=${opkeyfile}] \
-https://downloads.1password.com/linux/debian/amd64 stable main\
 "
 
 if ! cmp -s <(echo "${OP_SOURCES}") "${opsourcesfile}";
