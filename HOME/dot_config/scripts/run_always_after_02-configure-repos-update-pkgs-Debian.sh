@@ -689,8 +689,8 @@ then
 mapfile -t PACKAGES < "${aptpkglistfile}"
 else
 # Include one named terminal emulator here to prevent auto-install of another
-# terminal emulator application by x-terminal-emulator virtual package later
-# Foot is a high-performance, wayland first/only, terminal emulator
+# terminal emulator application by x-terminal-emulator virtual package later.
+# Chose qterminal being lightweight but still Qt based (from LXQt).
 PACKAGES=(
 curl
 wget
@@ -700,7 +700,7 @@ gpg
 cosign
 debsigs
 equivs
-foot
+qterminal
 )
 fi
 
@@ -745,6 +745,12 @@ Please run one of:
 sudo reboot
 OR
 wsl.exe --shutdown"
+fi
+
+if [ -f "/usr/share/applications/qterminal-drop.desktop" ]; then
+echo -e "\n${cyanbold}Remove QTerminal drop down launcher${normal}"
+echo -e "$ sudo rm /usr/share/applications/qterminal-drop.desktop"
+sudo rm /usr/share/applications/qterminal-drop.desktop
 fi
 
 # Get latest 1password versions
