@@ -43,8 +43,8 @@ echo -e "\n${cyanbold}Installing keymaps${normal}"
 
 kbd_github="https://github.com/legionus/kbd/releases"
 kbd_version="$(
-curl -ILsS -w "%{url_effective}" -o /dev/null "${kbd_github}/latest" \
-| sed 's|.*/v\?||'
+curl -ILsS -w "%{url_effective}" -o /dev/null "${kbd_github}/latest" |
+sed 's|.*/v\?||'
 )"
 kbd_releasefile="kbd-${kbd_version}.tar.xz"
 kbd_download="${kbd_github}/download/v${kbd_version}/${kbd_releasefile}"
