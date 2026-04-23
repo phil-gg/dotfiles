@@ -55,8 +55,9 @@ destdir="/usr/share/keymaps"
 echo -e "$ sudo mkdir -p ${destdir}"
 sudo mkdir -p "${destdir}"
 
-echo -e "$ sudo mkdir -p ${tempdir}"
-sudo mkdir -p "${tempdir}"
+# No sudo on the tempdir in $HOME
+echo -e "$ mkdir -p ${tempdir}"
+mkdir -p "${tempdir}"
 
 echo -e "$ curl -fsSL ${kbd_download} -o ${tempdir}/${kbd_releasefile}"
 curl -fsSL "${kbd_download}" -o "${tempdir}/${kbd_releasefile}"
