@@ -1227,6 +1227,7 @@ echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
 mkdir -p "${HOME}/.config/scripts"
 echo -e "$ cp \"\$0\" \"~/.config/scripts/${local_filename}\""
 cp "$0" "${HOME}/.config/scripts/${local_filename}"
+chmod +x "${HOME}/.config/scripts/${local_filename}"
 
 # Log this latest `Config` operation and display runtime
 
