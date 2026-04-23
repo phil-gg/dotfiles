@@ -1,4 +1,4 @@
-Script 05-test-keyboard-timezone-locale.sh
+Script 04 needs chezmoi go templating that can blank it out
 Scripts for plow / KDE Plasma & firefox
 
 invisible cursor theme (on WSL only)
