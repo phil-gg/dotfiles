@@ -2,6 +2,7 @@ Script 05-test-keyboard-timezone-locale.sh
 Scripts for plow / KDE Plasma & firefox
 
 invisible cursor theme (on WSL only)
+disable telemetry in gh config
 look at to-do from configure-wsl2
 
 https://github.com/dotphiles/dotphiles/blob/master/wget/wgetrc
