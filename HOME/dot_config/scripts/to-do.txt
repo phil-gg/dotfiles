@@ -1,7 +1,5 @@
-Script 04 needs chezmoi go templating that can blank it out
-Scripts for plow / KDE Plasma & firefox
-
 invisible cursor theme (on WSL only)
+Scripts for plow / KDE Plasma & firefox
 disable telemetry in gh config
 look at to-do from configure-wsl2
 
@@ -12,3 +10,52 @@ https://www.sap.com/design-system/fiori-design-web/foundations/visual/colors/col
 qterminal config
 
 https://www.binarylane.com.au/vps-hosting/linux-vps
+
+
+
+#!/bin/bash
+
+cyanbold=$(printf '\033[96;1m')
+normal=$(printf '\033[0m')
+tempdir="${HOME}/temp"
+
+echo -e "\n${cyanbold}Generating transparent cursor image files${normal}"
+
+# 1. Set up the temporary directory
+mkdir -p "${tempdir}"
+
+# 2. Generate the 1x1 transparent PNG using an absolute path
+gm convert -size 1x1 xc:none "${tempdir}/blank.png"
+
+# 3. Create the configuration file, explicitly passing the absolute path of the PNG
+echo "32 0 0 ${tempdir}/blank.png" > "${tempdir}/blank.cfg"
+
+echo -e "${cyanbold}Installing cursor theme to /usr/share/icons${normal}"
+
+# 4. Prepare the system-wide cursors directory
+sudo mkdir -p /usr/share/icons/transparent/cursors
+
+# 5. Generate and output the left_ptr cursor directly to the system directory
+sudo xcursorgen "${tempdir}/blank.cfg" /usr/share/icons/transparent/cursors/left_ptr
+
+# 6. Create the theme index file directly in the system directory
+echo -e "[Icon Theme]\nName=transparent\nComment=System-wide invisible cursor for WSLg" | sudo tee /usr/share/icons/transparent/index.theme > /dev/null
+
+echo -e "${cyanbold}Cleaning up temporary files${normal}"
+
+# 7. Remove the temporary folder and its contents using the variable
+rm -rf "${tempdir}"
+
+echo -e "${cyanbold}Applying system-wide Plasma configuration${normal}"
+
+# 8. Set the default Wayland mouse cursor theme for all Plasma users
+sudo mkdir -p /etc/xdg
+echo -e "[Mouse]\ncursorTheme=transparent" | sudo tee /etc/xdg/kcminputrc > /dev/null
+
+echo -e "${cyanbold}Applying system-wide Wayland environment variables${normal}"
+
+# 9. Inject the environment variable for Weston and all Wayland applications
+sudo mkdir -p /etc/environment.d
+echo 'XCURSOR_THEME="transparent"' | sudo tee /etc/environment.d/99-wayland-cursor.conf > /dev/null
+
+echo -e "\n${cyanbold}Installation complete! Please run 'wsl.exe --shutdown' from Windows to apply.${normal}\n"
