@@ -1,3 +1,19 @@
+{{- $bashChecks := print `
+if localectl list-keymaps 2>/dev/null | grep -iq "UK" \
+&& grep -iq "uk" /etc/default/keyboard \
+&& grep -iq "gb" /etc/default/keyboard \
+&& grep -iq "extd" /etc/default/keyboard \
+&& grep -iq "pc105" /etc/default/keyboard \
+&& grep -iq "UTF-8" /etc/default/console-setup \
+&& grep -iq "Lat15" /etc/default/console-setup \
+&& timedatectl status | grep -iq "Australia/Brisbane" \
+&& cmp -s "` .chezmoi.sourceDir `/usr/share/i18n/locales/en_AU@phil" "/usr/share/i18n/locales/en_AU@phil" \
+&& cmp -s "` .chezmoi.sourceDir `/usr/share/i18n/SUPPORTED" "/usr/share/i18n/SUPPORTED" \
+&& cmp -s "` .chezmoi.sourceDir `/etc/locale.gen" "/etc/locale.gen" \
+&& cmp -s "` .chezmoi.sourceDir `/etc/locale.conf" "/etc/locale.conf"; then
+echo -n "0"; else echo -n "1"; fi` -}}
+{{- $checksResult := output "bash" "-c" $bashChecks -}}
+{{- if ne $checksResult "0" -}}
 #!/bin/bash
 
 ################################################################################
@@ -289,4 +305,4 @@ echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
 #   5   10   15   20   25   30   35   40   45   50   55   60   65   70   75   80
 #
 ################################################################################
-
+{{- end -}}
