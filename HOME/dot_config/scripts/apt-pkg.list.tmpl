@@ -1,27 +1,69 @@
+{{- /* CLI tools */ -}}
 curl
 wget
-git
-gh
 gpg
-cosign
-debsigs
-equivs
-qterminal
-keyboard-configuration
-console-setup
-graphicsmagick
-x11-apps
-firefox-devedition
-firefox-devedition-l10n-en-gb
-libpci3
-libegl1
-nordvpn
-nordvpn-gui
 git
 git-doc
 git-gui
 gitk
 gh
 man-db
-python3
 fastfetch
+graphicsmagick
+
+{{- /* Localisation tools */ }}
+keyboard-configuration
+console-setup
+
+{{- /* Debian package tools */ }}
+cosign
+debsigs
+equivs
+
+{{- /* Firefox and dependencies */ }}
+firefox-devedition
+firefox-devedition-l10n-en-gb
+libpci3
+libegl1
+
+{{- /* 1password managed elsewhere as not using deb pkg on arm64 */ -}}
+{{- /* NordVPN */ }}
+nordvpn
+nordvpn-gui
+
+{{- /* KDE Plasma Desktop Environment */ }}
+plasma-workspace
+plasma-workspace-doc
+kde-cli-tools
+kio-extras
+kio-fuse
+ksystemstats
+plasma-desktop
+breeze-gtk-theme
+kde-config-gtk-style
+kde-config-gtk-style-preview
+kwin-wayland
+
+{{- /* KDE (or Qt) apps */ }}
+qterminal
+khelpcenter
+kinfocenter
+systemsettings
+
+{{- /* Font packages */ }}
+fonts-hack
+fonts-noto
+fonts-noto-color-emoji
+
+{{- /* Other packages */ }}
+x11-apps
+mesa-utils
+python3
+
+{{- /* Only needed on WSL packages */ -}}
+{{- $wsl := stat "/run/WSL" -}}
+{{- if and $wsl $wsl.IsDir }}
+weston
+wl-clipboard
+{{- /* Newline after final end is needed for POSIX compatibility */ -}}
+{{- end }}
