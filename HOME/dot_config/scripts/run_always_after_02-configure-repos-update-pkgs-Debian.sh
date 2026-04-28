@@ -28,6 +28,7 @@ cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
 pkgarch=$(dpkg --print-architecture)
 op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
+op_needs_signin="0"
 
 # Now running `${local_filename}`
 
@@ -653,7 +654,8 @@ sort -nr | head -n 1
 if (( now - ${last_update:-0} > 3600 )); then
 echo -e "\n${cyanbold}Update apt${normal}"
 echo -e "$ sudo apt update\n"
-sudo apt update && sudo touch /var/lib/apt/lists/lock
+LOCKFILE="/var/lib/apt/lists/lock"
+sudo apt update && sudo flock -n "${LOCKFILE}" touch "${LOCKFILE}"
 fi
 
 # apt upgrade if needed
@@ -662,8 +664,8 @@ count_upgrade_pkgs=$(apt-get -s upgrade | grep -P -c '^Inst ')
 # Thus don't want to use any alternative above!
 if (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
-echo -e "$ sudo apt upgrade -y\n"
-sudo apt upgrade -y
+echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y\n"
+sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
 fi
 
 # Check for packages and install if necessary
@@ -678,6 +680,82 @@ fi
 nordvpnconfigneeded="0"
 if ! command -v nordvpn &> /dev/null; then
 (( nordvpnconfigneeded += 1 ))
+fi
+
+# On WSL only, install dummy packages before any other apt install
+if [[ -d "/run/WSL" ]]; then
+
+# Define function to build and install a dummy package
+
+create_dummy_pkg() {
+local TARGET_PKG="$1"
+local DUMMY_PKG="${TARGET_PKG}-dummy"
+local TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
+
+DUMMY_REQD="$(dpkg -l "${DUMMY_PKG}" 2> /dev/null | grep -oP "^ii\\s+${DUMMY_PKG}")"
+DPKG_ERROR=$?
+
+if [ -z "${DUMMY_REQD}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
+echo -e "\n${cyanbold}Installing ${DUMMY_PKG} package${normal}"
+
+echo -e "$ mkdir -p ${TMP_DIR}"
+mkdir -p "${TMP_DIR}"
+
+# equivs-build always outputs package to current working directory
+echo -e "$ cd ${TMP_DIR}"
+cd "${TMP_DIR}" 2> /dev/null \
+|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
+; exit 111; }
+
+DUMMY_PAYLOAD="\
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+
+Package: ${DUMMY_PKG}
+Version: 1.0
+Provides: ${TARGET_PKG}
+Conflicts: ${TARGET_PKG}
+Architecture: all
+Description: Dependency resolving dummy pkg for deliberately missing ${TARGET_PKG}
+"
+# Show payload variable without expansion here (with backslash escapes)
+echo -e "$ printf \"%s\" \"\${DUMMY_PAYLOAD}\" | sudo tee ${DUMMY_PKG} > /dev/null"
+printf "%s" "${DUMMY_PAYLOAD}" | tee "${DUMMY_PKG}" > /dev/null
+echo -e "$ cat ${DUMMY_PKG}\n"
+cat "${DUMMY_PKG}"
+
+echo -e "\n$ equivs-build ${DUMMY_PKG}\n"
+equivs-build "${DUMMY_PKG}"
+
+echo -e "\n$ sudo dpkg -i ${DUMMY_PKG}_1.0_all.deb\n"
+sudo dpkg -i "${DUMMY_PKG}_1.0_all.deb"
+
+echo -e "$ cd ~/git/${github_username}/${github_project}"
+cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
+|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
+; exit 112; }
+
+echo -e "$ rm -rf ${TMP_DIR}"
+rm -rf "${TMP_DIR}"
+
+fi
+}
+
+# Create dummy packages
+# (Don't need GUI tools for network, power, or bluetooth in WSL2)
+# equivs dependency was installed by script 01
+
+if ! command -v equivs-build; then
+echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
+exit 113
+else
+create_dummy_pkg "plasma-nm"
+create_dummy_pkg "powerdevil"
+create_dummy_pkg "bluedevil"
+fi
+
+# End WSL only dummy packages section
 fi
 
 # PACKAGES come from chezmoi template with fixed bootstrap fallback list
@@ -882,8 +960,8 @@ apt-cache policy 1password | grep Installed | awk -F ': ' '{print $2}'
 installedver1pcli=$(
 apt-cache policy 1password-cli | grep Installed | awk -F ': ' '{print $2}'
 )
-echo -e "> ${installedversion1p:-${bluebold}(none)${normal}} = 1password"
-echo -e "> ${installedver1pcli:-${bluebold}(none)${normal}} = 1password-cli"
+echo -e "> ${installedversion1p} = 1password"
+echo -e "> ${installedver1pcli} = 1password-cli"
 
 # Install 1password if needed
 
@@ -898,7 +976,6 @@ echo -e "\n${cyanbold}Install/upgrade 1password${normal}"
 echo -e "$ sudo apt -y install 1password 1password-cli\n"
 sudo apt -y install 1password 1password-cli
 else
-op_needs_signin="0"
 echo -e "${greenbold}> 1password & 1password-cli are up-to-date${normal}"
 fi
 
@@ -978,7 +1055,7 @@ fi
 # echo -e "$ cd ~/git/${github_username}/${github_project}/tmp"
 # cd "${HOME}/git/${github_username}/${github_project}/tmp" 2> /dev/null \
 # || { echo -e "${redbold}> Failed to change directory, exiting${normal}\n"\
-# ; exit 111; }
+# ; exit 114; }
 # 
 # # get latest 1password amd64 deb package
 # 
@@ -1055,23 +1132,24 @@ if cosign verify-blob \
         sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
-        exit 111
+        exit 114
     # Close sha256sum check
     fi
 else
     echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
-    exit 112
+    exit 115
 # Close cosign check
 fi
 
+# If both config-runs.log file exists here and .git directory does not
+if [[ -f "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+ && ! -d "${HOME}/git/${github_username}/${github_project}/.git" ]]; then
+
 # Temporarily store config-runs.log up one level
-if [ -f "${HOME}/git/${github_username}/${github_project}/config-runs.log" ];
-then
 mv "${HOME}/git/${github_username}/${github_project}/config-runs.log" \
 "${HOME}/git/${github_username}/config-runs.log"
-fi
 
-# clear tmp and everything else too
+# Clear whole repo location so a fresh git clone will work
 find "${HOME}/git/${github_username}/${github_project}" -mindepth 1 -delete
 
 # chezmoi initial config
@@ -1079,7 +1157,6 @@ echo -e "\n$ chezmoi init https://github.com/${github_username}/${github_project
 chezmoi init "https://github.com/${github_username}/${github_project}.git"
 
 # Move config-runs.log back into project folder
-if [ -f "${HOME}/git/${github_username}/config-runs.log" ]; then
 mv "${HOME}/git/${github_username}/config-runs.log" \
 "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 fi
@@ -1227,10 +1304,11 @@ fi
 
 # Replicate the fully evaluated script to your target directory
 
+THIS_SCRIPT="${HOME}/git/${github_username}/${github_project}/HOME/dot_config/scripts/${git_filename}"
 echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
 echo -e "\
-$ install -CDm 755 \"\${BASH_SOURCE[0]}\" ~/.config/scripts/${local_filename}"
-install -CDm 755 "${BASH_SOURCE[0]}" "${HOME}/.config/scripts/${local_filename}"
+$ install -CDm 755 \"\${THIS_SCRIPT}\" ~/.config/scripts/${local_filename}"
+install -CDm 755 "${THIS_SCRIPT}" "${HOME}/.config/scripts/${local_filename}"
 
 # Log this latest `Config` operation and display runtime
 
