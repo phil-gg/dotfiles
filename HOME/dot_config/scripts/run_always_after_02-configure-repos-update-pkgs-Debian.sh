@@ -746,7 +746,7 @@ fi
 # (Don't need GUI tools for network, power, or bluetooth in WSL2)
 # equivs dependency was installed by script 01
 
-if ! command -v equivs-build; then
+if ! command -v equivs-build &> /dev/null; then
 echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
 exit 113
 else
