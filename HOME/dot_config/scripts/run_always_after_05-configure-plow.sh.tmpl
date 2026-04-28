@@ -43,11 +43,10 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
 # Create /etc/xdg/weston/weston.ini if it does not exist or has changed
 
-WESTON_FOLDER="/etc/xdg/weston"
-WESTONCONF_FILENAME="weston.ini"
-WESTON_FILEPATH="${WESTON_FOLDER}/${WESTONCONF_FILENAME}"
+WESTON_DIR="/etc/xdg/weston"
+WESTON_FILE="${WESTON_DIR}/weston.ini"
 
-WESTON_CONFIG="\
+WESTON_TEXT="\
 [core]
 # https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
 # Enables support for X11 applications
@@ -105,16 +104,16 @@ keymap_layout=gb
 keymap_variant=extd
 "
 
-if [ ! -f "${WESTON_FILEPATH}" ] || \
-! cmp -s <(printf "%s" "${WESTON_CONFIG}") "${WESTON_FILEPATH}"; then
+if [ ! -f "${WESTON_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_TEXT}") "${WESTON_FILE}"; then
 echo -e "\n${cyanbold}Configure weston${normal}"
-echo -e "$ sudo mkdir -p ${WESTON_FOLDER}"
-sudo mkdir -p "${WESTON_FOLDER}"
-echo -e "$ printf \"%s\" \"\${WESTON_CONFIG}\" | sudo tee ${WESTON_FILEPATH} > \
+echo -e "$ sudo mkdir -p ${WESTON_DIR}"
+sudo mkdir -p "${WESTON_DIR}"
+echo -e "$ printf \"%s\" \"\${WESTON_TEXT}\" | sudo tee ${WESTON_FILE} > \
 /dev/null"
-printf "%s" "${WESTON_CONFIG}" | sudo tee "${WESTON_FILEPATH}" > /dev/null
-echo -e "$ ln -sf ${WESTON_FILEPATH} ~/.config/weston.ini"
-ln -sf "${WESTON_FILEPATH}" "${HOME}/.config/weston.ini"
+printf "%s" "${WESTON_TEXT}" | sudo tee "${WESTON_FILE}" > /dev/null
+echo -e "$ ln -sf ${WESTON_FILE} ~/.config/weston.ini"
+ln -sf "${WESTON_FILE}" "${HOME}/.config/weston.ini"
 fi
 
 # Apply KDE taskbar customisations using plasma6 updates directory
@@ -284,7 +283,10 @@ fi
 
 # Setting system-wide environment variables for WSLg
 
-WSLG_VARS="\
+ENV_VARS_DIR="/etc/environment.d"
+ENV_VARS_FILE="${ENV_VARS_DIR}/01-plasma-on-wslg.conf"
+
+ENV_VARS_TEXT="\
 # --- Driver / Hardware Layer ---
 EGL_PLATFORM=wayland
 # Only uncomment when you want (lots!) more wayland logging
@@ -293,8 +295,6 @@ WSA_RENDER_DEVICE=/dev/dri/renderD128
 GALLIUM_DRIVER=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 MESA_VK_WSI_PRESENT_MODE=immediate
-# --- Audio ---
-PULSE_SERVER=unix:/mnt/wslg/PulseServer
 
 # --- Session Identity ---
 XDG_SESSION_TYPE=wayland
@@ -329,18 +329,14 @@ WINIT_UNIX_BACKEND=wayland
 _JAVA_AWT_WM_NONREPARENTING=1
 "
 
-if ! cmp -s <(printf "%s" "${WSLG_VARS}") /etc/environment.d/\
-01-graphics-on-wsl.conf; then
+if ! cmp -s <(printf "%s" "${ENV_VARS_TEXT}") "${ENV_VARS_FILE}"; then
 
-echo -e "\n${cyanbold}Setting system-wide environment variables for WSLg\
-${normal}"
+echo -e "\n${cyanbold}Setting system-wide environment variables for WSLg${normal}"
 # Quietly ensure folder exists (but should already be there)
-sudo mkdir -p /etc/environment.d
+sudo mkdir -p "${ENV_VARS_DIR}"
 
-echo -e "$ printf \"%s\" \"\${WSLG_VARS}\" | sudo tee /etc/environment.d/\
-01-graphics-on-wsl.conf > /dev/null"
-printf "%s" "${WSLG_VARS}" | sudo tee /etc/environment.d/\
-01-graphics-on-wsl.conf > /dev/null
+echo -e "$ printf \"%s\" \"\${ENV_VARS_TEXT}\" | sudo tee ${ENV_VARS_FILE}"
+printf "%s" "${ENV_VARS_TEXT}" | sudo tee "${ENV_VARS_FILE}" > /dev/null
 
 echo -e "\n${cyanbold}Print current systemd user environment${normal}"
 echo -e "$ systemctl --user show-environment --no-pager\n"
@@ -348,9 +344,9 @@ systemctl --user show-environment --no-pager
 
 echo -e "\n${cyanbold}Add to current systemd user environment${normal}"
 echo -e "> Needed for first launch of Weston & Plasma from this script"
-echo -e "$ echo -e \"\${WSLG_VARS}\" | grep -v '^$' | grep -v '^#' | \
+echo -e "$ echo -e \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
 xargs systemctl --user set-environment"
-echo -e "${WSLG_VARS}" | grep -v '^$' | grep -v '^#' | \
+echo -e "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | \
 xargs systemctl --user set-environment
 
 # Add environment variables to D-Bus, too
@@ -365,9 +361,53 @@ fi
 
 echo -e "\n${cyanbold}Export variables to current shell for testing${normal}"
 echo -e "> Needed for glxinfo & elginfo below in this script"
-echo -e "$ export \$(echo \"\${WSLG_VARS}\" | grep -v '^$' | grep -v '^#' | \
+echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
 xargs)"
-export $(echo "${WSLG_VARS}" | grep -v '^$' | grep -v '^#' | xargs)
+export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
+
+# WSLg audio config
+
+PIPEWIRE_CONF_DIR="/etc/pipewire/pipewire.conf.d"
+PIPEWIRE_CONF_FILE="${PIPEWIRE_CONF_DIR}/10-wslg-bridge.conf"
+
+PIPEWIRE_TEXT="\
+context.modules = [
+    { name = libpipewire-module-pulse-tunnel
+        args = {
+            tunnel.mode = sink
+            server.address = \"unix:/mnt/wslg/PulseServer\"
+            audio.rate = 48000
+            audio.channels = 2
+            stream.props = {
+                node.name = \"wslg_speaker\"
+                node.description = \"Windows Sound Output\"
+            }
+        }
+    }
+    { name = libpipewire-module-pulse-tunnel
+        args = {
+            tunnel.mode = source
+            server.address = \"unix:/mnt/wslg/PulseServer\"
+            audio.rate = 48000
+            audio.channels = 1
+            stream.props = {
+                node.name = \"wslg_mic\"
+                node.description = \"Windows Sound Input\"
+            }
+        }
+    }
+]
+"
+
+if [ ! -f "${PIPEWIRE_CONF_FILE}" ] \
+  || ! cmp -s <(printf "%s" "${PIPEWIRE_TEXT}") "${PIPEWIRE_CONF_FILE}"; then
+echo -e "\n${cyanbold}Configure PipeWire WSLg Audio Bridge${normal}"
+sudo mkdir -p "${PIPEWIRE_CONF_DIR}"
+echo -e "$ printf \"%s\" \"\${PIPEWIRE_TEXT}\" | sudo tee ${PIPEWIRE_CONF_FILE}"
+printf "%s" "${PIPEWIRE_TEXT}" | sudo tee "${PIPEWIRE_CONF_FILE}" > /dev/null
+echo -e "$ systemctl --user restart pipewire"
+systemctl --user restart pipewire
+fi
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
@@ -466,15 +506,26 @@ pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service"
 systemctl --user mask \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service \
 filter-chain.service \
 pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service
+
+# unmask and enable the systemd audio services we do actually want
+echo -e "$ systemctl --user unmask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service"
+systemctl --user unmask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service
+echo -e "$ systemctl --user enable --now pipewire pipewire-pulse wireplumber"
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
 
 # TO-DO: Add transparent cursor config here
 
@@ -761,14 +812,6 @@ else
 echo -e "> /usr/bin/eps is already up-to-date"
 fi
 
-# Run plow-plasma.service
-echo -e "\n${cyanbold}Run Plow session${normal}"
-echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then startplasma-wayland & disown; fi"
-if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then startplasma-wayland & disown; \
-fi
-
 # Error logs for Plow
 echo -e "\n${bluebold}View error logs for Plow with:${normal}"
 echo -e "${cyanbold}systemctl --user status plow-weston plasma-kwin_wayland \
@@ -792,6 +835,23 @@ echo -e "> ${runtime}\n"
 mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+
+# Run plow-plasma.service
+echo -e "\n${cyanbold}Optionally run Plow session${normal}"
+# Choice: message
+read -r -p "> Run Plow session now? (y/N) " response
+# Convert the string to lowercase
+response="${response,,}"
+# Choice: check for 'y', or 'yes', only - empty string and all others mean no
+if [[ "${response}" == "y" || "${response}" == "yes" ]]; then
+# This runs plow-plasma.service
+echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
+then startplasma-wayland & disown; fi"
+if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
+then startplasma-wayland & disown; \
+fi
+# Close the choice conditional
+fi
 
 ################################################################################
 #
