@@ -338,10 +338,6 @@ sudo mkdir -p "${ENV_VARS_DIR}"
 echo -e "$ printf \"%s\" \"\${ENV_VARS_TEXT}\" | sudo tee ${ENV_VARS_FILE}"
 printf "%s" "${ENV_VARS_TEXT}" | sudo tee "${ENV_VARS_FILE}" > /dev/null
 
-echo -e "\n${cyanbold}Print current systemd user environment${normal}"
-echo -e "$ systemctl --user show-environment --no-pager\n"
-systemctl --user show-environment --no-pager
-
 echo -e "\n${cyanbold}Add to current systemd user environment${normal}"
 echo -e "> Needed for first launch of Weston & Plasma from this script"
 echo -e "$ echo -e \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
@@ -364,50 +360,6 @@ echo -e "> Needed for glxinfo & elginfo below in this script"
 echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
 xargs)"
 export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
-
-# WSLg audio config
-
-PIPEWIRE_CONF_DIR="/etc/pipewire/pipewire.conf.d"
-PIPEWIRE_CONF_FILE="${PIPEWIRE_CONF_DIR}/10-wslg-bridge.conf"
-
-PIPEWIRE_TEXT="\
-context.modules = [
-    { name = libpipewire-module-pulse-tunnel
-        args = {
-            tunnel.mode = sink
-            server.address = \"unix:/mnt/wslg/PulseServer\"
-            audio.rate = 48000
-            audio.channels = 2
-            stream.props = {
-                node.name = \"wslg_speaker\"
-                node.description = \"Windows Sound Output\"
-            }
-        }
-    }
-    { name = libpipewire-module-pulse-tunnel
-        args = {
-            tunnel.mode = source
-            server.address = \"unix:/mnt/wslg/PulseServer\"
-            audio.rate = 48000
-            audio.channels = 1
-            stream.props = {
-                node.name = \"wslg_mic\"
-                node.description = \"Windows Sound Input\"
-            }
-        }
-    }
-]
-"
-
-if [ ! -f "${PIPEWIRE_CONF_FILE}" ] \
-  || ! cmp -s <(printf "%s" "${PIPEWIRE_TEXT}") "${PIPEWIRE_CONF_FILE}"; then
-echo -e "\n${cyanbold}Configure PipeWire WSLg Audio Bridge${normal}"
-sudo mkdir -p "${PIPEWIRE_CONF_DIR}"
-echo -e "$ printf \"%s\" \"\${PIPEWIRE_TEXT}\" | sudo tee ${PIPEWIRE_CONF_FILE}"
-printf "%s" "${PIPEWIRE_TEXT}" | sudo tee "${PIPEWIRE_CONF_FILE}" > /dev/null
-echo -e "$ systemctl --user restart pipewire"
-systemctl --user restart pipewire
-fi
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
@@ -526,6 +478,50 @@ pipewire-pulse.socket \
 wireplumber.service
 echo -e "$ systemctl --user enable --now pipewire pipewire-pulse wireplumber"
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
+
+# WSLg audio config
+
+PIPEWIRE_CONF_DIR="/etc/pipewire/pipewire.conf.d"
+PIPEWIRE_CONF_FILE="${PIPEWIRE_CONF_DIR}/10-wslg-bridge.conf"
+
+PIPEWIRE_TEXT="\
+context.modules = [
+    { name = libpipewire-module-pulse-tunnel
+        args = {
+            tunnel.mode = sink
+            server.address = \"unix:/mnt/wslg/PulseServer\"
+            audio.rate = 48000
+            audio.channels = 2
+            stream.props = {
+                node.name = \"wslg_speaker\"
+                node.description = \"Windows Sound Output\"
+            }
+        }
+    }
+    { name = libpipewire-module-pulse-tunnel
+        args = {
+            tunnel.mode = source
+            server.address = \"unix:/mnt/wslg/PulseServer\"
+            audio.rate = 48000
+            audio.channels = 1
+            stream.props = {
+                node.name = \"wslg_mic\"
+                node.description = \"Windows Sound Input\"
+            }
+        }
+    }
+]
+"
+
+if [ ! -f "${PIPEWIRE_CONF_FILE}" ] \
+  || ! cmp -s <(printf "%s" "${PIPEWIRE_TEXT}") "${PIPEWIRE_CONF_FILE}"; then
+echo -e "\n${cyanbold}Configure PipeWire WSLg Audio Bridge${normal}"
+sudo mkdir -p "${PIPEWIRE_CONF_DIR}"
+echo -e "$ printf \"%s\" \"\${PIPEWIRE_TEXT}\" | sudo tee ${PIPEWIRE_CONF_FILE}"
+printf "%s" "${PIPEWIRE_TEXT}" | sudo tee "${PIPEWIRE_CONF_FILE}" > /dev/null
+echo -e "$ systemctl --user restart pipewire"
+systemctl --user restart pipewire
+fi
 
 # TO-DO: Add transparent cursor config here
 
