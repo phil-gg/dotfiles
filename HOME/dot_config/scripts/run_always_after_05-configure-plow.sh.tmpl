@@ -1,5 +1,5 @@
 {{- $wsl := stat "/run/WSL" -}}
-{{- if and $wsl $wsl.IsDir -}}
+{{- if and $wsl $wsl.isDir -}}
 
 #!/bin/bash
 
