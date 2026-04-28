@@ -62,7 +62,7 @@ python3
 
 {{- /* Only needed on WSL packages */ -}}
 {{- $wsl := stat "/run/WSL" -}}
-{{- if and $wsl $wsl.IsDir }}
+{{- if and $wsl $wsl.isDir }}
 weston
 wl-clipboard
 {{- /* Newline after final end is needed for POSIX compatibility */ -}}
