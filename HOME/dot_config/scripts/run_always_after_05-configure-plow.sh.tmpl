@@ -843,9 +843,9 @@ if [[ "${response}" == "y" || "${response}" == "yes" ]]; then
 # This runs plow-plasma.service
 echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
 then startplasma-wayland & disown; fi"
-if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then startplasma-wayland & disown; \
-fi
+if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
+startplasma-wayland & disown; else \
+echo -e "${redbold}> Plow session already running\n"; fi
 # Close the choice conditional
 fi
 
