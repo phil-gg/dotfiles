@@ -293,6 +293,8 @@ WSA_RENDER_DEVICE=/dev/dri/renderD128
 GALLIUM_DRIVER=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 MESA_VK_WSI_PRESENT_MODE=immediate
+# --- Audio ---
+PULSE_SERVER=unix:/mnt/wslg/PulseServer
 
 # --- Session Identity ---
 XDG_SESSION_TYPE=wayland
@@ -431,21 +433,48 @@ kbuildsycoca6 --noincremental
 fi
 
 # run the mask command every time; it's a quick no-op if services already masked
-echo -e "\n${cyanbold}Disable sleep shutdown restart${normal}"
+# Mix of sleep/shutdown/restart, audio, and others not needed on WSL now.
+echo -e "\n${cyanbold}Disable systemd services not needed on WSL${normal}"
 echo -e "$ sudo systemctl mask \
 sleep.target \
 suspend.target \
 hibernate.target \
 hybrid-sleep.target \
 poweroff.target \
-reboot.target"
+reboot.target \
+upower.service \
+switcheroo-control.service \
+udisks2.service"
 sudo systemctl mask \
 sleep.target \
 suspend.target \
 hibernate.target \
 hybrid-sleep.target \
 poweroff.target \
-reboot.target
+reboot.target \
+upower.service \
+switcheroo-control.service \
+udisks2.service
+echo -e "$ systemctl --user mask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service \
+filter-chain.service \
+pulseaudio.service \
+pulseaudio.socket \
+app-org.kde.discover.notifier@autostart.service"
+systemctl --user mask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service \
+filter-chain.service \
+pulseaudio.service \
+pulseaudio.socket \
+app-org.kde.discover.notifier@autostart.service
 
 # TO-DO: Add transparent cursor config here
 
