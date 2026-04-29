@@ -1125,20 +1125,20 @@ echo -e "> Verifying release with cosign"
 echo -e "$ cosign verify-blob \
 --key \"${tmp_dir}/chezmoi_cosign.pub\" \
 --signature \"${tmp_dir}/${sig_file}\" \
-\"${tmp_dir}/${chk_file}\""
+\"${tmp_dir}/${chk_file}\"\n"
 if cosign verify-blob \
     --key "${tmp_dir}/chezmoi_cosign.pub" \
     --signature "${tmp_dir}/${sig_file}" \
     "${tmp_dir}/${chk_file}" &> /dev/null; then
     
-    echo -e "${greenbold} ✅ Checksum file signature verified${normal}"
+    echo -e "${greenbold} ✅ Checksum file signature verified${normal}\n"
     echo -e "> Verifying deb package integrity"
     
     # Check the sha256 of the deb pkg
-    echo -e "$ cd \"${tmp_dir}\" && sha256sum --ignore-missing -c \"${chk_file}\""
+    echo -e "$ cd \"${tmp_dir}\" && sha256sum --ignore-missing -c \"${chk_file}\"\n"
     if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
-        echo -e "${greenbold} ✅ deb package integrity verified${normal}"
-        echo -e "$ sudo dpkg -i \"${tmp_dir}/${deb_file}\""
+        echo -e "${greenbold} ✅ deb package integrity verified${normal}\n"
+        echo -e "$ sudo dpkg -i \"${tmp_dir}/${deb_file}\"\n"
         sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
@@ -1150,42 +1150,51 @@ else
     exit 115
 # Close cosign check
 fi
+# Close chezmoi not latest version check
+fi
 
-# If both config-runs.log file exists here and .git directory does not
-if [[ -f "${HOME}/git/${github_username}/${github_project}/config-runs.log"
- && ! -d "${HOME}/git/${github_username}/${github_project}/.git" ]]; then
-
+git_dir="${HOME}/git/${github_username}/${github_project}"
+# If .git directory does not exist (will need chezmoi init)
+if [[ ! -d "${git_dir}/.git" ]]; then
+# If config-runs.log file exists here
+if [[ -f "${git_dir}/config-runs.log" ]]; then
 # Temporarily store config-runs.log up one level
-mv "${HOME}/git/${github_username}/${github_project}/config-runs.log" \
-"${HOME}/git/${github_username}/config-runs.log"
-
+echo -e "\n> move config-runs.log"
+echo -e "$ mv ${git_dir}/config-runs.log ~/git/${github_username}/config-runs.log"
+mv "${git_dir}/config-runs.log" "${HOME}/git/${github_username}/config-runs.log"
+else echo ""
+fi
+# If one or more file exists in $git_dir
+if [[ -n $(find "${git_dir}" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
 # Clear whole repo location so a fresh git clone will work
-find "${HOME}/git/${github_username}/${github_project}" -mindepth 1 -delete
-
+echo -e "$ find ${git_dir} -mindepth 1 -delete"
+find "${git_dir}" -mindepth 1 -delete
+fi
 # chezmoi initial config
 echo -e "\n$ chezmoi init https://github.com/${github_username}/\
 ${github_project}.git --source ~/git/${github_username}/${github_project}\n"
 chezmoi init "https://github.com/${github_username}/${github_project}\
-.git" --source "${HOME}/git/${github_username}/${github_project}"
-
+.git" --source "${git_dir}"
+# If config-runs.log file exists here
+if [[ -f "${HOME}/git/${github_username}/config-runs.log" ]]; then
 # Move config-runs.log back into project folder
-mv "${HOME}/git/${github_username}/config-runs.log" \
-"${HOME}/git/${github_username}/${github_project}/config-runs.log"
+echo -e "> move config-runs.log"
+echo -e "$ mv ~/git/${github_username}/config-runs.log ${git_dir}/config-runs.log"
+mv "${HOME}/git/${github_username}/config-runs.log" "${git_dir}/config-runs.log"
 fi
-
+# All chezmoi init tasks complete
 echo -e "\n${greenbold} ✅ chezmoi init complete${normal}"
-
+# Logic branch where .git for chezmoi dotfiles already exists
 else
-echo -e "${greenbold}> chezmoi is already up-to-date${normal}"
-
-# Close check whether chezmoi needed installing / updating
+echo -e "${greenbold}> chezmoi init has already occurred${normal}"
+# Close need chezmoi init check
 fi
 
 # keep apt tidy
 
 echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
 echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
-sudo sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
+sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
