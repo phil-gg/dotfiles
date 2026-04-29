@@ -603,8 +603,8 @@ gpg --list-packets /usr/share/keyrings/1password-archive-keyring.gpg \
 
 if [[ ! -f "/etc/debsig/policies/${onepid}/${onepname}.pol"
    || ! -f "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
-echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}\n"
-echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg\n"
+echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}"
+echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 
 # Catch errors with 1password key
 if [[ -z "${onepid}" ]]; then exit 110; fi
@@ -632,7 +632,7 @@ echo -e "\n${bluebold}Create ${opdebsigfile}${normal}"
 echo -e "$ echo \"\${OP_DEBSIG}\" | sudo tee \"${opdebsigfile}\" 1> /dev/null"
 echo "${OP_DEBSIG}" | sudo tee "${opdebsigfile}" 1> /dev/null
 sudo mkdir -p "/usr/share/debsig/keyrings/${onepid}"
-echo -e "\n> Create usr/share/debsig/keyrings/${onepid}/debsig.gpg"
+echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 sudo cp /usr/share/keyrings/1password-archive-keyring.gpg \
 "/usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 fi
