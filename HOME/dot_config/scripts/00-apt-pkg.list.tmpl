@@ -1,8 +1,11 @@
 {{- /* Debian essential priority and important packages */ -}}
 {{ output "bash" "-c" "apt-cache dumpavail | awk '/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' | sort -u" }}
 
-{{- /* CLI tools */}}
+{{- /* Extra essentials not marked essential priority or important by Debian */}}
 sudo
+ca-certificates
+
+{{- /* CLI tools */}}
 curl
 wget
 gpg
