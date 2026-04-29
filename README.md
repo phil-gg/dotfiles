@@ -2,14 +2,10 @@
 
 ## Bootstrap
 ```
-sudo apt update && sudo apt upgrade -y &&
-sudo apt install -y gpg equivs curl ca-certificates
+sudo apt update && sudo apt upgrade -y && sudo apt install -y gpg equivs curl ca-certificates
 ```
 ```
-TMPDIR=$(mktemp -d) && /usr/lib/apt/apt-helper download-file \
-"https://raw.githubusercontent.com/phil-gg/dotfiles/refs/heads/main/HOME/\
-dot_config/scripts/run_after_02-configure-repos-update-pkgs-Debian.sh" \
-"${TMPDIR}/ba.sh" && bash "${TMPDIR}/ba.sh"; rm -rf "${TMPDIR}"
+curl -fsSL "https://raw.githubusercontent.com/phil-gg/dotfiles/refs/heads/main/HOME/dot_config/scripts/run_after_02-configure-repos-update-pkgs-Debian.sh" | bash
 ```
 
 ## Key Attributes
