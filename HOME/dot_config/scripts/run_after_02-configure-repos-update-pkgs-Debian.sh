@@ -18,7 +18,7 @@
 github_username="phil-gg"
 github_project="dotfiles"
 github_branch="main"
-git_filename="run_always_after_02-configure-repos-update-pkgs-Debian.sh"
+git_filename="run_after_02-configure-repos-update-pkgs-Debian.sh"
 local_filename="02-configure-repos-update-pkgs-Debian.sh"
 runtime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 normal=$(printf '\033[0m')
