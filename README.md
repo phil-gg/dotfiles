@@ -2,7 +2,8 @@
 
 ## Bootstrap
 ```
-sudo apt update && sudo apt upgrade -y && sudo apt install -y gpg curl ca-certificates
+sudo apt update && sudo apt upgrade -y &&
+sudo apt install -y gpg equivs curl ca-certificates
 ```
 ```
 TMPDIR=$(mktemp -d) && /usr/lib/apt/apt-helper download-file \
