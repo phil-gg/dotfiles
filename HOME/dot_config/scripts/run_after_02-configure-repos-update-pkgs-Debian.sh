@@ -1190,13 +1190,21 @@ sudo apt autoremove --purge -y
 
 # warn about installed packages not in chezmoi config
 
+ignorepkgs=(
+1password
+1password-cli
+chezmoi
+bluedevil-dummy
+plasma-nm-dummy
+powerdevil-dummy
+
+)
 pkgwarning=$(
-comm -23 <(apt-mark showmanual |
-sort) <(printf '%s\n' "${PACKAGES[@]}" |
-sort -u)
+comm -23 <(apt-mark showmanual | sort) <(printf '%s\n' "${PACKAGES[@]}" |
+sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
 )
 if [[ -n "$pkgwarning" ]]; then
-echo -e "${redbold}WARNING: Unexpected Debian packages installed${normal}"
+echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
 echo -e "${pkgwarning}"
 fi
 
@@ -1327,10 +1335,12 @@ fi
 # Replicate the fully evaluated script to your target directory
 
 THIS_SCRIPT="${HOME}/git/${github_username}/${github_project}/HOME/dot_config/scripts/${git_filename}"
+if [[ -f "${THIS_SCRIPT}" ]]; then
 echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
 echo -e "\
 $ install -CDm 755 \"\${THIS_SCRIPT}\" ~/.config/scripts/${local_filename}"
 install -CDm 755 "${THIS_SCRIPT}" "${HOME}/.config/scripts/${local_filename}"
+fi
 
 # Log this latest `Config` operation and display runtime
 
