@@ -2,7 +2,7 @@
 
 ## Bootstrap
 ```
-sudo apt update && sudo apt install -y ca-certificates && sudo apt upgrade -y
+sudo apt update && sudo apt upgrade -y && sudo apt install -y curl ca-certificates
 ```
 ```
 TMPDIR=$(mktemp -d) && /usr/lib/apt/apt-helper download-file \
