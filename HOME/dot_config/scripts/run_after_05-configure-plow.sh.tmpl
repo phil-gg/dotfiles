@@ -380,7 +380,7 @@ echo -e "\n${cyanbold}Export variables to current shell for testing${normal}"
 echo -e "> Needed for glxinfo & elginfo below in this script"
 echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
 xargs)"
-export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
+export "$(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)"
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
