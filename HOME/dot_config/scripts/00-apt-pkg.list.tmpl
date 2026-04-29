@@ -74,10 +74,10 @@ x11-apps
 mesa-utils
 python3
 
-{{- /* Only needed on WSL packages */ -}}
-{{- $wsl := stat "/run/WSL" -}}
-{{- if and $wsl $wsl.isDir }}
+{{- /* Packages that are only needed on WSL */ -}}
+{{- $wsl := output "bash" "-c" "[[ -d /run/WSL ]]; echo -n $?" -}}
+{{- if eq $wsl "0" }}
 weston
 wl-clipboard
-{{- /* Newline after final end is needed for POSIX compatibility */ -}}
+
 {{- end }}
