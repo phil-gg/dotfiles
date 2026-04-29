@@ -500,8 +500,11 @@ context.modules = [
             audio.rate = 48000
             audio.channels = 2
             stream.props = {
+                media.class = \"Audio/Sink\"
                 node.name = \"wslg_speaker\"
                 node.description = \"Windows Sound Output\"
+                device.description = \"Windows Sound Output\"
+                device.icon_name = \"audio-speakers\"
             }
         }
     }
@@ -512,8 +515,11 @@ context.modules = [
             audio.rate = 48000
             audio.channels = 1
             stream.props = {
+                media.class = \"Audio/Source\"
                 node.name = \"wslg_mic\"
                 node.description = \"Windows Sound Input\"
+                device.description = \"Windows Sound Input\"
+                device.icon_name = \"audio-input-microphone\"
             }
         }
     }
