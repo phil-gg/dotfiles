@@ -1165,7 +1165,8 @@ mv "${git_dir}/config-runs.log" "${HOME}/git/${github_username}/config-runs.log"
 else echo ""
 fi
 # If one or more file exists in $git_dir
-if [[ -n $(find "${git_dir}" -mindepth 1 -maxdepth 1 -print -quit) ]]; then
+if [[ -n $(find "${git_dir}" -mindepth 1 -maxdepth 1 -print -quit  2>/dev/null) ]]
+then
 # Clear whole repo location so a fresh git clone will work
 echo -e "$ find ${git_dir} -mindepth 1 -delete"
 find "${git_dir}" -mindepth 1 -delete
