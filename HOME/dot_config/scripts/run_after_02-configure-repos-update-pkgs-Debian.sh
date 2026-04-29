@@ -759,7 +759,7 @@ fi
 fi
 
 # PACKAGES come from chezmoi template with fixed bootstrap fallback list
-aptpkglistfile="${HOME}/.config/scripts/apt-pkg.list"
+aptpkglistfile="${HOME}/.config/scripts/00-apt-pkg.list"
 if [[ -f "${aptpkglistfile}" ]];
 then
 PACKAGES=( $(< "${aptpkglistfile}") )
