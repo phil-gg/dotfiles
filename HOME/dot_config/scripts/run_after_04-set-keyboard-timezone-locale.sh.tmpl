@@ -14,6 +14,7 @@ if localectl list-keymaps 2>/dev/null | grep -iq "UK" \
 echo -n "0"; else echo -n "1"; fi` -}}
 {{- $checksResult := output "bash" "-c" $bashChecks -}}
 {{- if ne $checksResult "0" -}}
+
 #!/bin/bash
 
 ################################################################################
