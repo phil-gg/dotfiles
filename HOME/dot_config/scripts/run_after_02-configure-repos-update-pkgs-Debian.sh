@@ -1291,7 +1291,7 @@ $ eval $(op account add --address my.1password.com --signin)
 "
             # Word-splitting is not a problem here
             # shellcheck disable=SC2046
-            eval $(op account add --address my.1password.com --signin))
+            eval $(op account add --address my.1password.com --signin)
             echo -e ""
             
             # Branch for op signin only
