@@ -139,11 +139,13 @@ fi
 
 # Apply KDE taskbar customisations using plasma6 updates directory
 
-# TO-DO: Remove SVG from here & Chezmoi go template once in custom theme instead
+# TO-DO: Remove SVG from here once in custom theme instead
 SVG_DIR="/usr/share/plasma/shells/org.kde.plasma.desktop/contents"
 SVG_FILE="${SVG_DIR}/kde-plasma.svg"
 TASKBAR_DIR="${SVG_DIR}/updates"
 TASKBAR_FILE="${TASKBAR_DIR}/plow-taskbar.js"
+VOLUME_DIR="/etc/profile.d"
+VOLUME_FILE="${VOLUME_DIR}/plasma-volume-applet-config.sh"
 
 SVG_TEXT="\
 <svg viewBox=\"0 0 44 44\" xmlns=\"http://www.w3.org/2000/svg\">
@@ -216,6 +218,35 @@ digitalclock.writeConfig(\"showLocalTimezone\", true);
 digitalclock.writeConfig(\"use24hFormat\", 0);
 "
 
+VOLUME_TEXT="\
+#!/bin/bash
+# This file is /etc/profile.d/plasma-volume-applet-config.sh
+# KDE Plasma 6 Volume applet configuration
+CONFIG_FILE=\"\${HOME}/.config/plasma-org.kde.plasma.desktop-appletsrc\"
+if [ -f \"\${CONFIG_FILE}\" ]; then
+    APPLET_GROUP=\$(awk '/^\\[Containments/ {grp=\$0} /plugin=org.kde.plasma.volume/ {print grp; exit}' \"\${CONFIG_FILE}\")
+    if [ -n \"\${APPLET_GROUP}\" ]; then
+        CONT_ID=\$(echo \"\${APPLET_GROUP}\" | awk -F'[][]' '{print \$4}')
+        APP_ID=\$(echo \"\${APPLET_GROUP}\" | awk -F'[][]' '{print \$8}')
+        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
+                      --group Containments --group \"\${CONT_ID}\" \\
+                      --group Applets --group \"\${APP_ID}\" \\
+                      --group Configuration --group General \\
+                      --key showVirtualDevices true
+        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
+                      --group Containments --group \"\${CONT_ID}\" \\
+                      --group Applets --group \"\${APP_ID}\" \\
+                      --group Configuration --group General \\
+                      --key raiseMaximumVolume true
+        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
+                      --group Containments --group \"\${CONT_ID}\" \\
+                      --group Applets --group \"\${APP_ID}\" \\
+                      --group Configuration --group General \\
+                      --key currentTab streams
+    fi
+fi
+"
+
 if [ ! -f "${SVG_FILE}" ] || \
      ! cmp -s <(printf "%s" "${SVG_TEXT}") "${SVG_FILE}" || \
    [ ! -f "${TASKBAR_FILE}" ] || \
@@ -243,6 +274,19 @@ echo -e "$ printf \"%s\" \"\${TASKBAR_TEXT}\" | sudo tee ${TASKBAR_FILE} > \
 /dev/null"
 printf "%s" "${TASKBAR_TEXT}" | sudo tee "${TASKBAR_FILE}" > /dev/null
 
+fi
+
+# Create volume applet config
+if ! cmp -s <(printf "%s" "${VOLUME_TEXT}") "${VOLUME_FILE}"; then
+echo -e "\n${cyanbold}Set volume applet config for WSLg${normal}"
+# Quietly ensure folder exists (but should already be there)
+sudo mkdir -p "${VOLUME_DIR}"
+echo -e "$ printf \"%s\" \"\${VOLUME_TEXT}\" | sudo tee ${VOLUME_FILE}"
+printf "%s" "${VOLUME_TEXT}" | sudo tee "${VOLUME_FILE}" > /dev/null
+echo -e "$ sudo chmod 644 ${VOLUME_FILE}"
+sudo chmod 644 "${VOLUME_FILE}"
+echo -e "$ bash ${VOLUME_FILE}"
+bash "${VOLUME_FILE}"
 fi
 
 # Note GBM may not do much in this set-up, but there are dri/drm name issues
@@ -469,59 +513,25 @@ upower.service \
 switcheroo-control.service \
 udisks2.service
 echo -e "$ systemctl --user mask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service \
 filter-chain.service \
 pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service"
 systemctl --user mask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service \
 filter-chain.service \
 pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service
-echo -e "$ systemctl --user unmask \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service"
-systemctl --user unmask \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service
-echo -e "$ systemctl --user enable --now \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service"
-systemctl --user enable --now \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service
-
-# Configure pipewire-pulse
-PIPEWIRE_PULSE_DIR="/etc/pipewire/pipewire-pulse.conf.d"
-PIPEWIRE_PULSE_FILE="${PIPEWIRE_PULSE_DIR}/10-wslg-tunnel.conf"
-
-PIPEWIRE_PULSE_TEXT="\
-pulse.cmd = [
-    { cmd = \"load-module\" args = \"module-tunnel-sink server=unix:/mnt/wslg/PulseServer sink_name=wslg_speaker sink_properties=\\\"device.description='Windows Speaker' device.icon_name='audio-speakers'\\\"\" }
-    { cmd = \"load-module\" args = \"module-tunnel-source server=unix:/mnt/wslg/PulseServer source_name=wslg_mic source_properties=\\\"device.description='Windows Microphone' device.icon_name='audio-input-microphone'\\\"\" }
-]
-"
-
-if [ ! -f "${PIPEWIRE_PULSE_FILE}" ] \
-  || ! cmp -s <(printf "%s" "${PIPEWIRE_PULSE_TEXT}") "${PIPEWIRE_PULSE_FILE}";
-then
-echo -e "\n${cyanbold}Configure PipeWire-Pulse for WSLg${normal}"
-sudo mkdir -p "${PIPEWIRE_PULSE_DIR}"
-echo -e "$ printf \"%s\" \"\${PIPEWIRE_PULSE_TEXT}\" | sudo tee ${PIPEWIRE_PULSE_FILE} > /dev/null"
-printf "%s" "${PIPEWIRE_PULSE_TEXT}" | sudo tee "${PIPEWIRE_PULSE_FILE}" > /dev/null
-fi
 
 # TO-DO: Add transparent cursor config here
 
