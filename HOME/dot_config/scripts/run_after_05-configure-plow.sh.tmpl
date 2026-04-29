@@ -583,6 +583,8 @@ Before=plasma-kwin_wayland.service
 
 [Service]
 Type=oneshot
+ExecStartPre=/usr/bin/mkdir -p %t/pulse
+ExecStartPre=/usr/bin/ln -sf /mnt/wslg/PulseServer %t/pulse/native
 # The '-' prefix tells systemd to continue even if pactl throws a minor warning
 ExecStart=-/usr/bin/pactl --server=unix:/mnt/wslg/PulseServer update-sink-proplist rdp-sink device.description=\"Windows Speaker\" device.form_factor=\"speaker\" device.icon_name=\"audio-speakers\"
 ExecStart=-/usr/bin/pactl --server=unix:/mnt/wslg/PulseServer update-source-proplist rdp-source device.description=\"Windows Microphone\" device.form_factor=\"mic\" device.icon_name=\"audio-input-microphone\"
