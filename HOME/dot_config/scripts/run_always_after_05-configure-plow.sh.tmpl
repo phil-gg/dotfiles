@@ -479,6 +479,13 @@ wireplumber.service
 echo -e "$ systemctl --user enable --now pipewire pipewire-pulse wireplumber"
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
 
+# get rid of environment variable injected by Microsoft WSLg init
+if systemctl --user show-environment | grep -q "PULSE_SERVER"; then
+echo -e "\n${cyanbold}Purge WSL native audio variables from systemd${normal}"
+echo -e "$ systemctl --user unset-environment PULSE_SERVER"
+systemctl --user unset-environment PULSE_SERVER
+fi
+
 # WSLg audio config
 
 PIPEWIRE_CONF_DIR="/etc/pipewire/pipewire.conf.d"
@@ -768,7 +775,7 @@ SPS_FILE="/usr/bin/sps"
 SPS_TEXT="\
 #!/bin/bash
 if ! systemctl --user is-active plasma-workspace.target > /dev/null
-then startplasma-wayland & disown
+then unset PULSE_SERVER && startplasma-wayland & disown
 fi
 "
 
@@ -781,7 +788,7 @@ echo -e "$ sudo chmod +x ${SPS_FILE}"
 sudo chmod +x "${SPS_FILE}"
 echo -e "${bluebold}Command within /usr/bin/sps is:"
 echo -e "${cyanbold}if ! systemctl --user is-active plasma-workspace.target > \
-/dev/null; then startplasma-wayland & disown; fi"
+/dev/null; then unset PULSE_SERVER && startplasma-wayland & disown; fi"
 else
 echo -e "> /usr/bin/sps is already up-to-date"
 fi
@@ -842,9 +849,9 @@ response="${response,,}"
 if [[ "${response}" == "y" || "${response}" == "yes" ]]; then
 # This runs plow-plasma.service
 echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then startplasma-wayland & disown; fi"
+then unset PULSE_SERVER && startplasma-wayland & disown; fi"
 if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
-startplasma-wayland & disown; else \
+unset PULSE_SERVER && startplasma-wayland & disown; else \
 echo -e "${redbold}> Plow session already running\n"; fi
 # Close the choice conditional
 fi
