@@ -469,25 +469,59 @@ upower.service \
 switcheroo-control.service \
 udisks2.service
 echo -e "$ systemctl --user mask \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service \
 filter-chain.service \
 pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service"
 systemctl --user mask \
-pipewire.service \
-pipewire.socket \
-pipewire-pulse.service \
-pipewire-pulse.socket \
-wireplumber.service \
 filter-chain.service \
 pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service
+echo -e "$ systemctl --user unmask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service"
+systemctl --user unmask \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service
+echo -e "$ systemctl --user enable --now \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service"
+systemctl --user enable --now \
+pipewire.service \
+pipewire.socket \
+pipewire-pulse.service \
+pipewire-pulse.socket \
+wireplumber.service
+
+# Configure pipewire-pulse
+PIPEWIRE_PULSE_DIR="/etc/pipewire/pipewire-pulse.conf.d"
+PIPEWIRE_PULSE_FILE="${PIPEWIRE_PULSE_DIR}/10-wslg-tunnel.conf"
+
+PIPEWIRE_PULSE_TEXT="\
+pulse.cmd = [
+    { cmd = \"load-module\" args = \"module-tunnel-sink server=unix:/mnt/wslg/PulseServer sink_name=wslg_speaker sink_properties=\\\"device.description='Windows Speaker' device.icon_name='audio-speakers'\\\"\" }
+    { cmd = \"load-module\" args = \"module-tunnel-source server=unix:/mnt/wslg/PulseServer source_name=wslg_mic source_properties=\\\"device.description='Windows Microphone' device.icon_name='audio-input-microphone'\\\"\" }
+]
+"
+
+if [ ! -f "${PIPEWIRE_PULSE_FILE}" ] \
+  || ! cmp -s <(printf "%s" "${PIPEWIRE_PULSE_TEXT}") "${PIPEWIRE_PULSE_FILE}";
+then
+echo -e "\n${cyanbold}Configure PipeWire-Pulse for WSLg${normal}"
+sudo mkdir -p "${PIPEWIRE_PULSE_DIR}"
+echo -e "$ printf \"%s\" \"\${PIPEWIRE_PULSE_TEXT}\" | sudo tee ${PIPEWIRE_PULSE_FILE} > /dev/null"
+printf "%s" "${PIPEWIRE_PULSE_TEXT}" | sudo tee "${PIPEWIRE_PULSE_FILE}" > /dev/null
+fi
 
 # TO-DO: Add transparent cursor config here
 
@@ -571,27 +605,6 @@ else echo \"Error: X11 socket setup failed verification.\" && exit 1; fi'
 WantedBy=multi-user.target
 "
 
-# Define systemd unit for audio configuration for Plow
-
-AUDIO_SERVICE="\
-# plow-audio.service
-# Systemd user service to relabel WSLg audio so KDE sees hardware devices
-
-[Unit]
-Description=Relabel WSLg audio configuration for Plow
-Before=plasma-kwin_wayland.service
-
-[Service]
-Type=oneshot
-ExecStartPre=/usr/bin/mkdir -p %t/pulse
-ExecStartPre=/usr/bin/ln -sf /mnt/wslg/PulseServer %t/pulse/native
-# The '-' prefix tells systemd to continue even if pactl throws a minor warning
-ExecStart=-/usr/bin/pactl --server=unix:/mnt/wslg/PulseServer update-sink-proplist rdp-sink device.description=\"Windows Speaker\" device.form_factor=\"speaker\" device.icon_name=\"audio-speakers\"
-ExecStart=-/usr/bin/pactl --server=unix:/mnt/wslg/PulseServer update-source-proplist rdp-source device.description=\"Windows Microphone\" device.form_factor=\"mic\" device.icon_name=\"audio-input-microphone\"
-# Service stays 'active' even after the setup script exits
-RemainAfterExit=yes
-"
-
 # Define systemd unit for Weston (Plow)
 
 WESTON_SERVICE="\
@@ -626,9 +639,9 @@ PLASMA_CONF="\
 # Customises /usr/lib/systemd/user/plasma-kwin_wayland.service
 
 [Unit]
-After=plow-weston.service plow-audio.service
+After=plow-weston.service
 # Enable these services before running plasma-kwin_wayland
-Requires=plow-weston.service plow-audio.service
+Requires=plow-weston.service
 # When plow-weston stops/dies, apply to kwin too (stronger than Wants)
 BindsTo=plow-weston.service
 # When plow-weston is restarted, apply to customised plasma-kwin_wayland too
@@ -686,8 +699,6 @@ echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
 
 TMP_X_UNIT_DIR="/etc/systemd/system"
 TMP_X_UNIT_FILE="${TMP_X_UNIT_DIR}/plow-tmp-x-unix.service"
-AUDIO_UNIT_DIR="/etc/systemd/user"
-AUDIO_UNIT_FILE="${AUDIO_UNIT_DIR}/plow-audio.service"
 WESTON_UNIT_DIR="/etc/systemd/user"
 WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
 PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
@@ -706,16 +717,6 @@ echo -e "$ printf \"%s\" \"\${TMP_X_SERVICE}\" | sudo tee ${TMP_X_UNIT_FILE} > \
 /dev/null"
 printf "%s" "${TMP_X_SERVICE}" | sudo tee "${TMP_X_UNIT_FILE}" > /dev/null
 SYS_UNITS_CHANGED=1
-fi
-
-# Configure plow-audio.service systemd unit
-if [ ! -f "${AUDIO_UNIT_FILE}" ] || \
-! cmp -s <(printf "%s" "${AUDIO_SERVICE}") "${AUDIO_UNIT_FILE}"; then
-echo -e "\n${cyanbold}Configure plow-audio.service systemd unit${normal}"
-echo -e "$ printf \"%s\" \"\${AUDIO_SERVICE}\" | sudo tee ${AUDIO_UNIT_FILE} > \
-/dev/null"
-printf "%s" "${AUDIO_SERVICE}" | sudo tee "${AUDIO_UNIT_FILE}" > /dev/null
-USR_UNITS_CHANGED=1
 fi
 
 # Configure plow-weston.service systemd unit
