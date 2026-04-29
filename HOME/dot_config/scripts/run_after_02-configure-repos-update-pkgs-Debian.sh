@@ -1163,8 +1163,10 @@ mv "${HOME}/git/${github_username}/${github_project}/config-runs.log" \
 find "${HOME}/git/${github_username}/${github_project}" -mindepth 1 -delete
 
 # chezmoi initial config
-echo -e "\n$ chezmoi init https://github.com/${github_username}/${github_project}.git\n"
-chezmoi init "https://github.com/${github_username}/${github_project}.git"
+echo -e "\n$ chezmoi init https://github.com/${github_username}/\
+${github_project}.git --source ~/git/${github_username}/${github_project}\n"
+chezmoi init "https://github.com/${github_username}/${github_project}\
+.git" --source "${HOME}/git/${github_username}/${github_project}"
 
 # Move config-runs.log back into project folder
 mv "${HOME}/git/${github_username}/config-runs.log" \
