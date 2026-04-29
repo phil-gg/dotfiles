@@ -854,6 +854,7 @@ if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
 unset PULSE_SERVER && startplasma-wayland & disown; else \
 echo -e "${redbold}> Plow session already running\n"; fi
 # Close the choice conditional
+else echo ""
 fi
 
 ################################################################################
