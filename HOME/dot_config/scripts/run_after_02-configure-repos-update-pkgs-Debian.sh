@@ -1182,7 +1182,7 @@ fi
 # keep apt tidy
 
 echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
-echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'\n"
+echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
 sudo sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
