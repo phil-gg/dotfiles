@@ -1,4 +1,8 @@
-{{- /* CLI tools */ -}}
+{{- /* Debian essential priority and important packages */ -}}
+{{ output "bash" "-c" "apt-cache dumpavail | awk '/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' | sort -u" }}
+
+{{- /* CLI tools */}}
+sudo
 curl
 wget
 gpg
@@ -12,10 +16,12 @@ fastfetch
 graphicsmagick
 
 {{- /* Localisation tools */}}
+locales
 keyboard-configuration
 console-setup
 
 {{- /* Debian package tools */}}
+aptitude
 cosign
 debsigs
 equivs
