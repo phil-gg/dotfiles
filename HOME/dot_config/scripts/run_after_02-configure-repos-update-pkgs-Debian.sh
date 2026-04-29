@@ -762,12 +762,18 @@ fi
 aptpkglistfile="${HOME}/.config/scripts/00-apt-pkg.list"
 if [[ -f "${aptpkglistfile}" ]];
 then
-PACKAGES=( $(< "${aptpkglistfile}") )
+mapfile -t PACKAGES < "${aptpkglistfile}"
 else
 # Include one named terminal emulator here to prevent auto-install of another
 # terminal emulator application by x-terminal-emulator virtual package later.
 # Chose qterminal being lightweight but still Qt based (from LXQt).
-PACKAGES=(
+
+mapfile -t PACKAGES < <(apt-cache dumpavail | awk \
+'/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' \
+| sort -u)
+
+PACKAGES+=(
+sudo
 curl
 wget
 git
@@ -776,6 +782,10 @@ gpg
 cosign
 debsigs
 equivs
+locales
+keyboard-configuration
+console-setup
+aptitude
 qterminal
 )
 fi
@@ -1172,11 +1182,23 @@ fi
 # keep apt tidy
 
 echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
-echo -e "$ sudo apt-mark minimize-manual\n"
-sudo apt-mark minimize-manual
+echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'\n"
+sudo sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 echo -e "\n${cyanbold}Clean up apt packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
+
+# warn about installed packages not in chezmoi config
+
+pkgwarning=$(
+comm -23 <(apt-mark showmanual |
+sort) <(printf '%s\n' "${PACKAGES[@]}" |
+sort -u)
+)
+if [[ -n "$pkgwarning" ]]; then
+echo -e "${redbold}WARNING: Unexpected Debian packages installed${normal}"
+echo -e "${pkgwarning}"
+fi
 
 # Check whether 1password-cli installed or updated
 if (( op_needs_signin == 1 )); then
