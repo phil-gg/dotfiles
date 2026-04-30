@@ -826,15 +826,21 @@ fi
 
 # warn about duplicates in chezmoi config
 
-duplicatepkgs=(
+# ca-certificates is a dependency of nordvpn
+# curl is a dependency of 1password
+# sudo is an indirect dependency of plasma-desktop
+ignoreduplicates=(
+ca-certificates
+curl
+sudo
 )
-pkgwarning=$(
+pkgduplicates=$(
 comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(apt-mark showmanual |
-sort) | comm -23 - <(printf '%s\n' "${duplicatepkgs[@]}" | sort -u)
+sort) | comm -23 - <(printf '%s\n' "${ignoreduplicates[@]}" | sort -u)
 )
-if [[ -n "$pkgwarning" ]]; then
+if [[ -n "$pkgduplicates" ]]; then
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
-echo -e "${pkgwarning}"
+echo -e "${pkgduplicates}"
 fi
 
 echo -e "\n> Combine apt install into apt upgrade with apt-mark manual"
