@@ -839,7 +839,7 @@ comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(apt-mark showmanual |
 sort) | comm -23 - <(printf '%s\n' "${ignoreduplicates[@]}" | sort -u)
 )
 if [[ -n "$pkgduplicates" ]]; then
-echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
+echo -e "\n${cyanbold}Duplicate packages in chezmoi template${normal}"
 echo -e "${pkgduplicates}"
 fi
 
