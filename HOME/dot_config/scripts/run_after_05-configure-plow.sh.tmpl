@@ -410,6 +410,15 @@ xargs systemctl --user set-environment"
 echo -e "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | \
 xargs systemctl --user set-environment
 
+# Enable D-Bus if needed
+if ! systemctl --user is-active --quiet dbus.socket; then
+echo -e "\n${cyanbold}Enable user D-Bus socket${normal}"
+echo -e "$ systemctl --user daemon-reload"
+systemctl --user daemon-reload
+echo -e "$ systemctl --user start dbus.socket"
+systemctl --user start dbus.socket
+fi
+
 # Add environment variables to D-Bus too
 echo -e "\n$ dbus-update-activation-environment --systemd --all"
 dbus-update-activation-environment --systemd --all
