@@ -1278,15 +1278,15 @@ if op whoami &> /dev/null
             
             # Branch for account registration
             then
-            echo -e "${redbold}> No accounts registered in 1password-cli${normal}
-\ \ \ \ \ \ > sign-in address = my.1password.com
-\ \ \ \ \ \ >  email  address = p… .c…@gmail.com
-\ \ \ \ \ \ >   For secret key:
-\ \ \ \ \ \ >    Open https://my.1password.com/apps
-\ \ \ \ \ \ >    …and click ‘Sign in manually’ button
-\ \ \ \ \ \ > Next enter master password
-\ \ \ \ \ \ > Finally enter TOTP from another 1password instance\n
-\ \ \ \ \ \ $ eval \$(op account add --signin)\n"
+echo -e "${redbold}> No accounts registered in 1password-cli${normal}
+> sign-in address = my.1password.com
+>  email  address = p… .c…@gmail.com
+>   For secret key:
+>    Open https://my.1password.com/apps
+>    …and click ‘Sign in manually’ button
+> Next enter master password
+> Finally enter TOTP from another 1password instance\n
+$ eval \$(op account add --signin)\n"
             raw_token=$(op account add --signin --raw)
             echo -e ""
             
