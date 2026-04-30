@@ -795,6 +795,10 @@ PACKAGES+=(
 )
 fi
 
+# mark manual so apt upgrade can do apt install too
+
+echo -e "\n${cyanbold}Keep apt tidy and apt-mark manual${normal}"
+
 # warn about installed packages not in chezmoi config
 
 ignorepkgs=(
@@ -814,14 +818,23 @@ echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
 echo -e "${pkgwarning}"
 fi
 
-# mark manual so apt upgrade can do apt install too
-
-echo -e "\n${cyanbold}Keep apt tidy and apt-mark manual${normal}"
-
 if command -v aptitude &> /dev/null; then
 echo -e "> Aggressive markauto"
 echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
 sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
+fi
+
+# warn about duplicates in chezmoi config
+
+duplicatepkgs=(
+)
+pkgwarning=$(
+comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(apt-mark showmanual |
+sort) | comm -23 - <(printf '%s\n' "${duplicatepkgs[@]}" | sort -u)
+)
+if [[ -n "$pkgwarning" ]]; then
+echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
+echo -e "${pkgwarning}"
 fi
 
 echo -e "\n> Combine apt install into apt upgrade with apt-mark manual"
