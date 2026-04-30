@@ -144,8 +144,6 @@ SVG_DIR="/usr/share/plasma/shells/org.kde.plasma.desktop/contents"
 SVG_FILE="${SVG_DIR}/kde-plasma.svg"
 TASKBAR_DIR="${SVG_DIR}/updates"
 TASKBAR_FILE="${TASKBAR_DIR}/plow-taskbar.js"
-VOLUME_DIR="/etc/profile.d"
-VOLUME_FILE="${VOLUME_DIR}/plasma-volume-applet-config.sh"
 
 SVG_TEXT="\
 <svg viewBox=\"0 0 44 44\" xmlns=\"http://www.w3.org/2000/svg\">
@@ -216,35 +214,20 @@ digitalclock.writeConfig(\"customDateFormat\", \"ddd-d-MMM-yyyy\");
 digitalclock.writeConfig(\"dateDisplayFormat\", \"BelowTime\");
 digitalclock.writeConfig(\"showLocalTimezone\", true);
 digitalclock.writeConfig(\"use24hFormat\", 0);
-"
 
-VOLUME_TEXT="\
-#!/bin/bash
-# This file is /etc/profile.d/plasma-volume-applet-config.sh
-# KDE Plasma 6 Volume applet configuration
-CONFIG_FILE=\"\${HOME}/.config/plasma-org.kde.plasma.desktop-appletsrc\"
-if [ -f \"\${CONFIG_FILE}\" ]; then
-    APPLET_GROUP=\$(awk '/^\\[Containments/ {grp=\$0} /plugin=org.kde.plasma.volume/ {print grp; exit}' \"\${CONFIG_FILE}\")
-    if [ -n \"\${APPLET_GROUP}\" ]; then
-        CONT_ID=\$(echo \"\${APPLET_GROUP}\" | awk -F'[][]' '{print \$4}')
-        APP_ID=\$(echo \"\${APPLET_GROUP}\" | awk -F'[][]' '{print \$8}')
-        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
-                      --group Containments --group \"\${CONT_ID}\" \\
-                      --group Applets --group \"\${APP_ID}\" \\
-                      --group Configuration --group General \\
-                      --key showVirtualDevices true
-        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
-                      --group Containments --group \"\${CONT_ID}\" \\
-                      --group Applets --group \"\${APP_ID}\" \\
-                      --group Configuration --group General \\
-                      --key raiseMaximumVolume true
-        kwriteconfig6 --file plasma-org.kde.plasma.desktop-appletsrc \\
-                      --group Containments --group \"\${CONT_ID}\" \\
-                      --group Applets --group \"\${APP_ID}\" \\
-                      --group Configuration --group General \\
-                      --key currentTab streams
-    fi
-fi
+// Volume applet (a containment within the System Tray)
+var allConts = containments();
+for (var c = 0; c < allConts.length; c++) {
+    var contWidgets = allConts[c].widgets();
+    for (var w = 0; w < contWidgets.length; w++) {
+        if (contWidgets[w].type === \"org.kde.plasma.volume\") {
+            contWidgets[w].currentConfigGroup = [\"General\"];
+            contWidgets[w].writeConfig(\"showVirtualDevices\", true);
+            contWidgets[w].writeConfig(\"raiseMaximumVolume\", true);
+            contWidgets[w].writeConfig(\"currentTab\", \"streams\");
+        }
+    }
+}
 "
 
 if [ ! -f "${SVG_FILE}" ] || \
@@ -274,19 +257,6 @@ echo -e "$ printf \"%s\" \"\${TASKBAR_TEXT}\" | sudo tee ${TASKBAR_FILE} > \
 /dev/null"
 printf "%s" "${TASKBAR_TEXT}" | sudo tee "${TASKBAR_FILE}" > /dev/null
 
-fi
-
-# Create volume applet config
-if ! cmp -s <(printf "%s" "${VOLUME_TEXT}") "${VOLUME_FILE}"; then
-echo -e "\n${cyanbold}Set volume applet config for WSLg${normal}"
-# Quietly ensure folder exists (but should already be there)
-sudo mkdir -p "${VOLUME_DIR}"
-echo -e "$ printf \"%s\" \"\${VOLUME_TEXT}\" | sudo tee ${VOLUME_FILE}"
-printf "%s" "${VOLUME_TEXT}" | sudo tee "${VOLUME_FILE}" > /dev/null
-echo -e "$ sudo chmod 644 ${VOLUME_FILE}"
-sudo chmod 644 "${VOLUME_FILE}"
-echo -e "$ bash ${VOLUME_FILE}"
-bash "${VOLUME_FILE}"
 fi
 
 # Note GBM may not do much in this set-up, but there are dri/drm name issues
