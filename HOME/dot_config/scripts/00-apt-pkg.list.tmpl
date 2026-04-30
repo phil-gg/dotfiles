@@ -1,3 +1,5 @@
+{{- /* Define WSL test */ -}}
+{{- $wsl := output "bash" "-c" "[[ -d /run/WSL ]]; echo -n $?" -}}
 {{- /* Min pkg list to install all Debian [essential|priority|important] pkgs */ -}}
 {{- output "bash" "-c" "comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) <(aptitude search -F '%p' '~E|~prequired|~pimportant' | xargs apt-cache depends | awk '/Depends:|PreDepends:/ {print $NF}' | tr -d '<>' | sort -u)" -}}
 {{- /* Extra essentials not marked essential priority or important by Debian */ -}}
@@ -49,13 +51,11 @@ nordvpn
 nordvpn-gui
 
 {{- /* KDE Plasma Desktop Environment */}}
-plasma-workspace
+plasma-desktop
 plasma-workspace-doc
-kde-cli-tools
 kio-extras
 kio-fuse
 ksystemstats
-plasma-desktop
 breeze-gtk-theme
 kde-config-gtk-style
 kde-config-gtk-style-preview
@@ -65,7 +65,6 @@ kwin-wayland
 qterminal
 khelpcenter
 kinfocenter
-systemsettings
 
 {{- /* Font packages */}}
 fonts-hack
@@ -78,9 +77,7 @@ mesa-utils
 python3
 
 {{- /* Packages that are only needed on WSL */ -}}
-{{- $wsl := output "bash" "-c" "[[ -d /run/WSL ]]; echo -n $?" -}}
 {{- if eq $wsl "0" }}
 weston
 wl-clipboard
-
 {{- end }}
