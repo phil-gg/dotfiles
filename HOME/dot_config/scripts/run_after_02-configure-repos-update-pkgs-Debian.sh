@@ -776,8 +776,6 @@ PACKAGES+=(
 sudo
 curl
 wget
-git
-gh
 gpg
 cosign
 debsigs
