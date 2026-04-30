@@ -1,5 +1,5 @@
-{{- /* Debian essential priority and important packages */ -}}
-{{- output "bash" "-c" "apt-cache dumpavail | awk '/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' | sort -u" -}}
+{{- /* Min pkg list to install all Debian [essential|priority|important] pkgs */ -}}
+{{- output "bash" "-c" "comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) <(aptitude search -F '%p' '~E|~prequired|~pimportant' | xargs apt-cache depends | awk '/Depends:|PreDepends:/ {print $NF}' | tr -d '<>' | sort -u)" -}}
 {{- /* Extra essentials not marked essential priority or important by Debian */ -}}
 sudo
 ca-certificates
