@@ -824,24 +824,24 @@ echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
 sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 fi
 
-echo -e "> Combine apt install into apt upgrade with apt-mark manual"
-echo -e "$ sudo apt-mark manual ${PACKAGES[*]}"
+echo -e "\n> Combine apt install into apt upgrade with apt-mark manual"
+echo -e "$ sudo apt-mark manual ${PACKAGES[*]}\n"
 printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual
 
 mapfile -t RC_PKGS < <(dpkg -l | awk '/^rc/ {print $2}')
 
 if (( ${#RC_PKGS[@]} > 0 )); then
-echo -e "> Purge residual configs"
+echo -e "\n> Purge residual configs"
 echo -e "$ sudo apt-get purge -y ${RC_PKGS[*]}"
 sudo apt-get purge -y "${RC_PKGS[@]}"
 fi
 
-echo -e "> Remove and purge not needed packages"
+echo -e "\n> Remove and purge not needed packages"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
 
-echo -e "> Remove obsolete deb package local copies"
-echo -e "$ sudo apt-get autoclean"
+echo -e "\n> Remove obsolete deb package local copies"
+echo -e "$ sudo apt-get autoclean\n"
 sudo apt-get autoclean
 
 # apt upgrade if needed
