@@ -27,8 +27,6 @@ greenbold=$(printf '\033[92;1m')
 cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
 pkgarch=$(dpkg --print-architecture)
-op_token_in_ram_path="/dev/shm/op_session_token_${USER}"
-op_needs_signin="0"
 
 # Now running `${local_filename}`
 
@@ -40,13 +38,13 @@ debianreleasekeyfile="/usr/share/keyrings/debian-archive-trixie-stable.asc"
 
 # Get debian package keys
 
-if [[ ! -f "${debianarchivekeyfile}"
-   || ! -f "${debiansecuritykeyfile}"
-   || ! -f "${debianreleasekeyfile}" ]]; then
+if [[ ! -s "${debianarchivekeyfile}"
+   || ! -s "${debiansecuritykeyfile}"
+   || ! -s "${debianreleasekeyfile}" ]]; then
 echo -e "\n${cyanbold}Downloading debian signing keys${normal}"
 fi
 
-if [[ ! -f "${debianarchivekeyfile}" ]]; then
+if [[ ! -s "${debianarchivekeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
 sudo tee \"${debianarchivekeyfile}\" 1> /dev/null"
@@ -54,7 +52,7 @@ curl -fsSL https://ftp-master.debian.org/keys/archive-key-13.asc | \
 sudo tee "${debianarchivekeyfile}" 1> /dev/null
 fi
 
-if [[ ! -f "${debiansecuritykeyfile}" ]]; then
+if [[ ! -s "${debiansecuritykeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
 sudo tee \"${debiansecuritykeyfile}\" 1> /dev/null"
@@ -62,7 +60,7 @@ curl -fsSL https://ftp-master.debian.org/keys/archive-key-13-security.asc | \
 sudo tee "${debiansecuritykeyfile}" 1> /dev/null
 fi
 
-if [[ ! -f "${debianreleasekeyfile}" ]]; then
+if [[ ! -s "${debianreleasekeyfile}" ]]; then
 echo -e "$ \
 curl -fsSL https://ftp-master.debian.org/keys/release-13.asc | \
 sudo tee \"${debianreleasekeyfile}\" 1> /dev/null"
@@ -88,15 +86,15 @@ expectedkeytrixierelease="41587F7DB8C774BCCF131416762F67A0B2C39DE4"
 
 actualsha256trixiearchive=$(
 sha256sum "${debianarchivekeyfile}" 2> /dev/null \
-| grep -oE "[0-9a-f]{64}"
+| awk '{print $1}'
 )
 actualsha256trixiesecurity=$(
 sha256sum "${debiansecuritykeyfile}" 2> /dev/null \
-| grep -oE "[0-9a-f]{64}"
+| awk '{print $1}'
 )
 actualsha256trixierelease=$(
 sha256sum "${debianreleasekeyfile}" 2> /dev/null \
-| grep -oE "[0-9a-f]{64}"
+| awk '{print $1}'
 )
 
 actualkeytrixiearchive=$(
@@ -462,7 +460,7 @@ Types: deb
 URIs: https://security.debian.org/debian-security/
 Suites: trixie-security
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386 arm64
 Signed-By: ${debiansecuritykeyfile}
 "
 
@@ -493,7 +491,7 @@ URIs: https://deb.debian.org/debian/
 Suites: trixie trixie-updates trixie-proposed-updates trixie-backports \
 trixie-backports-sloppy
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386 arm64
 Signed-By: ${debianarchivekeyfile}
 "
 
@@ -518,7 +516,7 @@ Types: deb
 URIs: https://deb.debian.org/debian/
 Suites: sid
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386 arm64
 Signed-By: ${debianarchivekeyfile}
 "
 
@@ -601,8 +599,8 @@ gpg --list-packets /usr/share/keyrings/1password-archive-keyring.gpg \
 | head -n 1
 )
 
-if [[ ! -f "/etc/debsig/policies/${onepid}/${onepname}.pol"
-   || ! -f "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
+if [[ ! -s "/etc/debsig/policies/${onepid}/${onepname}.pol"
+   || ! -s "/usr/share/debsig/keyrings/${onepid}/debsig.gpg" ]]; then
 echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}"
 echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 
@@ -626,7 +624,7 @@ OP_DEBSIG="\
 </Policy>
 "
 
-if [[ ! -f "${opdebsigfile}" ]];
+if [[ ! -s "${opdebsigfile}" ]];
 then
 echo -e "\n${bluebold}Create ${opdebsigfile}${normal}"
 echo -e "$ echo \"\${OP_DEBSIG}\" | sudo tee \"${opdebsigfile}\" 1> /dev/null"
@@ -658,17 +656,7 @@ LOCKFILE="/var/lib/apt/lists/lock"
 sudo apt update && sudo flock -n "${LOCKFILE}" touch "${LOCKFILE}"
 fi
 
-# apt upgrade if needed
-
-count_upgrade_pkgs=$(apt-get -s upgrade | grep -P -c '^Inst ')
-# Thus don't want to use any alternative above!
-if (( count_upgrade_pkgs > 0 )); then
-echo -e "\n${cyanbold}Run apt upgrade${normal}"
-echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y\n"
-sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
-fi
-
-# Check for packages and install if necessary
+# Check for packages with one-off post-install steps BEFORE apt upgrade
 
 # Firefox comes from chezmoi template; message to show if/when it is installed
 firefoxnotinstalled="0"
@@ -758,22 +746,32 @@ fi
 # End WSL only dummy packages section
 fi
 
-# PACKAGES come from chezmoi template with fixed bootstrap fallback list
+# PACKAGES either from chezmoi template or from fixed bootstrap fallback list
 aptpkglistfile="${HOME}/.config/scripts/00-apt-pkg.list"
-if [[ -f "${aptpkglistfile}" ]];
-then
+if [[ -s "${aptpkglistfile}" ]]; then
+# Load PACKAGES from chezmoi template
 mapfile -t PACKAGES < "${aptpkglistfile}"
 else
-# Include one named terminal emulator here to prevent auto-install of another
-# terminal emulator application by x-terminal-emulator virtual package later.
-# Chose qterminal being lightweight but still Qt based (from LXQt).
-
-mapfile -t PACKAGES < <(apt-cache dumpavail | awk \
-'/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' \
-| sort -u)
-
+# Construct PACKAGES bootstrap fallback list
+# Start with min pkg list to install all (essential|priority|important) deb pkgs
+EPI_PKGS=$(
+apt-cache dumpavail |
+awk '/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' |
+sort -u
+)
+# Remove from list any pkg that is a (Depends|PreDepends) of any other
+mapfile -t PACKAGES < <(
+comm -23 \
+<(printf '%s\n' "$EPI_PKGS") \
+<(printf '%s\n' "$EPI_PKGS" | xargs -r apt-cache depends 2>/dev/null | awk \
+'/^[[:space:]]*\|?(Depends|PreDepends):/ {print $NF}' | tr -d '<>' | sort -u)
+)
+# Add a minimum list of extra packages to the bootstrap fallback list
+# Include one named terminal emulator here (qterminal) to prevent auto-install
+# of something unwanted by x-terminal-emulator virtual package later.
 PACKAGES+=(
 sudo
+ca-certificates
 curl
 wget
 gpg
@@ -786,18 +784,76 @@ console-setup
 aptitude
 qterminal
 )
+# Close the chezmoi template file or bootstrap fallback list choice
 fi
 
-APT_LINE_COUNT=$(
-apt-get -s install "${PACKAGES[@]}" 2>/dev/null \
-| grep -cE '^(Inst|Conf)\b'
+# Add 1password on amd64 arch only
+if [[ "${pkgarch}" == "amd64" ]]; then
+PACKAGES+=(
+1password
+1password-cli
 )
-
-if [[ "${APT_LINE_COUNT}" -gt 0 ]]; then
-echo -e "\n${cyanbold}Installing packages${normal}"
-echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}"
-sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
 fi
+
+# warn about installed packages not in chezmoi config
+
+ignorepkgs=(
+1password
+1password-cli
+chezmoi
+bluedevil-dummy
+plasma-nm-dummy
+powerdevil-dummy
+)
+pkgwarning=$(
+comm -23 <(apt-mark showmanual | sort) <(printf '%s\n' "${PACKAGES[@]}" |
+sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
+)
+if [[ -n "$pkgwarning" ]]; then
+echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
+echo -e "${pkgwarning}"
+fi
+
+# mark manual so apt upgrade can do apt install too
+
+echo -e "\n${cyanbold}Keep apt tidy and apt-mark manual${normal}"
+
+if command -v aptitude &> /dev/null; then
+echo -e "> Aggressive markauto"
+echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
+sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
+fi
+
+echo -e "> Combine apt install into apt upgrade with apt-mark manual"
+echo -e "$ sudo apt-mark manual ${PACKAGES[*]}"
+printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual
+
+mapfile -t RC_PKGS < <(dpkg -l | awk '/^rc/ {print $2}')
+
+if (( ${#RC_PKGS[@]} > 0 )); then
+echo -e "> Purge residual configs"
+echo -e "$ sudo apt-get purge -y ${RC_PKGS[*]}"
+sudo apt-get purge -y "${RC_PKGS[@]}"
+fi
+
+echo -e "> Remove and purge not needed packages"
+echo -e "$ sudo apt autoremove --purge -y\n"
+sudo apt autoremove --purge -y
+
+echo -e "> Remove obsolete deb package local copies"
+echo -e "$ sudo apt-get autoclean"
+sudo apt-get autoclean
+
+# apt upgrade if needed
+
+count_upgrade_pkgs=$(apt-get -s upgrade | grep -c '^Inst ')
+if (( count_upgrade_pkgs > 0 )); then
+echo -e "\n${cyanbold}Run apt upgrade${normal}"
+echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y\n"
+sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
+fi
+
+# Check for packages with one-off post-install steps AFTER apt upgrade
 
 # Firefox comes from chezmoi template; message to show if/when it is installed
 if command -v firefox-devedition &> /dev/null; then
@@ -808,6 +864,8 @@ fi
 if command -v nordvpn &> /dev/null; then
 (( nordvpnconfigneeded += 2 ))
 fi
+
+# Do one-off post-install checks where required
 
 if (( firefoxnotinstalled == 3 )) && [[ -d "/run/WSL" ]]; then
 echo -e "
@@ -831,7 +889,7 @@ OR
 wsl.exe --shutdown"
 fi
 
-if [ -f "/usr/share/applications/qterminal-drop.desktop" ]; then
+if [ -s "/usr/share/applications/qterminal-drop.desktop" ]; then
 echo -e "\n${cyanbold}Remove QTerminal drop down launcher${normal}"
 echo -e "$ sudo rm /usr/share/applications/qterminal-drop.desktop"
 sudo rm /usr/share/applications/qterminal-drop.desktop
@@ -953,12 +1011,8 @@ echo -e "> See https://releases.1password.com/developers/cli/"
 echo -e "> ${opclilatestversion}"
 echo -e "> ${opclireleasedate}"
 
-# ################## #
-# ON AMD64 ARCH ONLY #
-# ################## #
+# 1password debian packages available on amd64 only
 if [[ "${pkgarch}" == "amd64" ]]; then
-
-# debian packages available on amd64 only
 
 echo -e "\n${cyanbold}Installed 1password debian package versions${normal}"
 
@@ -971,36 +1025,12 @@ apt-cache policy 1password-cli | grep Installed | awk -F ': ' '{print $2}'
 echo -e "> ${installedversion1p} = 1password"
 echo -e "> ${installedver1pcli} = 1password-cli"
 
-# Install 1password if needed
-
-opinstallcheck=$(
-apt-get -s install 1password 1password-cli 2>/dev/null \
-| grep -P '^Inst 1password'
-)
-
-if [[ -n "${opinstallcheck}" ]]; then
-op_needs_signin="1"
-echo -e "\n${cyanbold}Install/upgrade 1password${normal}"
-echo -e "$ sudo apt -y install 1password 1password-cli\n"
-sudo apt -y install 1password 1password-cli
-else
-echo -e "${greenbold}> 1password & 1password-cli are up-to-date${normal}"
+# Close amd64 arch choice, latest version aready managed by apt
 fi
 
-# ###################### #
-# END AMD64 ONLY SECTION #
-# ###################### #
-fi
-
-# ################## #
-# ON ARM64 ARCH ONLY #
-# ################## #
-
-# Ignore this section, it is not complete, and not executed
-#
+# Install 1password from tarball on arm64 only
 # if [[ "${pkgarch}" == "arm64" ]]; then
-# 
-# # TO-DO: 1password & 1password-cli versions without looking at deb packages
+# TO-DO: Need to setup hardware before can work on this arch
 # 
 # # Explicitly install 1password dependencies
 # 
@@ -1077,11 +1107,9 @@ fi
 # # TO-DO: Complete manual deb package build here
 # # OR: Don't even make tmp folder; instead sig-check & install tarball
 # 
-# fi
 
-# ###################### #
-# END ARM64 ONLY SECTION #
-# ###################### #
+# Close arm64 arch choice, latest version aready managed by apt
+# fi
 
 # Install / Update chezmoi (on any arch)
 
@@ -1155,7 +1183,7 @@ git_dir="${HOME}/git/${github_username}/${github_project}"
 # If .git directory does not exist (will need chezmoi init)
 if [[ ! -d "${git_dir}/.git" ]]; then
 # If config-runs.log file exists here
-if [[ -f "${git_dir}/config-runs.log" ]]; then
+if [[ -s "${git_dir}/config-runs.log" ]]; then
 # Temporarily store config-runs.log up one level
 echo -e "\n> move config-runs.log"
 echo -e "$ mv ${git_dir}/config-runs.log ~/git/${github_username}/config-runs.log"
@@ -1175,7 +1203,7 @@ ${github_project}.git --source ~/git/${github_username}/${github_project}\n"
 chezmoi init "https://github.com/${github_username}/${github_project}\
 .git" --source "${git_dir}"
 # If config-runs.log file exists here
-if [[ -f "${HOME}/git/${github_username}/config-runs.log" ]]; then
+if [[ -s "${HOME}/git/${github_username}/config-runs.log" ]]; then
 # Move config-runs.log back into project folder
 echo -e "> move config-runs.log"
 echo -e "$ mv ~/git/${github_username}/config-runs.log ${git_dir}/config-runs.log"
@@ -1189,151 +1217,10 @@ echo -e "${greenbold}> chezmoi init has already occurred${normal}"
 # Close need chezmoi init check
 fi
 
-# keep apt tidy
-
-echo -e "\n${cyanbold}Make apt autoremove work properly${normal}"
-echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
-sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
-echo -e "\n${cyanbold}Clean up apt packages${normal}"
-echo -e "$ sudo apt autoremove --purge -y\n"
-sudo apt autoremove --purge -y
-
-# warn about installed packages not in chezmoi config
-
-ignorepkgs=(
-1password
-1password-cli
-chezmoi
-bluedevil-dummy
-plasma-nm-dummy
-powerdevil-dummy
-
-)
-pkgwarning=$(
-comm -23 <(apt-mark showmanual | sort) <(printf '%s\n' "${PACKAGES[@]}" |
-sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
-)
-if [[ -n "$pkgwarning" ]]; then
-echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
-echo -e "${pkgwarning}"
-fi
-
-# Check whether 1password-cli installed or updated
-if (( op_needs_signin == 1 )); then
-
-# Check whether signed into 1password-cli
-if ! op whoami &> /dev/null; then
-
-echo -e "\n${cyanbold}Manage 1password-cli authentication (op signin)${normal}"
-
-# Check if the token file exists
-if [[ -f "${op_token_in_ram_path}" ]]
-    
-    # Branch where prior op session token exists
-    then
-    # Read the token and export it for this script's session
-    OP_SESSION_my=$(cat "${op_token_in_ram_path}")
-    export OP_SESSION_my
-    tokenloaded="1"
-    echo -e "${greenbold}> 1password-cli session token loaded${normal}"
-    
-    # Branch where *NO* prior op session token exists
-    else
-    tokenloaded="0"
-    echo -e "${redbold}> No 1password-cli session token loaded${normal}"
-    
-# Close whether token file exists condition
-fi
-
-# Now check whether you have a valid 1password-cli session
-if op whoami &> /dev/null
-    
-    # Branch where token is valid
-    then
-    echo -e "${greenbold}> op signin complete${normal}"
-    
-    # Branch where token not valid or non existent
-    else
-    # Message only if token existed but not valid
-    if (( tokenloaded == 1 )); then
-        echo -e "${redbold}> 1password-cli token expired${normal}"
-    fi
-    # Choice: message
-    read -r -p "> Authenticate 1password-cli (op signin) now? (Y/n) " response
-    # Convert the string to lowercase
-    response="${response,,}"
-    
-    # Choice: check for 'y', 'yes', or an empty string (-z)
-    if [[ "${response}" == "y" || "${response}" == "yes" || -z "${response}" ]]
-        
-        # Branch where you want to create a new valid token for 1password-cli
-        then
-        # No scriptused variable this time
-        echo -e "\n${cyanbold}Checking whether account registered in 1password-cli${normal}"
-        
-        # Check whether account(s) registered in 1password-cli
-        if ! op account list 2> /dev/null | grep -q "1password.com"
-            
-            # Branch for account registration
-            then
-echo -e "${redbold}> No accounts registered in 1password-cli${normal}
-> sign-in address = my.1password.com
->  email  address = p… .c…@gmail.com
->   For secret key:
->    Open https://my.1password.com/apps
->    …and click ‘Sign in manually’ button
-> Next enter master password
-> Finally enter TOTP from another 1password instance\n
-$ eval \$(op account add --signin)\n"
-            raw_token=$(op account add --signin --raw)
-            echo -e ""
-            
-            # Branch for op signin only
-            else
-            echo -e "$ eval \$(op signin)\n"
-            raw_token=$(op signin --raw)
-        # Close check whether account(s) registered in 1password-cli
-        fi
-        
-        # Check for errors in generating new session token
-        if [[ -n "${raw_token}" ]]
-            
-            # Branch where new token was successfully generated
-            then
-            # Write to RAM and instantly lock down file permissions
-            touch "${op_token_in_ram_path}"
-            chmod 600 "${op_token_in_ram_path}"
-            echo "${raw_token}" > "${op_token_in_ram_path}"
-            OP_SESSION_my="${raw_token}"
-            export OP_SESSION_my
-            echo -e "${greenbold}> op session token successfully stored in memory${normal}"
-            
-            # Branch to handle token generation errors
-            else
-            echo -e "${redbold}> op signin failed${normal}"
-            exit 201
-            
-        # Close check for errors in generating new session token
-        fi
-        
-        # Branch where you declined to create a new valid token for 1password-cli
-        else
-        echo -e "${redbold}> You chose no. All secrets injection from 1password will be skipped for this chezmoi run${normal}"
-        
-    # Close [Y/n] choice whether to sign into 1password
-    fi
-# Close check whether you have a valid 1password-cli session
-fi
-
-# Close check whether signed into 1password-cli
-fi
-# Close check whether 1password-cli installed or updated
-fi
-
 # Replicate the fully evaluated script to your target directory
 
 THIS_SCRIPT="${HOME}/git/${github_username}/${github_project}/HOME/dot_config/scripts/${git_filename}"
-if [[ -f "${THIS_SCRIPT}" ]]; then
+if [[ -s "${THIS_SCRIPT}" ]]; then
 echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
 echo -e "\
 $ install -CDm 755 \"\${THIS_SCRIPT}\" ~/.config/scripts/${local_filename}"
