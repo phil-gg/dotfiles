@@ -380,7 +380,11 @@ Explanation: https://salsa.debian.org/debian/package-cycle/-/blob/master/package
 Explanation: Priorities over 1000 forces install even for a downgrade
 Explanation: Currently NO packages are set with Pin-Priorities over 1000
 Explanation: 991-1000 beats target release unless installed a higher version
-Explanation: Currently NO packages are set with Pin-Priorities 991-1000
+Explanation: Force kitty to be installed from Sid
+Package: kitty kitty-terminfo kitty-shell-integration kitty-doc
+Pin: release o=Debian, n=sid
+Pin-Priority: 999
+
 Explanation: Target release priority is 990
 Explanation: Trixie/Stable is here at 980 just less than target release priority
 Package: *
