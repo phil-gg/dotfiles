@@ -32,7 +32,8 @@ greenbold=$(printf '\033[92;1m')
 cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
 multiarch=$(dpkg-architecture -q DEB_HOST_MULTIARCH)
-lib_dir="/usr/lib/${multiarch}"
+libdir="/usr/lib/${multiarch}"
+tmpdir="${HOME}/tmp"
 KDE_CONF_CHANGED=0
 USR_UNITS_CHANGED=0
 SYS_UNITS_CHANGED=0
@@ -94,9 +95,9 @@ allow-zap=true
 # Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
 binding-modifier=alt
 # Set the cursor theme
-# cursor-theme=
+# cursor-theme=transparent
 # Set the cursor size
-cursor-size=48
+# cursor-size=48
 
 [keyboard]
 keymap_model=pc105
@@ -261,28 +262,28 @@ fi
 
 # Note GBM may not do much in this set-up, but there are dri/drm name issues
 # /usr/lib/x86_64-linux-gnu/gbm/dri_gbm.so must exist (from apt install above)
-if [ -e "${lib_dir}/gbm/dri_gbm.so" ]; then
-if [ ! -L "${lib_dir}/gbm/drm_gbm.so" ] \
-|| [ ! -L "${lib_dir}/dri/dri_gbm.so" ] \
-|| [ ! -L "${lib_dir}/dri/drm_gbm.so" ]; then
+if [ -e "${libdir}/gbm/dri_gbm.so" ]; then
+if [ ! -L "${libdir}/gbm/drm_gbm.so" ] \
+|| [ ! -L "${libdir}/dri/dri_gbm.so" ] \
+|| [ ! -L "${libdir}/dri/drm_gbm.so" ]; then
 
 echo -e "\n${cyanbold}Create symlinks to gbm/dri_gbm.so${normal}"
 # Quietly ensure other folder exists (but should already be there)
-sudo mkdir -p "${lib_dir}/dri"
+sudo mkdir -p "${libdir}/dri"
 
-if [ ! -L "${lib_dir}/gbm/drm_gbm.so" ]; then
-echo -e "$ sudo ln -s ${lib_dir}/gbm/dri_gbm.so ${lib_dir}/gbm/drm_gbm.so"
-sudo ln -sf "${lib_dir}/gbm/dri_gbm.so" "${lib_dir}/gbm/drm_gbm.so"
+if [ ! -L "${libdir}/gbm/drm_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/gbm/drm_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/gbm/drm_gbm.so"
 fi
 
-if [ ! -L "${lib_dir}/dri/dri_gbm.so" ]; then
-echo -e "$ sudo ln -s ${lib_dir}/gbm/dri_gbm.so ${lib_dir}/dri/dri_gbm.so"
-sudo ln -sf "${lib_dir}/gbm/dri_gbm.so" "${lib_dir}/dri/dri_gbm.so"
+if [ ! -L "${libdir}/dri/dri_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/dri/dri_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/dri/dri_gbm.so"
 fi
 
-if [ ! -L "${lib_dir}/dri/drm_gbm.so" ]; then
-echo -e "$ sudo ln -s ${lib_dir}/gbm/dri_gbm.so ${lib_dir}/dri/drm_gbm.so"
-sudo ln -sf "${lib_dir}/gbm/dri_gbm.so" "${lib_dir}/dri/drm_gbm.so"
+if [ ! -L "${libdir}/dri/drm_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/dri/drm_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/dri/drm_gbm.so"
 fi
 
 fi
@@ -306,8 +307,8 @@ echo /usr/lib/wsl/lib | sudo tee /etc/ld.so.conf.d/phil-wslg.conf > /dev/null
 fi
 
 if [ ! -f "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
-echo -e "$ echo ${lib_dir}/dri | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf"
-echo "${lib_dir}/dri" | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf > /dev/null
+echo -e "$ echo ${libdir}/dri | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf"
+echo "${libdir}/dri" | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf > /dev/null
 fi
 
 # Update the linker cache so the system sees the new libs immediately
@@ -362,6 +363,9 @@ WINIT_UNIX_BACKEND=wayland
 # --- Compatibility Fixes ---
 # Fixes blank/gray windows in Java apps (IntelliJ, NetBeans) running on XWayland
 _JAVA_AWT_WM_NONREPARENTING=1
+
+# --- Blank out cursor in both Weston and KDE Plasma ---
+XCURSOR_THEME=transparent
 "
 
 if ! cmp -s <(printf "%s" "${ENV_VARS_TEXT}") "${ENV_VARS_FILE}"; then
@@ -403,7 +407,7 @@ echo -e "\n${cyanbold}Export variables to current shell for testing${normal}"
 echo -e "> Needed for glxinfo & elginfo below in this script"
 echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
 xargs)"
-export "$(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)"
+export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
@@ -512,7 +516,58 @@ pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service
 
-# TO-DO: Add transparent cursor config here
+# Configure transparent cursor theme
+if [[ ! -s /usr/share/icons/transparent/cursors/left_ptr \
+   || ! -s /usr/share/icons/transparent/index.theme ]]; then
+
+echo -e "\n${cyanbold}Generating transparent cursor image files${normal}"
+# Set up tmpdir
+mkdir -p "${tmpdir}"
+
+# Generate 1x1 transparent PNG in tmpdir
+echo -e "$ gm convert -size 1x1 xc:none \"${tmpdir}/blank.png\""
+gm convert -size 1x1 xc:none "${tmpdir}/blank.png"
+
+# Create configuration file in tmpdir
+echo -e "$ echo \"32 0 0 ${tmpdir}/blank.png\" > \"${tmpdir}/blank.cfg\""
+echo "32 0 0 ${tmpdir}/blank.png" > "${tmpdir}/blank.cfg"
+
+echo -e "\n${cyanbold}Installing cursor theme${normal}"
+# Prepare transparent cursors directory
+sudo mkdir -p /usr/share/icons/transparent/cursors
+
+# Generate & output left_ptr cursor to transparent cursors directory
+echo -e "$ sudo xcursorgen \"${tmpdir}/blank.cfg\" /usr/share/icons/transparent/cursors/left_ptr"
+sudo xcursorgen "${tmpdir}/blank.cfg" /usr/share/icons/transparent/cursors/left_ptr
+
+# Create theme index file in transparent cursors directory
+echo -e "\
+$ echo -e \"\
+  [Icon Theme]
+  Name=transparent
+  Comment=System-wide invisible cursor for WSLg
+  \" | sudo tee /usr/share/icons/transparent/index.theme > /dev/null"
+echo -e "\
+[Icon Theme]
+Name=transparent
+Comment=System-wide invisible cursor for WSLg
+" | sudo tee /usr/share/icons/transparent/index.theme > /dev/null
+
+# Remove tmpdir
+echo -e "$ rm -rf \"${tmpdir}\""
+rm -rf "${tmpdir}"
+
+# Close checks for transparent cursor theme
+fi
+
+# Set the default Wayland mouse cursor theme for all Plasma users
+if [[ "$(kreadconfig6 --file /etc/xdg/kcminputrc \
+                      --group Mouse \
+                      --key cursorTheme 2> /dev/null)" != "transparent" ]]; then
+sudo mkdir -p /etc/xdg
+echo -e "$ sudo kwriteconfig6 --file /etc/xdg/kcminputrc --group Mouse --key cursorTheme transparent"
+sudo kwriteconfig6 --file /etc/xdg/kcminputrc --group Mouse --key cursorTheme transparent
+fi
 
 # Check WSL kernel version
 
@@ -821,6 +876,8 @@ mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
 echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
 >> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
 
+# Only ask if running interactively in a terminal
+if [ -t 0 ]; then
 # Run plow-plasma.service
 echo -e "${cyanbold}Optionally run Plow session${normal}"
 # Choice: message
@@ -835,8 +892,10 @@ then startplasma-wayland & disown; fi\n"
 if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
 startplasma-wayland & disown; else \
 echo -e "${redbold}> Plow session already running\n"; fi
-# Close the choice conditional
 else echo ""
+# Close the choice conditional
+fi
+# Close the interactive terminal conditional
 fi
 
 ################################################################################
