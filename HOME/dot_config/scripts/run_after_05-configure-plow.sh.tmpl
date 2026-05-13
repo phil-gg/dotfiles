@@ -95,9 +95,9 @@ allow-zap=true
 # Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
 binding-modifier=alt
 # Set the cursor theme
-# cursor-theme=transparent
+cursor-theme=transparent
 # Set the cursor size
-cursor-size=128
+# cursor-size=128
 
 [keyboard]
 keymap_model=pc105
@@ -105,7 +105,7 @@ keymap_layout=gb
 keymap_variant=extd
 "
 
-if [ ! -f "${WESTON_FILE}" ] || \
+if [ ! -s "${WESTON_FILE}" ] || \
 ! cmp -s <(printf "%s" "${WESTON_TEXT}") "${WESTON_FILE}"; then
 echo -e "\n${cyanbold}Configure weston${normal}"
 echo -e "$ sudo mkdir -p ${WESTON_DIR}"
@@ -131,7 +131,7 @@ ctl.!default {
 }
 "
 
-if [ ! -f "${ASOUND_FILE}" ] \
+if [ ! -s "${ASOUND_FILE}" ] \
   || ! cmp -s <(printf "%s" "${ASOUND_TEXT}") "${ASOUND_FILE}"; then
 echo -e "\n${cyanbold}Configure ALSA${normal}"
 echo -e "$ printf \"%s\" \"\${ASOUND_TEXT}\" | sudo tee ${ASOUND_FILE} > /dev/null"
@@ -231,9 +231,9 @@ for (var c = 0; c < allConts.length; c++) {
 }
 "
 
-if [ ! -f "${SVG_FILE}" ] || \
+if [ ! -s "${SVG_FILE}" ] || \
      ! cmp -s <(printf "%s" "${SVG_TEXT}") "${SVG_FILE}" || \
-   [ ! -f "${TASKBAR_FILE}" ] || \
+   [ ! -s "${TASKBAR_FILE}" ] || \
      ! cmp -s <(printf "%s" "${TASKBAR_TEXT}") "${TASKBAR_FILE}"; then
 
 echo -e "\n${cyanbold}Set custom KDE plasma 6 layout${normal}"
@@ -294,19 +294,19 @@ fi
 # This stops the following environment variable from being needed:
 # LD_LIBRARY_PATH=/usr/lib/wsl/lib:/usr/lib/x86_64-linux-gnu/dri
 
-if [ ! -f "/etc/ld.so.conf.d/phil-wslg.conf" ] || \
-[ ! -f "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
+if [ ! -s "/etc/ld.so.conf.d/phil-wslg.conf" ] || \
+[ ! -s "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
 
 echo -e "\n${cyanbold}Configuring system library paths${normal}"
 # Quietly ensure folder exists (but should already be there)
 sudo mkdir -p /etc/ld.so.conf.d
 
-if [ ! -f "/etc/ld.so.conf.d/phil-wslg.conf" ]; then
+if [ ! -s "/etc/ld.so.conf.d/phil-wslg.conf" ]; then
 echo -e "$ echo /usr/lib/wsl/lib | sudo tee /etc/ld.so.conf.d/phil-wslg.conf"
 echo /usr/lib/wsl/lib | sudo tee /etc/ld.so.conf.d/phil-wslg.conf > /dev/null
 fi
 
-if [ ! -f "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
+if [ ! -s "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
 echo -e "$ echo ${libdir}/dri | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf"
 echo "${libdir}/dri" | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf > /dev/null
 fi
@@ -363,9 +363,6 @@ WINIT_UNIX_BACKEND=wayland
 # --- Compatibility Fixes ---
 # Fixes blank/gray windows in Java apps (IntelliJ, NetBeans) running on XWayland
 _JAVA_AWT_WM_NONREPARENTING=1
-
-# --- Blank out cursor in both Weston and KDE Plasma ---
-XCURSOR_THEME=transparent
 "
 
 if ! cmp -s <(printf "%s" "${ENV_VARS_TEXT}") "${ENV_VARS_FILE}"; then
@@ -438,7 +435,7 @@ confirmLogout=true
 loginMode=emptySession
 "
 
-if [ ! -f /etc/xdg/kscreenlockerrc ] || \
+if [ ! -s /etc/xdg/kscreenlockerrc ] || \
 ! cmp -s <(printf "%s" "${kscreenlockerrc}") /etc/xdg/kscreenlockerrc; then
 echo -e "\n${cyanbold}Configure kscreenlockerrc${normal}"
 echo -e "$ printf \"%s\" \"\${kscreenlockerrc}\" | sudo tee /etc/xdg/\
@@ -447,7 +444,7 @@ printf "%s" "${kscreenlockerrc}" | sudo tee /etc/xdg/kscreenlockerrc > /dev/null
 KDE_CONF_CHANGED=1
 fi
 
-if [ ! -f /etc/xdg/kdeglobals ] || \
+if [ ! -s /etc/xdg/kdeglobals ] || \
 ! cmp -s <(printf "%s" "${kdeglobals}") /etc/xdg/kdeglobals; then
 echo -e "\n${cyanbold}Configure kdeglobals${normal}"
 echo -e "$ printf \"%s\" \"\${kdeglobals}\" | sudo tee /etc/xdg/kdeglobals > \
@@ -456,7 +453,7 @@ printf "%s" "${kdeglobals}" | sudo tee /etc/xdg/kdeglobals > /dev/null
 KDE_CONF_CHANGED=1
 fi
 
-if [ ! -f /etc/xdg/ksmserverrc ] || \
+if [ ! -s /etc/xdg/ksmserverrc ] || \
 ! cmp -s <(printf "%s" "${ksmserverrc}") /etc/xdg/ksmserverrc; then
 echo -e "\n${cyanbold}Configure ksmserverrc${normal}"
 echo -e "$ printf \"%s\" \"\${ksmserverrc}\" | sudo tee /etc/xdg/ksmserverrc > \
@@ -558,15 +555,6 @@ echo -e "$ rm -rf \"${tmpdir}\""
 rm -rf "${tmpdir}"
 
 # Close checks for transparent cursor theme
-fi
-
-# Set the default Wayland mouse cursor theme for all Plasma users
-if [[ "$(kreadconfig6 --file /etc/xdg/kcminputrc \
-                      --group Mouse \
-                      --key cursorTheme 2> /dev/null)" != "transparent" ]]; then
-sudo mkdir -p /etc/xdg
-echo -e "$ sudo kwriteconfig6 --file /etc/xdg/kcminputrc --group Mouse --key cursorTheme transparent"
-sudo kwriteconfig6 --file /etc/xdg/kcminputrc --group Mouse --key cursorTheme transparent
 fi
 
 # Check WSL kernel version
@@ -752,7 +740,7 @@ PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
 sudo mkdir -p "${PLASMA_CONF_DIR}"
 
 # Configure plow-tmp-x-unix.service systemd unit
-if [ ! -f "${TMP_X_UNIT_FILE}" ] || \
+if [ ! -s "${TMP_X_UNIT_FILE}" ] || \
 ! cmp -s <(printf "%s" "${TMP_X_SERVICE}") "${TMP_X_UNIT_FILE}"; then
 echo -e "\n${cyanbold}Configure plow-tmp-x-unix.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
@@ -764,7 +752,7 @@ SYS_UNITS_CHANGED=1
 fi
 
 # Configure plow-weston.service systemd unit
-if [ ! -f "${WESTON_UNIT_FILE}" ] || \
+if [ ! -s "${WESTON_UNIT_FILE}" ] || \
 ! cmp -s <(printf "%s" "${WESTON_SERVICE}") "${WESTON_UNIT_FILE}"; then
 echo -e "\n${cyanbold}Configure plow-weston.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
@@ -776,7 +764,7 @@ USR_UNITS_CHANGED=1
 fi
 
 # Configure plasma-kwin_wayland.service customisation
-if [ ! -f "${PLASMA_CONF_FILE}" ] || \
+if [ ! -s "${PLASMA_CONF_FILE}" ] || \
 ! cmp -s <(printf "%s" "${PLASMA_CONF}") "${PLASMA_CONF_FILE}"; then
 echo -e "\n${cyanbold}Customise plasma-kwin_wayland systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
@@ -817,7 +805,7 @@ fi
 "
 
 echo -e "\n${cyanbold}Configure /usr/bin/sps (Start Plow Session)${normal}"
-if [ ! -f "${SPS_FILE}" ] \
+if [ ! -s "${SPS_FILE}" ] \
   || ! cmp -s <(printf "%s" "${SPS_TEXT}") "${SPS_FILE}"; then
 echo -e "$ printf \"%s\" \"\${SPS_TEXT}\" | sudo tee ${SPS_FILE} > /dev/null"
 printf "%s" "${SPS_TEXT}" | sudo tee "${SPS_FILE}" > /dev/null
@@ -839,7 +827,7 @@ qdbus6 org.kde.LogoutPrompt /LogoutPrompt org.kde.LogoutPrompt.promptLogout
 "
 
 echo -e "\n${cyanbold}Configure /usr/bin/eps (End Plow Session)${normal}"
-if [ ! -f "${EPS_FILE}" ] \
+if [ ! -s "${EPS_FILE}" ] \
   || ! cmp -s <(printf "%s" "${EPS_TEXT}") "${EPS_FILE}"; then
 echo -e "$ printf \"%s\" \"\${EPS_TEXT}\" | sudo tee ${EPS_FILE} > /dev/null"
 printf "%s" "${EPS_TEXT}" | sudo tee "${EPS_FILE}" > /dev/null
