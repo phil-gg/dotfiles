@@ -819,11 +819,11 @@ sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
 )
 if [[ -n "$pkgwarning" ]]; then
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
-echo -e "${pkgwarning}"
+echo -e "${pkgwarning}\n"
 fi
 
 if command -v aptitude &> /dev/null; then
-echo -e "> Aggressive markauto"
+echo -e "${bluebold}> Aggressive markauto${normal}"
 echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
 sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 fi
@@ -847,23 +847,23 @@ echo -e "\n${cyanbold}Duplicate packages in chezmoi template${normal}"
 echo -e "${pkgduplicates}"
 fi
 
-echo -e "\n> Combine apt install into apt upgrade with apt-mark manual"
+echo -e "\n${bluebold}> Combine apt install into apt upgrade with apt-mark manual${normal}"
 echo -e "$ sudo apt-mark manual ${PACKAGES[*]}\n"
 printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual
 
 mapfile -t RC_PKGS < <(dpkg -l | awk '/^rc/ {print $2}')
 
 if (( ${#RC_PKGS[@]} > 0 )); then
-echo -e "\n> Purge residual configs"
+echo -e "\n${bluebold}> Purge residual configs${normal}"
 echo -e "$ sudo apt-get purge -y ${RC_PKGS[*]}"
 sudo apt-get purge -y "${RC_PKGS[@]}"
 fi
 
-echo -e "\n> Remove and purge not needed packages"
+echo -e "\n${bluebold}> Remove and purge not needed packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
 
-echo -e "\n> Remove obsolete deb package local copies"
+echo -e "\n${bluebold}> Remove obsolete deb package local copies${normal}"
 echo -e "$ sudo apt-get autoclean\n"
 sudo apt-get autoclean
 
