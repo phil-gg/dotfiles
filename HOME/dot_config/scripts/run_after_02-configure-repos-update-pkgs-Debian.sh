@@ -1235,8 +1235,6 @@ fi
 # All chezmoi init tasks complete
 echo -e "\n${greenbold} ✅ chezmoi init complete${normal}"
 # Logic branch where .git for chezmoi dotfiles already exists
-else
-echo -e "${greenbold}> chezmoi init has already occurred${normal}"
 # Close need chezmoi init check
 fi
 
