@@ -802,14 +802,14 @@ fi
 readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk '!seen[$0]++')
 
 # Show array
-echo -e "\n${cyanbold}PACKAGES list${normal}"
+echo -e "\n${bluebold}PACKAGES list${normal}"
 printf '%s\n' "${PACKAGES[@]}"
 
 # Only run all this if you can markauto with aptitude
 if command -v aptitude &> /dev/null; then
 
 # Aggressively markauto (allows display of not strictly needed pkgs in config)
-echo -e "${bluebold}> Aggressive markauto${normal}"
+echo -e "\n${bluebold}> Aggressive markauto${normal}"
 echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
 sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 
@@ -842,7 +842,7 @@ if [[ -n "$pkgwarning" ]]; then
 # Keep the packages you are warning about, marked for installation
 mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${pkgwarning}"
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
-echo -e "${pkgwarning}\n"
+echo -e "${pkgwarning}"
 fi
 
 # End of aptitude only section
