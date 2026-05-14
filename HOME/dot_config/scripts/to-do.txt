@@ -1,3 +1,8 @@
+(1) Google Cursor theme in Weston
+    - https://github.com/ful1e5/Google_Cursor
+    - https://github.com/jinliu/svg-cursor
+(2) Proper transparent cursor theme in Plow
+
 Clipboard (on WSL only)
 Configuration for firefox
 disable telemetry in gh config
