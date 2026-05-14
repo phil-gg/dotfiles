@@ -343,17 +343,17 @@ fi
 
 if [[ -d "/run/WSL" ]]; then
 WSL_PREFS="\
-Explanation: Don't want network manager on plasma when runing inside WSL2
+Explanation: Don't want network manager on plasma when running inside WSL2
 Package: plasma-nm
 Pin: version *
 Pin-Priority: -1
 
-Explanation: Don't want power management within plasma when runing inside WSL2
+Explanation: Don't want power management within plasma when running inside WSL2
 Package: powerdevil
 Pin: version *
 Pin-Priority: -1
 
-Explanation: Don't want bluetooth within plasma when runing inside WSL2
+Explanation: Don't want bluetooth within plasma when running inside WSL2
 Package: bluedevil
 Pin: version *
 Pin-Priority: -1
@@ -645,16 +645,17 @@ fi
 # Close check for amd64 arch only
 fi
 
+# Apt package management section
+echo -e "\n${cyanbold}Apt package management${normal}"
+
 # Update apt if last `sudo apt update` more than one hour ago
 # touch the lock file to capture timestamp of updates with no file changes
-
 now="$(date +%s)"
 last_update="$(
 find /var/lib/apt/lists/ -maxdepth 1 -type f -printf '%Ts\n' 2>/dev/null |
 sort -nr | head -n 1
 )"
 if (( now - ${last_update:-0} > 3600 )); then
-echo -e "\n${cyanbold}Update apt${normal}"
 echo -e "$ sudo apt update\n"
 LOCKFILE="/var/lib/apt/lists/lock"
 sudo apt update && sudo flock -n "${LOCKFILE}" touch "${LOCKFILE}"
@@ -750,30 +751,27 @@ fi
 # End WSL only dummy packages section
 fi
 
-# PACKAGES either from chezmoi template or from fixed bootstrap fallback list
-aptpkglistfile="${HOME}/.config/scripts/00-apt-pkg.list"
-if [[ -s "${aptpkglistfile}" ]]; then
-# Load PACKAGES from chezmoi template
-mapfile -t PACKAGES < "${aptpkglistfile}"
-else
-# Construct PACKAGES bootstrap fallback list
-# Start with min pkg list to install all (essential|priority|important) deb pkgs
+# Construct PACKAGES list
+declare -a PACKAGES
+
+# Start with all (essential|priority|important) deb pkgs
 EPI_PKGS=$(
 apt-cache dumpavail |
 awk '/^Package:/ {pkg=$2} /^Essential: yes/ || /^Priority: required/ || /^Priority: important/ {print pkg}' |
 sort -u
 )
-# Remove from list any pkg that is a (Depends|PreDepends) of any other
-mapfile -t PACKAGES < <(
-comm -23 \
-<(printf '%s\n' "$EPI_PKGS") \
-<(printf '%s\n' "$EPI_PKGS" | xargs -r apt-cache depends 2>/dev/null | awk \
-'/^[[:space:]]*\|?(Depends|PreDepends):/ {print $NF}' | tr -d '<>' | sort -u)
-)
-# Add a minimum list of extra packages to the bootstrap fallback list
-# Include one named terminal emulator here (qterminal) to prevent auto-install
+mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${EPI_PKGS}"
+
+# Check if package list is available
+aptpkglistfile="${HOME}/.config/scripts/00-apt-pkg.list"
+if [[ -s "${aptpkglistfile}" ]]; then
+# Use package list (if available)
+PKG_LIST=$(<"${aptpkglistfile}")
+else
+# This is a bootstrap fallback minimum list of required packages
+# Includes at least one named terminal emulator here to prevent auto-install
 # of something unwanted by x-terminal-emulator virtual package later.
-PACKAGES+=(
+PKG_LIST="\
 sudo
 ca-certificates
 curl
@@ -787,9 +785,10 @@ keyboard-configuration
 console-setup
 aptitude
 qterminal
-)
-# Close the chezmoi template file or bootstrap fallback list choice
+kitty
+"
 fi
+mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${PKG_LIST}"
 
 # Add 1password on amd64 arch only
 if [[ "${pkgarch}" == "amd64" ]]; then
@@ -799,12 +798,34 @@ PACKAGES+=(
 )
 fi
 
-# mark manual so apt upgrade can do apt install too
+# Deduplicate the array while preserving the original order
+readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk '!seen[$0]++')
 
-echo -e "\n${cyanbold}Keep apt tidy and apt-mark manual${normal}"
+# Show array
+echo -e "\n${cyanbold}PACKAGES list${normal}"
+printf '%s\n' "${PACKAGES[@]}"
 
-# warn about installed packages not in chezmoi config
+# Only run all this if you can markauto with aptitude
+if command -v aptitude &> /dev/null; then
 
+# Aggressively markauto (allows display of not strictly needed pkgs in config)
+echo -e "${bluebold}> Aggressive markauto${normal}"
+echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
+sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
+
+# Create the MANUAL_PKGS array variable
+readarray -t MANUAL_PKGS < <(apt-mark showmanual | awk -F':' '{print $1}' | sort -u)
+
+# Show duplicates in chezmoi config
+pkgduplicates=$(
+comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}") | sort -u
+)
+if [[ -n "$pkgduplicates" ]]; then
+echo -e "\n${cyanbold}Duplicate packages in chezmoi template (INFO ONLY)${normal}"
+echo -e "${pkgduplicates}"
+fi
+
+# Warn about installed packages not in chezmoi config
 ignorepkgs=(
 1password
 1password-cli
@@ -814,61 +835,51 @@ plasma-nm-dummy
 powerdevil-dummy
 )
 pkgwarning=$(
-comm -23 <(apt-mark showmanual | sort) <(printf '%s\n' "${PACKAGES[@]}" |
+comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") <(printf '%s\n' "${PACKAGES[@]}" |
 sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
 )
 if [[ -n "$pkgwarning" ]]; then
+# Keep the packages you are warning about, marked for installation
+mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${pkgwarning}"
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
 echo -e "${pkgwarning}\n"
 fi
 
-if command -v aptitude &> /dev/null; then
-echo -e "${bluebold}> Aggressive markauto${normal}"
-echo -e "$ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'"
-sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
+# End of aptitude only section
 fi
 
-# warn about duplicates in chezmoi config
-
-# ca-certificates is a dependency of nordvpn
-# curl is a dependency of 1password
-# sudo is an indirect dependency of plasma-desktop
-ignoreduplicates=(
-ca-certificates
-curl
-sudo
-)
-pkgduplicates=$(
-comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(apt-mark showmanual |
-sort) | comm -23 - <(printf '%s\n' "${ignoreduplicates[@]}" | sort -u)
-)
-if [[ -n "$pkgduplicates" ]]; then
-echo -e "\n${cyanbold}Duplicate packages in chezmoi template${normal}"
-echo -e "${pkgduplicates}"
-fi
-
-echo -e "\n${bluebold}> Combine apt install into apt upgrade with apt-mark manual${normal}"
+# Make all of PACKAGES array apt-mark manual in apt
+echo -e "\n${bluebold}> apt-mark manual${normal}"
 echo -e "$ sudo apt-mark manual ${PACKAGES[*]}\n"
-printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual
+printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual 2>/dev/null
 
+# autoremove now apt mark-manual is correct
+echo -e "\n${bluebold}> Remove and purge not needed packages${normal}"
+echo -e "$ sudo apt autoremove --purge -y\n"
+sudo apt autoremove --purge -y
+
+# autoclean
+echo -e "\n${bluebold}> Remove obsolete deb package local copies${normal}"
+echo -e "$ sudo apt-get autoclean\n"
+sudo apt-get autoclean
+
+# purge residual configs
 mapfile -t RC_PKGS < <(dpkg -l | awk '/^rc/ {print $2}')
-
 if (( ${#RC_PKGS[@]} > 0 )); then
 echo -e "\n${bluebold}> Purge residual configs${normal}"
 echo -e "$ sudo apt-get purge -y ${RC_PKGS[*]}"
 sudo apt-get purge -y "${RC_PKGS[@]}"
 fi
 
-echo -e "\n${bluebold}> Remove and purge not needed packages${normal}"
-echo -e "$ sudo apt autoremove --purge -y\n"
-sudo apt autoremove --purge -y
-
-echo -e "\n${bluebold}> Remove obsolete deb package local copies${normal}"
-echo -e "$ sudo apt-get autoclean\n"
-sudo apt-get autoclean
+# apt install if needed
+count_install_pkgs=$(apt-get -s install "${PACKAGES[@]}" | grep -c '^Inst ')
+if (( count_install_pkgs > 0 )); then
+echo -e "\n${cyanbold}Run apt install${normal}"
+echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
+sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
+fi
 
 # apt upgrade if needed
-
 count_upgrade_pkgs=$(apt-get -s upgrade | grep -c '^Inst ')
 if (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
@@ -1048,7 +1059,7 @@ apt-cache policy 1password-cli | grep Installed | awk -F ': ' '{print $2}'
 echo -e "> ${installedversion1p} = 1password"
 echo -e "> ${installedver1pcli} = 1password-cli"
 
-# Close amd64 arch choice, latest version aready managed by apt
+# Close amd64 arch choice, latest version already managed by apt
 fi
 
 # Install 1password from tarball on arm64 only
@@ -1131,7 +1142,7 @@ fi
 # # OR: Don't even make tmp folder; instead sig-check & install tarball
 # 
 
-# Close arm64 arch choice, latest version aready managed by apt
+# Close arm64 arch choice, latest version already managed by apt
 # fi
 
 # Install / Update chezmoi (on any arch)
