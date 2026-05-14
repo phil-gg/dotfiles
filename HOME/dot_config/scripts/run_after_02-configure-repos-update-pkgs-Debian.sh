@@ -1172,6 +1172,7 @@ pub_file="chezmoi_cosign.pub"
 base_url="https://github.com/twpayne/chezmoi/releases/download/v${chezmoi_latestver}"
 
 # Ensure availability of working folder for deb package installation
+echo -e "$ mkdir -p ${tmp_dir}"
 mkdir -p "${tmp_dir}"
 
 echo -e "> Downloading chezmoi v${chezmoi_latestver} package and verification files"
@@ -1210,6 +1211,11 @@ else
     exit 115
 # Close cosign check
 fi
+
+# Remove working folder at the end of the task
+echo -e "$ rm -rf ${tmp_dir}"
+rm -rf "${tmp_dir}"
+
 # Close chezmoi not latest version check
 fi
 
