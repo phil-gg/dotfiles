@@ -1,7 +1,11 @@
-(1) Google Cursor theme in Weston
-    - https://github.com/ful1e5/Google_Cursor
+(1) Not quite transparent cursor theme in Weston (called westonCursor)
+(2) Swish cursor theme in Plow
+    - https://blogs.kde.org/2025/01/12/kcursorgen-and-svg-cursors/
     - https://github.com/jinliu/svg-cursor
-(2) Proper transparent cursor theme in Plow
+    - https://github.com/ful1e5/Google_Cursor
+    - https://github.com/vinceliuice/WhiteSur-cursors
+    - https://github.com/vinceliuice/Graphite-cursors
+    - https://github.com/vinceliuice/McMojave-cursors
 
 Clipboard (on WSL only)
 Configuration for firefox
