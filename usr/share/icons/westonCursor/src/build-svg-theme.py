@@ -38,8 +38,8 @@ def main():
             size = int(fields[0])
             if size != nominal_size:
                 continue
-            hotspot_x = int(fields[1])
-            hotspot_y = int(fields[2])
+            hotspot_x = int(round(float(fields[1])))
+            hotspot_y = int(round(float(fields[2])))
             path = fields[3]
             filename = Path(path).stem
             svg_file = svg_dir / f"{filename}.svg"
