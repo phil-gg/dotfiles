@@ -12,7 +12,7 @@
       --svg-dir=src/svg \
       --config-dir=src/config \
       --alias-file=src/cursorList \
-      --nominal-size=24
+      --nominal-size=96
     ```
     _See [jinliu/svg-cursor](https://github.com/jinliu/svg-cursor) for more details_
 
