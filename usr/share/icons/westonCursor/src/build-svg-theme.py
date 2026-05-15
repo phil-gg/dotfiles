@@ -10,17 +10,17 @@ def main():
                     prog='build-svg-theme',
                     description='Build an SVG theme from SVG source files')
     parser.add_argument('--output-dir', required=True)
-    parser.add_argument('--config-dir', required=True)
     parser.add_argument('--svg-dir', required=True)
-    parser.add_argument('--alias-file')
+    parser.add_argument('--config-dir', required=True)
+    parser.add_argument('--alias-file', required=True)
     parser.add_argument('--nominal-size', required=True)
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    config_dir = Path(args.config_dir)
     svg_dir = Path(args.svg_dir)
+    config_dir = Path(args.config_dir)
     nominal_size = int(args.nominal_size)
 
     for config_file in sorted(config_dir.iterdir()):
