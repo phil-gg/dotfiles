@@ -528,13 +528,13 @@ $ sudo python3 ${source_dir}/src/build-svg-theme.py \\
         --svg-dir=${source_dir}/src/svg \\
         --config-dir=${source_dir}/src/config \\
         --alias-file=${source_dir}/src/cursorList \\
-        --nominal-size=24"
+        --nominal-size=96"
 sudo python3 "${source_dir}/src/build-svg-theme.py" \
   --output-dir="${target_dir}/cursors_scalable" \
   --svg-dir="${source_dir}/src/svg" \
   --config-dir="${source_dir}/src/config" \
   --alias-file="${source_dir}/src/cursorList" \
-  --nominal-size=24
+  --nominal-size=96
 
 echo -e "\
 $ sudo python3 ${source_dir}/src/svg-theme-to-xcursor.py \\
