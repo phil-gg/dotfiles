@@ -23,7 +23,7 @@
       --output-dir=cursors \
       --svg-dir=src/svg \
       --config-dir=src/config \
-      --alias-file=src/cursorList \
+      --alias-file=src/cursorList
     ```
 
 4. Copy to `/usr/share/icons/westonCursor`
