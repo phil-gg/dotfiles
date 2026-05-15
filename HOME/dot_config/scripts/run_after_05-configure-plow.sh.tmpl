@@ -33,7 +33,6 @@ cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
 multiarch=$(dpkg-architecture -q DEB_HOST_MULTIARCH)
 libdir="/usr/lib/${multiarch}"
-tmpdir="${HOME}/tmp"
 KDE_CONF_CHANGED=0
 USR_UNITS_CHANGED=0
 SYS_UNITS_CHANGED=0
@@ -95,9 +94,9 @@ allow-zap=false
 # Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
 binding-modifier=alt
 # Set the cursor theme
-cursor-theme=breeze
+cursor-theme=westonCursor
 # Set the cursor size
-cursor-size=96
+cursor-size=54
 
 [keyboard]
 keymap_model=pc105
@@ -513,48 +512,46 @@ pulseaudio.service \
 pulseaudio.socket \
 app-org.kde.discover.notifier@autostart.service
 
-# Configure transparent cursor theme
-if [[ ! -s /usr/share/icons/transparent/cursors/left_ptr \
-   || ! -s /usr/share/icons/transparent/index.theme ]]; then
+# Configure westonCursor theme
+source_dir="${HOME}/git/${github_username}/${github_project}/usr/share/icons/westonCursor"
+target_dir="/usr/share/icons/westonCursor"
+if [[ ! -d "${target_dir}" ]]; then
 
-echo -e "\n${cyanbold}Generating transparent cursor image files${normal}"
-# Set up tmpdir
-mkdir -p "${tmpdir}"
+echo -e "\n${cyanbold}Installing westonCursor${normal}"
 
-# Generate 1x1 transparent PNG in tmpdir
-echo -e "$ gm convert -size 1x1 xc:none \"${tmpdir}/blank.png\""
-gm convert -size 1x1 xc:none "${tmpdir}/blank.png"
+echo -e "$ sudo mkdir -p ${target_dir}"
+sudo mkdir -p "${target_dir}"
 
-# Create configuration file in tmpdir
-echo -e "$ echo \"32 0 0 ${tmpdir}/blank.png\" > \"${tmpdir}/blank.cfg\""
-echo "32 0 0 ${tmpdir}/blank.png" > "${tmpdir}/blank.cfg"
-
-echo -e "\n${cyanbold}Installing cursor theme${normal}"
-# Prepare transparent cursors directory
-sudo mkdir -p /usr/share/icons/transparent/cursors
-
-# Generate & output left_ptr cursor to transparent cursors directory
-echo -e "$ sudo xcursorgen \"${tmpdir}/blank.cfg\" /usr/share/icons/transparent/cursors/left_ptr"
-sudo xcursorgen "${tmpdir}/blank.cfg" /usr/share/icons/transparent/cursors/left_ptr
-
-# Create theme index file in transparent cursors directory
 echo -e "\
-$ echo -e \"\
-  [Icon Theme]
-  Name=transparent
-  Comment=System-wide invisible cursor for WSLg
-  \" | sudo tee /usr/share/icons/transparent/index.theme > /dev/null"
+$ sudo python3 ${source_dir}/src/build-svg-theme.py \\
+        --output-dir=${target_dir}/cursors_scalable \\
+        --svg-dir=${source_dir}/src/svg \\
+        --config-dir=${source_dir}/src/config \\
+        --alias-file=${source_dir}/src/cursorList \\
+        --nominal-size=24"
+sudo python3 "${source_dir}/src/build-svg-theme.py" \
+  --output-dir="${target_dir}/cursors_scalable" \
+  --svg-dir="${source_dir}/src/svg" \
+  --config-dir="${source_dir}/src/config" \
+  --alias-file="${source_dir}/src/cursorList" \
+  --nominal-size=24
+
 echo -e "\
-[Icon Theme]
-Name=transparent
-Comment=System-wide invisible cursor for WSLg
-" | sudo tee /usr/share/icons/transparent/index.theme > /dev/null
+$ sudo python3 ${source_dir}/src/svg-theme-to-xcursor.py \\
+        --output-dir=${target_dir}/cursors \\
+        --svg-dir=${source_dir}/src/svg \\
+        --config-dir=${source_dir}/src/config \\
+        --alias-file=${source_dir}/src/cursorList"
+sudo python3 "${source_dir}/src/svg-theme-to-xcursor.py" \
+  --output-dir="${target_dir}/cursors" \
+  --svg-dir="${source_dir}/src/svg" \
+  --config-dir="${source_dir}/src/config" \
+  --alias-file="${source_dir}/src/cursorList"
 
-# Remove tmpdir
-echo -e "$ rm -rf \"${tmpdir}\""
-rm -rf "${tmpdir}"
+echo -e "$ sudo install -CDm 644 ${source_dir}/index.theme ${target_dir}/index.theme"
+sudo install -CDm 644 "${source_dir}/index.theme" "${target_dir}/index.theme"
 
-# Close checks for transparent cursor theme
+# Close check for westonCursor theme
 fi
 
 # Check WSL kernel version
