@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <filter id="a" width="1.25" height="1.25" x="-0.125" y="-0.125" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <linearGradient id="b" x1="9" y1="14" x2="20" y2="40.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#333" offset="0"/>
+      <stop stop-color="#000" offset="1"/>
+    </linearGradient>
+    <linearGradient id="c" x1="28" y1="40" x2="28" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0df" offset="0"/>
+      <stop stop-color="#07b" offset="1"/>
+    </linearGradient>
+  </defs>
+  <path filter="url(#a)" opacity=".2" stroke="none" d="M32.2675 28.732a2.5 2.5 0 0 1-1.768 4.268h-12.3745l-8.857 8.768a2.5 2.5 0 0 1-4.268-1.768v-32.4954a2.5 2.5 0 0 1 4.27 -1.77z"/>
+  <path fill="#fff" stroke="none" d="M30.268 26.732a2.5 2.5 0 0 1-1.768 4.268h-12.39l-8.842 8.766a2.5 2.5 0 0 1-4.268-1.768v-32.499a2.5 2.5 0 0 1 4.268-1.768z"/>
+  <path fill="url(#b)" stroke="none" d="M28.853 28.146a0.5 0.5 0 0 1-0.354 0.854h-13.299l-9.346 9.353a 0.5 0.5 0 0 1-0.854-0.354v-32.498a0.50.5 0 0 1 0.854-0.354z"/>
+  <circle filter="url(#a)" opacity=".15" stroke="none" cx="30" cy="62" r="22"/>
+  <circle fill="#fff" stroke="none" cx="28" cy="60" r="22"/>
+  <circle fill="url(#c)" stroke="none" cx="28" cy="60" r="20"/>
+<!--
+  <circle fill="#fff" opacity="0.4" stroke="none" cx="26.5" cy="61.5" r="6.364"/>
+  <circle fill="#fff" opacity="0.4" stroke="none" cx="29.5" cy="58.5" r="6.364"/>
+  <circle fill="#fff" opacity="0.4" stroke="none" cx="21.5" cy="66.5" r="6.364"/>
+  <circle fill="#fff" opacity="0.4" stroke="none" cx="34.5" cy="53.5" r="6.364"/>
+  <circle fill="#09d" opacity="0.6" stroke="none" cx="26.5" cy="61.5" r="3.535"/>
+  <circle fill="#09d" opacity="0.6" stroke="none" cx="29.5" cy="58.5" r="3.535"/>
+  <circle fill="#09d" opacity="0.6" stroke="none" cx="21.5" cy="66.5" r="3.535"/>
+  <circle fill="#09d" opacity="0.6" stroke="none" cx="34.5" cy="53.5" r="3.535"/>
+  <circle fill="#000" opacity="0.1" stroke="none" cx="29.5" cy="58.5" r="7.78"/>
+  <circle fill="#000" opacity="0.1" stroke="none" cx="26.5" cy="61.5" r="7.78"/>
+  <circle fill="#ff0" opacity="0.2" stroke="none" cx="29.5" cy="58.5" r="2.122"/>
+  <circle fill="#ff0" opacity="0.2" stroke="none" cx="26.5" cy="61.5" r="2.122"/>
+-->
+  <path fill="#fff" stroke="none" d="m39 58a6.364 6.364 0 0 0-9-9l-5 5a6.364 6.364 0 0 0 1.773 10.227l1.227-1.227a2.112 2.112 0 0 0 0.59-1.135 3.536 3.536 0 0 1-1.59-5.865l5-5a3.536 3.536 0 0 1 5 5l-3.1 3.1a7.78 7.78 0 0 1 0.264 3.736z"/>
+  <path fill="#fff" stroke="none" d="m17 62a6.364 6.364 0 0 0 9 9l5-5a6.364 6.364 0 0 0-1.773-10.227l-1.227 1.227a2.112 2.112 0 0 0-0.59 1.135 3.536 3.536 0 0 1 1.59 5.865l-5 5a3.536 3.536 0 0 1-5-5l 3.1-3.1a7.78 7.78 0 0 1-0.264-3.736z"/>
+</svg>
