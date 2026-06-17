@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# This function runs in its own subshell
+detect_captive_portal() (
+    RUNTIME=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
+    TARGET_URL="http://www.msftconnecttest.com/connecttest.txt"
+    TARGET_DOMAIN="msftconnecttest.com"
+    STATUS_FILE="/tmp/captiveportal-status"
+    REDIRECTS_FILE="/tmp/captiveportal-redirects"
+    
+    # Fetch current DNS servers answering for the target domain
+    # Cut at the '#' to remove port number
+    CURRENT_DNS_IPV4=$(dig -4 +time=2 +tries=1 "$TARGET_DOMAIN" | awk '/^;; SERVER:/ {print $3}' | cut -d'#' -f1)
+    CURRENT_DNS_IPV6=$(dig -6 +time=2 +tries=1 "$TARGET_DOMAIN" | awk '/^;; SERVER:/ {print $3}' | cut -d'#' -f1)
+    
+    # Parse previous DNS servers from the redirects state file
+    PREV_DNS_IPV4=$(awk '/^\[DNS_SERVER_IPV4\]/{flag=1; next} /^\[/{flag=0} flag && NF' "$REDIRECTS_FILE" 2>/dev/null)
+    PREV_DNS_IPV6=$(awk '/^\[DNS_SERVER_IPV6\]/{flag=1; next} /^\[/{flag=0} flag && NF' "$REDIRECTS_FILE" 2>/dev/null)
+    
+    # Evaluate whether the network has changed
+    # If yes clear out stale data from a previous network from the redirects file
+    if [[ "$CURRENT_DNS_IPV4" != "$PREV_DNS_IPV4" || 
+          "$CURRENT_DNS_IPV6" != "$PREV_DNS_IPV6" ]]; then
+        > "$REDIRECTS_FILE"
+    fi
+    
+    # Create temporary files for the active curl session
+    HEADERS_FILE=$(mktemp)
+    BODY_FILE=$(mktemp)
+    
+    # Clean up the temporary curl files on script exit (normal or crash)
+    trap 'rm -f "$HEADERS_FILE" "$BODY_FILE"' EXIT
+    
+    # -s: Silent mode
+    # -L: Follow redirects automatically
+    # --max-time 5: Limit wait time for response to 5 seconds
+    # -D: Dump all HTTP headers (including redirects) to a temp file
+    # -o: Write the final response body to another temp file
+    if ! curl -s -L --max-time 5 -D "$HEADERS_FILE" -o "$BODY_FILE" "$TARGET_URL"; then
+        
+        CURL_EXIT_CODE=$?
+        
+    # Exit Code 6: DNS Resolution Failure (cannot resolve hostname)
+    # Exit Code 7: Connection Refused / Network Unreachable (firewall block or no route)
+    # Exit Code 28: Operation Timeout (reached the --max-time limit)
+    # Exit Code 47: Maximum Redirects Reached (hit the redirect limit, possible loop)
+        echo -e "CONNECTION FAILED\nExit code $CURL_EXIT_CODE\n$RUNTIME" > "$STATUS_FILE"
+    else
+        BODY_CONTENT=$(cat "$BODY_FILE")
+    
+        if [[ "$BODY_CONTENT" == *"Microsoft Connect Test"* ]]; then
+            echo -e "CONNECTION SUCCESSFUL\nNo captive portal\n$RUNTIME" > "$STATUS_FILE"
+        else
+            REDIRECTS=$(grep -i '^Location:' "$HEADERS_FILE" | sed 's/^[Ll]ocation: //i' | tr -d '\r')
+            
+            if [[ -n "$REDIRECTS" ]]; then
+                echo -e "CONNECTION SUCCESSFUL\nCaptive portal detected\n$RUNTIME" > "$STATUS_FILE"
+                cat <<EOF > "$REDIRECTS_FILE"
+[RUNTIME]
+$RUNTIME
+
+[DNS_SERVER_IPV4]
+$CURRENT_DNS_IPV4
+
+[DNS_SERVER_IPV6]
+$CURRENT_DNS_IPV6
+
+[REDIRECTS]
+$REDIRECTS
+EOF
+            else
+            
+                # Extract the final (tail -n 1) HTTP status code from the headers
+                HTTP_CODE=$(grep -E '^HTTP/' "$HEADERS_FILE" | tail -n 1 | awk '{print $2}')
+                
+                # Could be a no-redirect DNS hijacking captive portal (HTTP 200 OK)
+                # Or a strict corporate DNS could block the target url (HTTP 403 Forbidden)
+                # Or a Microsoft outage (HTTP 4xx or 5xx)
+                echo -e "NO REDIRECT AND NOT EXPECTED MSFT RESPONSE\nHttp code $HTTP_CODE\n$RUNTIME" > "$STATUS_FILE"
+            fi
+        fi
+    fi
+)
+
+detect_captive_portal

@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# /etc/NetworkManager/dispatcher.d/01-dynamic-split-dns
+# This is high priority (etc beats usr & 01 is high in alphabetical order)
+
+INTERFACE=$1
+ACTION=$2
+
+# Only execute when a connection is fully established
+if [ "$ACTION" != "up" ]; then
+    exit 0
+fi
+
+CONF_FILE="/etc/NetworkManager/dnsmasq.d/99-dynamic-local-dns.conf"
+
+# Always clear the previous state first
+rm -f "$CONF_FILE"
+
+# If no local DNS was provided by DHCP then signal dnsmasq and exit
+if [ -z "$DHCP4_DOMAIN_NAME_SERVERS" ] && [ -z "$DHCP6_NAME_SERVERS" ]; then
+    killall -SIGHUP dnsmasq 2>/dev/null
+    exit 0
+fi
+
+# DNS forward lookups (IPv4 and/or IPv6)
+add_forward_rules() {
+    local ip=$1
+    if [ -z "$ip" ]; then return; fi
+
+    for domain in asusrouter.com \
+                  router.asus.com \
+                  mshome.net \
+                  captive.apple.com \
+                  connectivitycheck.gstatic.com \
+                  msftconnecttest.com \
+                  msftncsi.com \
+                  nmcheck.gnome.org \
+                  networkcheck.kde.org \
+                  detectportal.firefox.com \
+                  home.arpa \
+                  local \
+                  lan \
+                  home \
+                  test \
+                  invalid \
+                  example \
+                  localhost \
+                  example.com \
+                  example.net \
+                  example.org
+    do
+        echo "server=/${domain}/${ip}" >> "$CONF_FILE"
+    done
+}
+
+# IPv4 reverse lookups
+add_ipv4_reverse_rules() {
+    local ip=$1
+    if [ -z "$ip" ]; then return; fi
+
+    # Traditional IPv4 reverse lookup rule
+    echo "server=/in-addr.arpa/${ip}" >> "$CONF_FILE"
+
+    # IPv4 reverse lookups in CIDR for use with rev-server
+    for subnet in 10.0.0.0/8 \
+                  100.64.0.0/10 \
+                  127.0.0.0/8 \
+                  169.254.0.0/16 \
+                  172.16.0.0/12 \
+                  192.168.0.0/16 \
+                  224.0.0.0/4 \
+                  255.255.255.255/32
+    do
+        echo "rev-server=${subnet},${ip}" >> "$CONF_FILE"
+    done
+}
+
+# IPv6 reverse lookups
+add_ipv6_reverse_rules() {
+    local ip=$1
+    if [ -z "$ip" ]; then return; fi
+
+    # Traditional IPv6 reverse lookup rule
+    echo "server=/ip6.arpa/${ip}" >> "$CONF_FILE"
+
+    # IPv6 reverse lookups in CIDR for use with rev-server
+    for subnet in ::1/128 \
+                  fc00::/7 \
+                  fe80::/10 \
+                  ff00::/8
+    do
+        echo "rev-server=${subnet},${ip}" >> "$CONF_FILE"
+    done
+}
+
+# Apply domain rules for forward DNS lookups (IPv4 and IPv6)
+for ip in $DHCP4_DOMAIN_NAME_SERVERS $DHCP6_NAME_SERVERS; do
+    add_forward_rules "$ip"
+done
+
+# Apply rules for IPv4 reverse lookups
+for ip in $DHCP4_DOMAIN_NAME_SERVERS; do
+    add_ipv4_reverse_rules "$ip"
+done
+
+# Apply rules for IPv6 reverse lookups
+for ip in $DHCP6_NAME_SERVERS; do
+    add_ipv6_reverse_rules "$ip"
+done
+
+# Force dnsmasq config reload without dropping cache
+killall -SIGHUP dnsmasq 2>/dev/null
+
+# TO-DO: Global default config that "fails closed" so that local dnsmasq is the authoritative and only source for all the above destinations
