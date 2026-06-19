@@ -21,6 +21,19 @@ qterminal config
 
 https://www.binarylane.com.au/vps-hosting/linux-vps
 
+https://github.com/shvedes/awesome-kde
+https://github.com/shalva97/kde-configuration-files
+https://store.kde.org/p/2362998 (Resolution Scaler, KDE panel plasmoid)
+
+# CLOCKS
+
+https://store.kde.org/p/2362918
+https://github.com/jaxparrow07/liquidglass-kde-widgets
+https://store.kde.org/p/2359997
+https://github.com/kevinbudz/quickclock
+https://store.kde.org/p/2325221
+https://github.com/aknari/plasma-sbbclock
+
  # NETWORKING
 
 route locally:
