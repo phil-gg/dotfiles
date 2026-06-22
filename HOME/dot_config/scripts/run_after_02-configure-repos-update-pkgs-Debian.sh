@@ -258,6 +258,48 @@ echo -e "${redbold} ⛔ ${actualnordvpnkey}
 exit 108
 fi
 
+# Add raspberrypi package key (on any arch)
+
+rpikeyfile="/usr/share/keyrings/rpi-repo-signing-key.asc"
+expectedrpirepokey="CF8A1AF502A2AA2D763BAE7E82B129927FA3303E"
+
+actualrpirepokey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${rpikeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+
+if [[ "${actualrpirepokey}" != "${expectedrpirepokey}" ]];
+then
+echo -e "\n${cyanbold}Add raspberrypi signing key${normal}"
+echo -e "$ curl -fsSL \
+https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+| sudo tee \"${rpikeyfile}\" 1> /dev/null"
+curl -fsSL \
+https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+| sudo tee "${rpikeyfile}" 1> /dev/null
+
+actualrpirepokey=$(
+gpg --no-default-keyring --with-colons --import-options show-only --import \
+"${rpikeyfile}" 2> /dev/null \
+| awk -F':' '$1=="fpr"{print $10}' \
+| head -n 1
+)
+
+fi
+
+echo -e "\n 🔑 ${rpikeyfile}"
+echo -e " 🔐 ${expectedrpirepokey}"
+if [[ "${expectedrpirepokey}" == "${actualrpirepokey}" ]];
+then
+echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
+else
+echo -e "${redbold} ⛔ ${actualrpirepokey}
+ ⚠️ WARNING: unexpected fingerprint${normal}\n"
+exit 109
+fi
+
 # Add 1password package key (on amd64 arch only)
 
 if [[ "${pkgarch}" == "amd64" ]]; then
@@ -299,7 +341,7 @@ echo -e "${greenbold} ✅ The key fingerprint matches${normal}"
 else
 echo -e "${redbold} ⛔ ${actualopkey}
  ⚠️ WARNING: unexpected fingerprint${normal}\n"
-exit 109
+exit 110
 fi
 
 fi
@@ -434,9 +476,14 @@ Package: *
 Pin: release o=Debian Backports, n=trixie-backports-sloppy
 Pin-Priority: 120
 
-Explanation: Sid/Unstable is here at 110 for selected packages only
+Explanation: Sid/Unstable is here at 120 for selected packages only
 Package: *
 Pin: release o=Debian, n=sid
+Pin-Priority: 120
+
+Explanation: Raspberry Pi is here at 110 for selected packages only
+Package: *
+Pin: origin \"archive.raspberrypi.org\"
 Pin-Priority: 110
 
 Explanation: Installed packages have priority 100
@@ -571,6 +618,30 @@ echo -e "$ echo \"\${NORDVPN_SOURCES}\" | sudo tee \"${nordvpnsourcesfile}\" 1> 
 echo "${NORDVPN_SOURCES}" | sudo tee "${nordvpnsourcesfile}" 1> /dev/null
 fi
 
+# Install raspberrypi deb repo (on any arch)
+
+rpisourcesfile="/etc/apt/sources.list.d/05-raspberrypi.sources"
+RPI_SOURCES="\
+# Config to save at /etc/apt/sources.list.d/05-raspberrypi.sources
+# No companion archive.raspbian.org repo as this is armhf arch only
+# debian repo available types: deb deb-src
+# trixie available components: main beta untested
+# trixie available architectures: amd64 arm64 armhf i386
+Types: deb
+URIs: http://archive.raspberrypi.org/debian/
+Suites: trixie
+Components: main
+Architectures: ${pkgarch}
+Signed-By: ${rpikeyfile}
+"
+
+if ! cmp -s <(echo "${RPI_SOURCES}") "${rpisourcesfile}";
+then
+echo -e "\n${bluebold}Create/update ${rpisourcesfile}${normal}"
+echo -e "$ echo \"\${RPI_SOURCES}\" | sudo tee \"${rpisourcesfile}\" 1> /dev/null"
+echo "${RPI_SOURCES}" | sudo tee "${rpisourcesfile}" 1> /dev/null
+fi
+
 # Install 1password deb repo (on amd64 arch only)
 if [[ "${pkgarch}" == "amd64" ]]; then
 
@@ -609,7 +680,7 @@ echo -e "\n${bluebold}Set debsig policy for ${onepname}${normal}"
 echo -e "> Create /usr/share/debsig/keyrings/${onepid}/debsig.gpg"
 
 # Catch errors with 1password key
-if [[ -z "${onepid}" ]]; then exit 110; fi
+if [[ -z "${onepid}" ]]; then exit 111; fi
 # Create folder with key fingerprint
 sudo mkdir -p "/etc/debsig/policies/${onepid}"
 
@@ -698,7 +769,7 @@ mkdir -p "${TMP_DIR}"
 echo -e "$ cd ${TMP_DIR}"
 cd "${TMP_DIR}" 2> /dev/null \
 || { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 111; }
+; exit 112; }
 
 DUMMY_PAYLOAD="\
 Section: misc
@@ -727,7 +798,7 @@ sudo dpkg -i "${DUMMY_PKG}_1.0_all.deb"
 echo -e "$ cd ~/git/${github_username}/${github_project}"
 cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
 || { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 112; }
+; exit 113; }
 
 echo -e "$ rm -rf ${TMP_DIR}"
 rm -rf "${TMP_DIR}"
@@ -741,7 +812,7 @@ fi
 
 if ! command -v equivs-build &> /dev/null; then
 echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
-exit 113
+exit 114
 else
 create_dummy_pkg "plasma-nm"
 create_dummy_pkg "powerdevil"
@@ -1203,12 +1274,12 @@ if cosign verify-blob \
         sudo dpkg -i "${tmp_dir}/${deb_file}"
     else
         echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
-        exit 114
+        exit 115
     # Close sha256sum check
     fi
 else
     echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
-    exit 115
+    exit 116
 # Close cosign check
 fi
 
