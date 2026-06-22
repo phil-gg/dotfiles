@@ -633,6 +633,8 @@ Suites: trixie
 Components: main
 Architectures: ${pkgarch}
 Signed-By: ${rpikeyfile}
+# above rpi key uses weak SHA1 cypher; below line stops this resulting in warnings
+Allow-Weak: yes
 "
 
 if ! cmp -s <(echo "${RPI_SOURCES}") "${rpisourcesfile}";
