@@ -1,5 +1,15 @@
 #!/bin/bash
 
+curl_output=$(curl -o /dev/null -s -w "%{http_code}|%{redirect_url}" http://connect.rom.miui.com/generate_204)
+REDIRECT_STATUS="${curl_output%%|*}"
+REDIRECT_URL="${curl_output#*|}"
+
+echo "Status: $REDIRECT_STATUS"
+
+if [ -n "$REDIRECT_URL" ]; then
+    echo "Redirect URL: $REDIRECT_URL"
+fi
+
 # This function runs in its own subshell
 detect_captive_portal() (
     RUNTIME=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")

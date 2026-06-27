@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Check if 'jq' is installed
+if ! command -v jq &> /dev/null; then
+    echo -e "\e[31mError: 'jq' is not installed.\e[0m Please run 'sudo apt install jq' to continue." >&2
+    exit 1
+fi
+
+# Define jq filter logic
+JQ_FILTER='
+def colour_state:
+  if . == "UP" then "\u001b[32m\(.)\u001b[0m"
+  elif . == "DOWN" then "\u001b[31m\(.)\u001b[0m"
+  else .
+  end;
+
+.[] | [
+  "\u001b[36m\(.ifname)\u001b[0m",
+  (.operstate | colour_state),
+  (if .address then "\u001b[33m\(.address)\u001b[0m" else "" end),
+  ([.addr_info[]? | select(.family=="inet").local] | map("\u001b[35m\(.)\u001b[0m") | join(", ")),
+  ([.addr_info[]? | select(.family=="inet6").local] | map("\u001b[34m\(.)\u001b[0m") | join(", "))
+] | @tsv
+'
+
+# Set the header, fetch the JSON data, parse it, and format into columns
+{echo -e "INTERFACE\tSTATE\tMAC_ADDRESS\tIPv4\tIPv6"
+ ip -j addr | jq -r "$JQ_FILTER"} | column -t -s $'\t'

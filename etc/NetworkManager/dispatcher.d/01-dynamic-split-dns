@@ -112,3 +112,65 @@ done
 killall -SIGHUP dnsmasq 2>/dev/null
 
 # TO-DO: Global default config that "fails closed" so that local dnsmasq is the authoritative and only source for all the above destinations
+
+TO-DO='
+I want to use plasma-nm, networkmanager, and the dnsmasq version that integrates most closely with network manager to customise my DNS.
+I want to whitelist DHCP on my linux laptop for leasing IP addresses only, and for receiving the network DNS server, which I then use for the following whitelist only:
+
+asusrouter.com
+router.asus.com
+mshome.net
+captive.apple.com
+connectivitycheck.gstatic.com
+msftconnecttest.com
+msftncsi.com
+nmcheck.gnome.org
+networkcheck.kde.org
+detectportal.firefox.com
+home.arpa
+local
+lan
+home
+test
+invalid
+example
+example.com
+example.net
+example.org
+
+ip6.arpa
+
+10.0.0.0/8
+172.16.0.0/12
+192.168.0.0/16
+100.64.0.0/10
+169.254.0.0/16
+
+fc00::/7
+fe80::/10
+
+Everything else, I want to go my local dnsmasq instance as the DNS server, with that local instance getting its info from AdGuard over DoQ or DoH or DoT.
+How do I go from default Trixie network settings, to this config?
+
+'
+
+NOTE='
+You do not want to whitelist these items; dnsmasq has other code to handle these properly:
+localhost
+127.0.0.0/8
+::1/128
+255.255.255.255/32
+224.0.0.ff00::/8
+0/4
+
+'
+
+WEBSITES='
+https://test-ipv6.com/faq.html.en_US
+https://blog.thea.codes/nordvpn-wireguard-namespaces/
+https://github.com/jnsgruk/wireguard-over-wss
+https://github.com/mustafachyi/NordVPN-WireGuard-Config-Generator
+https://wg-nord.pages.dev/
+https://nordgen.selfhoster.win/
+
+'
