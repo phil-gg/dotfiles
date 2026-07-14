@@ -963,9 +963,7 @@ if (( apt_exit_status != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
 echo -ne "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}"
 sudo script -qec "DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[@]}" /dev/null |
-grep --color=always -v \
-     -e "is already the newest version" \
-     -e "WARNING: apt does not have a stable CLI interface"
+grep --color=always -v "is already the newest version"
 fi
 
 # apt upgrade if needed
