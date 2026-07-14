@@ -962,7 +962,8 @@ echo -e "\n${cyanbold}Run apt install${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
 sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}" 2>&1 |
 grep -v -e "is already the newest version" \
-        -e "WARNING: apt does not have a stable CLI interface"
+        -e "WARNING: apt does not have a stable CLI interface" \
+        -e ""
 fi
 
 # apt upgrade if needed
