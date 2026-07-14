@@ -1226,9 +1226,8 @@ curl -ILsS -w "%{url_effective}" -o /dev/null \
 "https://github.com/twpayne/chezmoi/releases/latest" \
 | sed 's|.*/v\?||'
 )
-chezmoi_installedver=$(
-chezmoi --version 2> /dev/null | awk '{ sub(/^v/, "", $3); print $3 }'
-)
+chezmoi_installedver=$(dpkg-query -W -f='${Version}' chezmoi 2> /dev/null)
+
 echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
 echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
