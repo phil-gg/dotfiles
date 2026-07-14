@@ -260,16 +260,16 @@ fi
 
 # Add raspberrypi package key (on any arch)
 
-PKG_NAME="raspberrypi-archive-keyring"
-
-if ! dpkg -s "${PKG_NAME}" &> /dev/null
+if ! dpkg -s raspberrypi-archive-keyring &> /dev/null
 then
 echo -e "\n${cyanbold}Add raspberrypi signing key${normal}"
 PKG_DIR="https://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-archive-keyring/"
-PKG_FILE="$(curl -fsSL "${PKG_DIR}" \
-  | grep -oP 'href="\Kraspberrypi-archive-keyring_[^"]+\.deb' \
-  | sort -V \
-  | tail -n 1)"
+PKG_FILE=$(
+curl -fsSL "${PKG_DIR}" \
+| grep -oP 'href="\Kraspberrypi-archive-keyring_[^"]+\.deb' \
+| sort -V \
+| tail -n 1
+)
 echo -e "> Installing ${PKG_FILE}\n"
 # Install in subshell with tmp file and trap
 (
@@ -280,7 +280,7 @@ echo -e "> Installing ${PKG_FILE}\n"
 )
 fi
 
-rpikeyfile="/usr/share/keyrings/rpi-repo-signing-key.asc"
+rpikeyfile="/usr/share/keyrings/raspberrypi-archive-keyring.pgp"
 expectedrpirepokey="CF8A1AF502A2AA2D763BAE7E82B129927FA3303E"
 
 actualrpirepokey=$(
@@ -423,11 +423,7 @@ Explanation: https://salsa.debian.org/debian/package-cycle/-/blob/master/package
 Explanation: Priorities over 1000 forces install even for a downgrade
 Explanation: Currently NO packages are set with Pin-Priorities over 1000
 Explanation: 991-1000 beats target release unless installed a higher version
-Explanation: Force kitty to be installed from Sid
-Package: kitty kitty-terminfo kitty-shell-integration kitty-doc
-Pin: release o=Debian, n=sid
-Pin-Priority: 999
-
+Explanation: Currently NO packages are set with Pin-Priorities 991-1000
 Explanation: Target release priority is 990
 Explanation: Trixie/Stable is here at 980 just less than target release priority
 Package: *
@@ -947,7 +943,7 @@ fi
 
 # apt install if needed
 count_install_pkgs=$(apt-get -s install "${PACKAGES[@]}" | grep -c '^Inst ')
-if (( count_install_pkgs > 0 )); then
+if (( PIPESTATUS[0] != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
 sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
@@ -955,7 +951,7 @@ fi
 
 # apt upgrade if needed
 count_upgrade_pkgs=$(apt-get -s upgrade | grep -c '^Inst ')
-if (( count_upgrade_pkgs > 0 )); then
+if (( PIPESTATUS[0] != 0 )) || (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y\n"
 sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
@@ -1227,7 +1223,7 @@ curl -ILsS -w "%{url_effective}" -o /dev/null \
 | sed 's|.*/v\?||'
 )
 chezmoi_installedver=$(
-chezmoi --version 2> /dev/null | awk '{print $3}' | tr -d 'v,'
+chezmoi --version 2> /dev/null | awk '{ sub(/^v/, "", $3); print $3 }'
 )
 echo -e "\n${cyanbold}Check chezmoi versions${normal}"
 echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
@@ -1241,7 +1237,7 @@ echo -e "\n${cyanbold}Install/update chezmoi${normal}"
 tmp_dir="${HOME}/git/${github_username}/${github_project}/tmp"
 deb_file="chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
 chk_file="chezmoi_${chezmoi_latestver}_checksums.txt"
-sig_file="${chk_file}.sig"
+sig_file="${chk_file}.sigstore.json"
 pub_file="chezmoi_cosign.pub"
 base_url="https://github.com/twpayne/chezmoi/releases/download/v${chezmoi_latestver}"
 
@@ -1259,11 +1255,11 @@ curl -fsSL "${base_url}/${pub_file}" -o "${tmp_dir}/${pub_file}"
 echo -e "> Verifying release with cosign"
 echo -e "$ cosign verify-blob \
 --key \"${tmp_dir}/chezmoi_cosign.pub\" \
---signature \"${tmp_dir}/${sig_file}\" \
+--bundle \"${tmp_dir}/${sig_file}\" \
 \"${tmp_dir}/${chk_file}\"\n"
 if cosign verify-blob \
     --key "${tmp_dir}/chezmoi_cosign.pub" \
-    --signature "${tmp_dir}/${sig_file}" \
+    --bundle "${tmp_dir}/${sig_file}" \
     "${tmp_dir}/${chk_file}" &> /dev/null; then
     
     echo -e "${greenbold} ✅ Checksum file signature verified${normal}\n"
