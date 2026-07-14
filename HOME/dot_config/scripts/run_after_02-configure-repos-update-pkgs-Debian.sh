@@ -961,8 +961,8 @@ apt_exit_status=$?
 count_install_pkgs=$(printf "%s" "${install_dry_run}" | grep -c '^Inst ')
 if (( apt_exit_status != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
-echo -ne "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}"
-sudo script -qec "DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[@]}" /dev/null |
+echo -ne "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
+sudo script -qec "DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}" /dev/null |
 grep --color=always -v "is already the newest version"
 fi
 
