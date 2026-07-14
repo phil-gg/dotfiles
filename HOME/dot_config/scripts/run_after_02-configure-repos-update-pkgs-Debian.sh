@@ -260,7 +260,11 @@ fi
 
 # Add raspberrypi package key (on any arch)
 
-if ! dpkg -s raspberrypi-archive-keyring &> /dev/null
+PKG_NAME="raspberrypi-archive-keyring"
+PKG_STATUS="$(dpkg -l "${PKG_NAME}" 2> /dev/null | grep -oP "^ii\\s+${PKG_NAME}")"
+DPKG_ERROR=$?
+
+if [ -z "${PKG_STATUS}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
 then
 echo -e "\n${cyanbold}Add raspberrypi signing key${normal}"
 PKG_DIR="https://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-archive-keyring/"
