@@ -929,7 +929,7 @@ sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}")
 )
 if [[ -n "${unmarked_pkgs}" ]]; then
 echo -e "\n${bluebold}> apt-mark manual${normal}"
-echo -e "$ echo ${unmarked_pkgs} | xargs sudo apt-mark manual 2>/dev/null\n"
+echo -e "$ echo ${unmarked_pkgs//$'\n'/ } | xargs sudo apt-mark manual 2>/dev/null\n"
 echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null
 fi
 
