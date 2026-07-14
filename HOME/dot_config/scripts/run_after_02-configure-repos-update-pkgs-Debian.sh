@@ -427,7 +427,11 @@ Explanation: https://salsa.debian.org/debian/package-cycle/-/blob/master/package
 Explanation: Priorities over 1000 forces install even for a downgrade
 Explanation: Currently NO packages are set with Pin-Priorities over 1000
 Explanation: 991-1000 beats target release unless installed a higher version
-Explanation: Currently NO packages are set with Pin-Priorities 991-1000
+Explanation: Force chezmoi to be installed from Sid
+Package: chezmoi
+Pin: release o=Debian, n=sid
+Pin-Priority: 999
+
 Explanation: Target release priority is 990
 Explanation: Trixie/Stable is here at 980 just less than target release priority
 Package: *
@@ -903,7 +907,6 @@ fi
 ignorepkgs=(
 1password
 1password-cli
-chezmoi
 bluedevil-dummy
 plasma-nm-dummy
 powerdevil-dummy
@@ -1219,77 +1222,11 @@ fi
 # Close arm64 arch choice, latest version already managed by apt
 # fi
 
-# Install / Update chezmoi (on any arch)
+# Configure chezmoi
 
-chezmoi_latestver=$(
-curl -ILsS -w "%{url_effective}" -o /dev/null \
-"https://github.com/twpayne/chezmoi/releases/latest" \
-| sed 's|.*/v\?||'
-)
-chezmoi_installedver=$(dpkg-query -W -f='${Version}' chezmoi 2> /dev/null)
-
-echo -e "\n${cyanbold}Check chezmoi versions${normal}"
-echo -e ">    Latest = ${chezmoi_latestver:-${bluebold}(none)${normal}}"
-echo -e "> Installed = ${chezmoi_installedver:-${bluebold}(none)${normal}}"
-
-# Check if chezmoi needs installing / updating
-if [[ "${chezmoi_installedver}" != "${chezmoi_latestver}" ]]; then
-echo -e "\n${cyanbold}Install/update chezmoi${normal}"
-
-# Define working directory and target file names
-tmp_dir="${HOME}/git/${github_username}/${github_project}/tmp"
-deb_file="chezmoi_${chezmoi_latestver}_linux_${pkgarch}.deb"
-chk_file="chezmoi_${chezmoi_latestver}_checksums.txt"
-sig_file="${chk_file}.sigstore.json"
-pub_file="chezmoi_cosign.pub"
-base_url="https://github.com/twpayne/chezmoi/releases/download/v${chezmoi_latestver}"
-
-# Ensure availability of working folder for deb package installation
-echo -e "$ mkdir -p ${tmp_dir}"
-mkdir -p "${tmp_dir}"
-
-echo -e "> Downloading chezmoi v${chezmoi_latestver} package and verification files"
-curl -fsSL "${base_url}/${deb_file}" -o "${tmp_dir}/${deb_file}"
-curl -fsSL "${base_url}/${chk_file}" -o "${tmp_dir}/${chk_file}"
-curl -fsSL "${base_url}/${sig_file}" -o "${tmp_dir}/${sig_file}"
-curl -fsSL "${base_url}/${pub_file}" -o "${tmp_dir}/${pub_file}"
-
-# Verify the checksum file with cosign
-echo -e "> Verifying release with cosign"
-echo -e "$ cosign verify-blob \
---key \"${tmp_dir}/chezmoi_cosign.pub\" \
---bundle \"${tmp_dir}/${sig_file}\" \
-\"${tmp_dir}/${chk_file}\"\n"
-if cosign verify-blob \
-    --key "${tmp_dir}/chezmoi_cosign.pub" \
-    --bundle "${tmp_dir}/${sig_file}" \
-    "${tmp_dir}/${chk_file}" &> /dev/null; then
-    
-    echo -e "${greenbold} ✅ Checksum file signature verified${normal}\n"
-    echo -e "> Verifying deb package integrity"
-    
-    # Check the sha256 of the deb pkg
-    echo -e "$ cd \"${tmp_dir}\" && sha256sum --ignore-missing -c \"${chk_file}\"\n"
-    if ( cd "${tmp_dir}" && sha256sum --ignore-missing -c --status "${chk_file}" ); then
-        echo -e "${greenbold} ✅ deb package integrity verified${normal}\n"
-        echo -e "$ sudo dpkg -i \"${tmp_dir}/${deb_file}\"\n"
-        sudo dpkg -i "${tmp_dir}/${deb_file}"
-    else
-        echo -e "${redbold} ⚠️ WARNING: deb package checksum failed${normal}\n"
-        exit 115
-    # Close sha256sum check
-    fi
-else
-    echo -e "${redbold} ⚠️ WARNING: Signature verification failed${normal}\n"
-    exit 116
-# Close cosign check
-fi
-
-# Remove working folder at the end of the task
-echo -e "$ rm -rf ${tmp_dir}"
-rm -rf "${tmp_dir}"
-
-# Close chezmoi not latest version check
+if ! command -v chezmoi &> /dev/null; then
+echo -e "${redbold}> Missing chezmoi package dependency, exiting${normal}"
+exit 115
 fi
 
 git_dir="${HOME}/git/${github_username}/${github_project}"
