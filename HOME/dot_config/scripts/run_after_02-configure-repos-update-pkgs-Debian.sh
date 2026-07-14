@@ -956,19 +956,20 @@ sudo apt-get purge -y "${RC_PKGS[@]}"
 fi
 
 # apt install if needed
-count_install_pkgs=$(apt-get -s install "${PACKAGES[@]}" | grep -c '^Inst ')
-if (( PIPESTATUS[0] != 0 )) || (( count_install_pkgs > 0 )); then
+install_dry_run=$(apt-get -s install "${PACKAGES[@]}")
+apt_exit_status=$?
+count_install_pkgs=$(printf "%s" "${install_dry_run}" | grep -c '^Inst ')
+if (( apt_exit_status != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
-sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}" 2>&1 |
-grep -v -e "is already the newest version" \
-        -e "WARNING: apt does not have a stable CLI interface" \
-        -e ""
+sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
 fi
 
 # apt upgrade if needed
-count_upgrade_pkgs=$(apt-get -s upgrade | grep -c '^Inst ')
-if (( PIPESTATUS[0] != 0 )) || (( count_upgrade_pkgs > 0 )); then
+upgrade_dry_run=$(apt-get -s upgrade)
+apt_exit_status=$?
+count_upgrade_pkgs=$(printf "%s" "${upgrade_dry_run}" | grep -c '^Inst ')
+if (( apt_exit_status != 0 )) || (( count_upgrade_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt upgrade${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y\n"
 sudo DEBIAN_FRONTEND=noninteractive apt upgrade -y
