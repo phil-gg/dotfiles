@@ -625,9 +625,9 @@ rpisourcesfile="/etc/apt/sources.list.d/05-raspberrypi.sources"
 RPI_SOURCES="\
 # Config to save at /etc/apt/sources.list.d/05-raspberrypi.sources
 # No companion archive.raspbian.org repo as this is armhf arch only
-# debian repo available types: deb deb-src
-# trixie available components: main beta untested
-# trixie available architectures: amd64 arm64 armhf i386
+# Available types: deb deb-src
+# Available components: main beta untested
+# Available architectures: amd64 arm64 armhf i386
 Types: deb
 URIs: http://archive.raspberrypi.org/debian/
 Suites: trixie
