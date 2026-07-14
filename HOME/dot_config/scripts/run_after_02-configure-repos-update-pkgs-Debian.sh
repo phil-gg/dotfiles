@@ -962,7 +962,8 @@ count_install_pkgs=$(printf "%s" "${install_dry_run}" | grep -c '^Inst ')
 if (( apt_exit_status != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
-sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
+sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}" |
+grep -v "is already the newest version"
 fi
 
 # apt upgrade if needed
