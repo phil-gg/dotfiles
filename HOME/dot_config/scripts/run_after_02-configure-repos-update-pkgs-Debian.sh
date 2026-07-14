@@ -960,8 +960,9 @@ count_install_pkgs=$(apt-get -s install "${PACKAGES[@]}" | grep -c '^Inst ')
 if (( PIPESTATUS[0] != 0 )) || (( count_install_pkgs > 0 )); then
 echo -e "\n${cyanbold}Run apt install${normal}"
 echo -e "$ sudo DEBIAN_FRONTEND=noninteractive apt install -y ${PACKAGES[*]}\n"
-sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}" |
-grep -v "is already the newest version"
+sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}" 2>&1 |
+grep -v -e "is already the newest version" \
+        -e "WARNING: apt does not have a stable CLI interface"
 fi
 
 # apt upgrade if needed
