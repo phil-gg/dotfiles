@@ -922,13 +922,19 @@ echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
 echo -e "${pkgwarning}"
 fi
 
-# End of aptitude only section
+# Make unmarked PACKAGES apt-mark manual in apt
+unmarked_pkgs=$(
+comm -23 <(printf '%s\n' "${PACKAGES[@]}" |
+sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}")
+)
+if [[ -n "${unmarked_pkgs}" ]]; then
+echo -e "\n${bluebold}> apt-mark manual${normal}"
+echo -e "$ echo ${unmarked_pkgs} | xargs sudo apt-mark manual 2>/dev/null\n"
+echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null
 fi
 
-# Make all of PACKAGES array apt-mark manual in apt
-echo -e "\n${bluebold}> apt-mark manual${normal}"
-echo -e "$ sudo apt-mark manual ${PACKAGES[*]}\n"
-printf '%s\n' "${PACKAGES[@]}" | xargs sudo apt-mark manual 2>/dev/null
+# End of aptitude only section
+fi
 
 # autoremove now apt mark-manual is correct
 echo -e "\n${bluebold}> Remove and purge not needed packages${normal}"
