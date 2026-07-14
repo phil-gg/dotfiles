@@ -260,6 +260,26 @@ fi
 
 # Add raspberrypi package key (on any arch)
 
+PKG_NAME="raspberrypi-archive-keyring"
+
+if ! dpkg -s "${PKG_NAME}" &> /dev/null
+then
+echo -e "\n${cyanbold}Add raspberrypi signing key${normal}"
+PKG_DIR="https://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-archive-keyring/"
+PKG_FILE="$(curl -fsSL "${PKG_DIR}" \
+  | grep -oP 'href="\Kraspberrypi-archive-keyring_[^"]+\.deb' \
+  | sort -V \
+  | tail -n 1)"
+echo -e "> Installing ${PKG_FILE}\n"
+# Install in subshell with tmp file and trap
+(
+    TMP_DEB="$(mktemp)"
+    trap 'rm -f "${TMP_DEB}"' EXIT
+    curl -fsSL -o "${TMP_DEB}" "${PKG_DIR}${PKG_FILE}"
+    sudo dpkg -i "${TMP_DEB}"
+)
+fi
+
 rpikeyfile="/usr/share/keyrings/rpi-repo-signing-key.asc"
 expectedrpirepokey="CF8A1AF502A2AA2D763BAE7E82B129927FA3303E"
 
@@ -269,25 +289,6 @@ gpg --no-default-keyring --with-colons --import-options show-only --import \
 | awk -F':' '$1=="fpr"{print $10}' \
 | head -n 1
 )
-
-if [[ "${actualrpirepokey}" != "${expectedrpirepokey}" ]];
-then
-echo -e "\n${cyanbold}Add raspberrypi signing key${normal}"
-echo -e "$ curl -fsSL \
-https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
-| sudo tee \"${rpikeyfile}\" 1> /dev/null"
-curl -fsSL \
-https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
-| sudo tee "${rpikeyfile}" 1> /dev/null
-
-actualrpirepokey=$(
-gpg --no-default-keyring --with-colons --import-options show-only --import \
-"${rpikeyfile}" 2> /dev/null \
-| awk -F':' '$1=="fpr"{print $10}' \
-| head -n 1
-)
-
-fi
 
 echo -e "\n 🔑 ${rpikeyfile}"
 echo -e " 🔐 ${expectedrpirepokey}"
