@@ -1,7 +1,7 @@
 {{- $bashChecks := print `
-if [[ -s ~/.config/autostart/chezmoi-autorun.desktop && \
-      -s ~/.config/systemd/user/chezmoi-update.service && \
-      -s ~/.config/systemd/user/chezmoi-update.timer ]]; then
+if [[ -s {{ .chezmoi.homeDir }}/.config/autostart/chezmoi-autorun.desktop && \
+      -s {{ .chezmoi.homeDir }}/.config/systemd/user/chezmoi-update.service && \
+      -s {{ .chezmoi.homeDir }}/.config/systemd/user/chezmoi-update.timer ]]; then
 echo -n "0"; else echo -n "1"; fi` -}}
 {{- $checksResult := output "bash" "-c" $bashChecks -}}
 {{- if ne $checksResult "0" -}}
@@ -26,8 +26,8 @@ echo -n "0"; else echo -n "1"; fi` -}}
 github_username="phil-gg"
 github_project="dotfiles"
 github_branch="main"
-git_filename="run_after_06-configure-chezmoi-autorun.sh.tmpl"
-local_filename="06-configure-chezmoi-autorun.sh"
+git_filename="run_after_05-configure-chezmoi-autorun.sh.tmpl"
+local_filename="05-configure-chezmoi-autorun.sh"
 runtime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 normal=$(printf '\033[0m')
 redbold=$(printf '\033[91;1m')
@@ -52,7 +52,7 @@ Version=1.0
 Type=Application
 Terminal=false
 NoDisplay=true
-Exec=qterminal -e %h/.config/scripts/98-chezmoi-tui-update.sh
+Exec=qterminal -e ${HOME}/.config/scripts/98-chezmoi-tui-update.sh
 Name=Chezmoi update autorun
 Comment=Autorun chezmoi update in QTerminal
 Icon=utilities-terminal
