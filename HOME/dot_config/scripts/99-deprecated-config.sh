@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Deprecated config removed from other scripts in this folder.
+# Deprecated config removed from other chezmoi scripts.
 #
 # See `#term-Idempotency` definition at:
 # https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html
@@ -32,7 +32,10 @@ pkgarch=$(dpkg --print-architecture)
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
+################################################################################
 # Deprecated when chezmoi was added to Sid repo (July 2026)
+################################################################################
+
 # Install / Update chezmoi (on any arch)
 
 chezmoi_latestver=$(
@@ -105,6 +108,107 @@ rm -rf "${tmp_dir}"
 
 # Close chezmoi not latest version check
 fi
+
+################################################################################
+# WSL instance stop/start triggers this, making login autorun not so useful
+################################################################################
+
+# Create chezmoi update autorun at login if it does not exist or has changed
+
+AUTORUN_DIR="${HOME}/.config/autostart"
+DESKTOP_FILE="chezmoi-autorun.desktop"
+DESKTOP_PATH="${AUTORUN_DIR}/${DESKTOP_FILE}"
+
+DESKTOP_TEXT="\
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+NoDisplay=true
+Exec=qterminal -e ${HOME}/.config/scripts/98-chezmoi-tui-update.sh
+Name=Chezmoi update autorun
+Comment=Autorun chezmoi update in QTerminal
+Icon=utilities-terminal
+Categories=System;Settings;Utility;Development;
+"
+
+if [ ! -s "${DESKTOP_PATH}" ] || \
+! cmp -s <(printf "%s" "${DESKTOP_TEXT}") "${DESKTOP_PATH}"; then
+echo -e "\n${cyanbold}‘Autorun chezmoi update in QTerminal’ desktop file${normal}"
+echo -e "$ mkdir -p ${AUTORUN_DIR}"
+mkdir -p "${AUTORUN_DIR}"
+echo -e "$ printf \"%s\" \"\${DESKTOP_TEXT}\" > ${DESKTOP_PATH}"
+printf "%s" "${DESKTOP_TEXT}" > "${DESKTOP_PATH}"
+fi
+
+################################################################################
+# Overnight update not useful unless/until 1password and sudo are automatic
+################################################################################
+
+# Create systemd service if it does not exist or has changed
+
+SERVICE_DIR="${HOME}/.config/systemd/user"
+SERVICE_FILE="chezmoi-update.service"
+SERVICE_PATH="${SERVICE_DIR}/${SERVICE_FILE}"
+
+SERVICE_TEXT="\
+[Unit]
+Description=Run chezmoi update in QTerminal
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+# Check if the GUI is active. If inactive (exit code 3), skip cleanly.
+ExecCondition=/usr/bin/systemctl --user is-active graphical-session.target
+ExecStart=/usr/bin/qterminal -e %h/.config/scripts/98-chezmoi-tui-update.sh
+"
+
+if [ ! -s "${SERVICE_PATH}" ] || \
+! cmp -s <(printf "%s" "${SERVICE_TEXT}") "${SERVICE_PATH}"; then
+echo -e "\n${cyanbold}Systemd service: chezmoi update${normal}"
+echo -e "$ mkdir -p ${SERVICE_DIR}"
+mkdir -p "${SERVICE_DIR}"
+echo -e "$ printf \"%s\" \"\${SERVICE_TEXT}\" > ${SERVICE_PATH}"
+printf "%s" "${SERVICE_TEXT}" > "${SERVICE_PATH}"
+RELOAD_SYSTEMD=1
+fi
+
+# Create systemd timer if it does not exist or has changed
+
+TIMER_DIR="${HOME}/.config/systemd/user"
+TIMER_FILE="chezmoi-update.timer"
+TIMER_PATH="${TIMER_DIR}/${TIMER_FILE}"
+
+TIMER_TEXT="\
+[Unit]
+Description=Run chezmoi update at 2 AM daily
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+"
+
+if [ ! -s "${TIMER_PATH}" ] || \
+! cmp -s <(printf "%s" "${TIMER_TEXT}") "${TIMER_PATH}"; then
+echo -e "\n${cyanbold}Systemd timer: chezmoi update${normal}"
+echo -e "$ mkdir -p ${TIMER_DIR}"
+mkdir -p "${TIMER_DIR}"
+echo -e "$ printf \"%s\" \"\${TIMER_TEXT}\" > ${TIMER_PATH}"
+printf "%s" "${TIMER_TEXT}" > "${TIMER_PATH}"
+RELOAD_SYSTEMD=1
+fi
+
+if (( RELOAD_SYSTEMD == 1 )); then
+echo -e "$ systemctl --user daemon-reload"
+systemctl --user daemon-reload
+echo -e "$ systemctl --user enable --now ${TIMER_FILE}"
+systemctl --user enable --now "${TIMER_FILE}"
+fi
+
+################################################################################
 
 # Log this latest `Config` operation and display runtime
 
