@@ -106,6 +106,14 @@ rm -rf "${tmp_dir}"
 # Close chezmoi not latest version check
 fi
 
+# Log this latest `Config` operation and display runtime
+
+echo -e "\n${bluebold}${local_filename} run at${normal}"
+echo -e "> ${runtime}\n"
+mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
+echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
+>> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+
 ################################################################################
 #
 # Line wrap ruler
