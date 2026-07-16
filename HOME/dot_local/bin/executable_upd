@@ -1,0 +1,5 @@
+#!/bin/bash
+echo -ne $'\033]0;Chezmoi update\007'
+chezmoi update
+read -srp $'\033[1;35mEnd of script - press RETURN to exit\033[0m\n'
+echo -ne $'\033]0;\007'

@@ -125,7 +125,7 @@ Version=1.0
 Type=Application
 Terminal=false
 NoDisplay=true
-Exec=qterminal -e ${HOME}/.config/scripts/98-chezmoi-tui-update.sh
+Exec=qterminal -e ${HOME}/.local/bin/upd
 Name=Chezmoi update autorun
 Comment=Autorun chezmoi update in QTerminal
 Icon=utilities-terminal
@@ -160,7 +160,7 @@ After=graphical-session.target
 Type=oneshot
 # Check if the GUI is active. If inactive (exit code 3), skip cleanly.
 ExecCondition=/usr/bin/systemctl --user is-active graphical-session.target
-ExecStart=/usr/bin/qterminal -e %h/.config/scripts/98-chezmoi-tui-update.sh
+ExecStart=/usr/bin/qterminal -e %h/.local/bin/upd
 "
 
 if [ ! -s "${SERVICE_PATH}" ] || \
