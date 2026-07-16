@@ -1,4 +1,4 @@
-{{ /* /run/WSL exists & is a dir & not executing chezmoi from inside kde */ -}}
+{{/* /run/WSL exists & is a dir & not executing chezmoi from inside kde */ -}}
 {{ $wsl := stat "/run/WSL" -}}
 {{ $kdeSession := env "KDE_FULL_SESSION" -}}
 {{ if and $wsl $wsl.isDir (ne $kdeSession "true") -}}
