@@ -80,6 +80,12 @@ kinfocenter
 klevernotes
 {{- /* Would like to add this in future */}}
 {{- /* kjournaldbrowser */}}
+{{- /* These integrate 1password GUI app with kwallet for auto-login */}}
+kwalletmanager
+{{- /* Only need these when NOT on wsl */}}
+{{- if not (and $wsl $wsl.IsDir) }}
+libpam-kwallet5
+{{- end }}
 
 {{- /* Font packages */}}
 fonts-hack
