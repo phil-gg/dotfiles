@@ -205,7 +205,10 @@ tasks.writeConfig(\"launchers\", \"\");
 // Spacer (Expanding pushes subsequent widgets to the right)
 var spacer = taskbar.addWidget(\"org.kde.plasma.panelspacer\");
 
-// System Tray (Right-aligned via the spacer)
+// Colour Picker (Right-aligned via the spacer)
+var colorpicker = taskbar.addWidget(\"org.kde.plasma.colorpicker\");
+
+// System Tray (Between Colour Picker & Digital Clock)
 var systray = taskbar.addWidget(\"org.kde.plasma.systemtray\");
 
 // Digital Clock (Far right edge)
