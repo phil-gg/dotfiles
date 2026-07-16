@@ -27,25 +27,111 @@ runtime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 normal=$(printf '\033[0m')
 redbold=$(printf '\033[91;1m')
 greenbold=$(printf '\033[92;1m')
-cyanbold=$(printf '\033[96;1m')
 bluebold=$(printf '\033[94;1m')
+purplebold=$(printf '\033[95;1m')
+cyanbold=$(printf '\033[96;1m')
 
 # Now running `${local_filename}`
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
 # Graphically create kdewallet if it does not already exist
+WALLET_DIR="${HOME}/.local/share/kwalletd"
+WALLET_FILE="kdewallet.kwl"
+WALLET_PATH="${WALLET_DIR}/${WALLET_FILE}"
 
-if ! kwallet-query -l kdewallet &> /dev/null; then
+if [ ! -s "${WALLET_PATH}" ]; then
 echo -e "\n${cyanbold}Create kdewallet${normal}"
 echo -e "> Opening GUI wizard to create kdewallet"
-echo -e "> Choose blowfish encryption & reuse your system login password"
-echo -e "> These settings should allow for wallet auto-unlock on login"
-echo -e '$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 ""'
-qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 ""
+echo -e "> 1. Choose blowfish encryption & reuse your system login password"
+echo -e "> 2. (a) On WSL, use a blank password (noting the security implications of this)"
+echo -e "> 2. (b) With a session-mgr & libpam, reuse your system login password\n"
+echo -e "> These settings should allow for wallet auto-unlock on login\n"
+
+# Ensure the target directory exists before we monitor it
+echo -e "$ mkdir -p ${WALLET_DIR}"
+mkdir -p "${WALLET_DIR}"
+
+# Trigger the GUI prompt in the background to prevent D-Bus timeouts
+echo -e "$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 &> /dev/null &\n"
+qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 &> /dev/null &
+
+# Pause the script until you finish the GUI wizard and the file appears
+echo -e "> Waiting for wallet creation to complete\n"
+while [ ! -s "${WALLET_PATH}" ]; do
+    echo -n "."
+    sleep 1
+done
+echo -e "> Wallet created successfully"
+
+
+# Close kdewallet exists conditional
 fi
 
+# Enable the Freedesktop Secret Service bridge for 1Password
+WALLET_ENABLED=$(
+kreadconfig6 --file kwalletrc --group Wallet --key Enabled --default "false"
+)
+WALLET_FIRST_USE=$(
+kreadconfig6 --file kwalletrc --group Wallet --key "First Use" --default "true"
+)
+SECRET_API=$(
+kreadconfig6 --file kwalletrc --group org.freedesktop.secrets --key apiEnabled --default "false"
+)
 
+if [[ "${WALLET_ENABLED}" != "true" ||
+      "${WALLET_FIRST_USE}" != "false" ||
+      "${SECRET_API}" != "true" ]]; then
+
+echo -e "\n${cyanbold}Configuring KWallet Secret Service bridge${normal}"
+echo -e "$ kwriteconfig6 --file kwalletrc --group Wallet --key Enabled true"
+kwriteconfig6 --file kwalletrc --group Wallet --key Enabled true
+echo -e "$ kwriteconfig6 --file kwalletrc --group Wallet --key \"First Use\" false"
+kwriteconfig6 --file kwalletrc --group Wallet --key "First Use" false
+echo -e "$ kwriteconfig6 --file kwalletrc --group org.freedesktop.secrets --key apiEnabled true"
+kwriteconfig6 --file kwalletrc --group org.freedesktop.secrets --key apiEnabled true
+echo -e "$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 reconfigure &> /dev/null || true"
+qdbus6 org.kde.kwalletd6 /modules/kwalletd6 reconfigure &> /dev/null || true
+
+# 1password settings is part of the same conditional as Secret Service bridge config
+echo -e "\n${cyanbold}Complete 1Password integration${normal}"
+echo -e "> Opening 1Password GUI"
+echo -e "> 1. Unlock the application (manually this time)\n"
+echo -e "> 2. (a) Navigate to Settings > Security"
+echo -e "> 2. (b) Turn ON 'Unlock using system authentication'"
+echo -e "> 2. (c) Turn OFF 'Lock 1Password when computer locks' (noting the security implications of this)\n"
+echo -e "> 3. (a) Navigate to Settings > Developer"
+echo -e "> 3. (b) Turn OFF 'Integrate with 1Password CLI'"
+echo -e "${purplebold}>     *  NOTE: This config manages GUI & CLI logins independently *${normal}"
+echo -e "> 4. Close the Settings window & fully terminate 1Password GUI app"
+echo -e "> 5. Return to this terminal (the script will automatically resume)\n"
+
+# Trigger 1Password GUI app in the background
+echo -e "$ 1password &> /dev/null &\n"
+1password &> /dev/null &
+
+# Give the Electron app a few seconds to spin up
+sleep 3
+
+# Poll the process list until 1password is completely closed
+echo -n "> Waiting for 1Password to be fully terminated"
+while pgrep -x 1password > /dev/null; do
+    echo -n "."
+    sleep 1
+done
+echo -e "> 1Password has been terminated."
+
+# Close the condtional Secret Service bridge configuration
+fi
+
+# (Re-)launch 1Password GUI app in background (test the auto-login)
+if ! pgrep -x 1password > /dev/null; then
+echo -e "\n${cyanbold}(Re-)launching 1Password GUI app${normal}"
+echo -e "> Configuration of 1Password GUI app auto-login should now be complete"
+echo -e "> Please verify\n"
+echo -e "$ 1password --silent &> /dev/null &"
+1password --silent &> /dev/null &
+fi
 
 # Replicate the fully evaluated script to your target directory
 
