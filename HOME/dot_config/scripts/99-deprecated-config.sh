@@ -278,6 +278,217 @@ sudo ldconfig
 fi
 
 ################################################################################
+# Removed my Weston instance and pointed KWin directly into WSLg Weston fork
+################################################################################
+
+# Create /etc/xdg/weston/weston.ini if it does not exist or has changed
+
+WESTON_DIR="/etc/xdg/weston"
+WESTON_FILE="${WESTON_DIR}/weston.ini"
+
+WESTON_TEXT="\
+[core]
+# https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
+# Enables support for X11 applications
+# xwayland=true
+# Force wayland backend
+backend=wayland
+# Use the Kiosk shell to force the nested app to fill the screen
+shell=kiosk-shell.so
+# Load the systemd notification module
+modules=systemd-notify.so
+# Set output repaint window to 8 ms maximum, which should support up to 125 Hz display refresh rates
+repaint-window=8
+# Disable screen blanking
+idle-time=0
+# Force graphics acceleration
+renderer=gl
+
+[libinput]
+# Enables tap to click on touchpad devices
+enable-tap=true
+# Enables tap and drag on touchpad devices
+tap-and-drag=true
+# Disable other devices while typing on keyboard
+disable-while-typing=false
+# Disable clicking both left and right buttons together simulating middle click
+middle-button-emulation=false
+# Enable touchscreen calibrator interface
+touchscreen_calibrator=false
+
+[shell]
+# Set background color to opaque black
+background-color=0xff000000
+# Enables screen locking (Boolean)
+locking=false
+# Opening new windows animation
+animation=none
+# Closing windows animation
+close-animation=none
+# Effect used by desktop-shell when starting up
+startup-animation=none
+# Effect used with focused vs unfocused windows
+focus-animation=dim-layer
+# Weston quits when the Ctrl-Alt-Backspace key combination is pressed
+allow-zap=false
+# Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
+binding-modifier=alt
+# Set the cursor theme
+cursor-theme=westonCursor
+# Set the cursor size
+cursor-size=96
+
+[keyboard]
+keymap_model=pc105
+keymap_layout=gb
+keymap_variant=extd
+"
+
+if [ ! -s "${WESTON_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_TEXT}") "${WESTON_FILE}"; then
+echo -e "\n${cyanbold}Configure weston${normal}"
+echo -e "$ sudo mkdir -p ${WESTON_DIR}"
+sudo mkdir -p "${WESTON_DIR}"
+echo -e "$ printf \"%s\" \"\${WESTON_TEXT}\" | sudo tee ${WESTON_FILE} > \
+/dev/null"
+printf "%s" "${WESTON_TEXT}" | sudo tee "${WESTON_FILE}" > /dev/null
+echo -e "$ ln -sf ${WESTON_FILE} ~/.config/weston.ini"
+ln -sf "${WESTON_FILE}" "${HOME}/.config/weston.ini"
+fi
+
+# Configure westonCursor theme
+source_dir="${HOME}/git/${github_username}/${github_project}/usr/share/icons/westonCursor"
+target_dir="/usr/share/icons/westonCursor"
+if [[ ! -d "${target_dir}" ]]; then
+
+echo -e "\n${cyanbold}Installing westonCursor${normal}"
+
+echo -e "$ sudo mkdir -p ${target_dir}"
+sudo mkdir -p "${target_dir}"
+
+echo -e "\
+$ sudo python3 ${source_dir}/src/build-svg-theme.py \\
+        --output-dir=${target_dir}/cursors_scalable \\
+        --svg-dir=${source_dir}/src/svg \\
+        --config-dir=${source_dir}/src/config \\
+        --alias-file=${source_dir}/src/cursorList \\
+        --nominal-size=96"
+sudo python3 "${source_dir}/src/build-svg-theme.py" \
+  --output-dir="${target_dir}/cursors_scalable" \
+  --svg-dir="${source_dir}/src/svg" \
+  --config-dir="${source_dir}/src/config" \
+  --alias-file="${source_dir}/src/cursorList" \
+  --nominal-size=96
+
+echo -e "\
+$ sudo python3 ${source_dir}/src/svg-theme-to-xcursor.py \\
+        --output-dir=${target_dir}/cursors \\
+        --svg-dir=${source_dir}/src/svg \\
+        --config-dir=${source_dir}/src/config \\
+        --alias-file=${source_dir}/src/cursorList"
+sudo python3 "${source_dir}/src/svg-theme-to-xcursor.py" \
+  --output-dir="${target_dir}/cursors" \
+  --svg-dir="${source_dir}/src/svg" \
+  --config-dir="${source_dir}/src/config" \
+  --alias-file="${source_dir}/src/cursorList"
+
+echo -e "$ sudo install -CDm 644 ${source_dir}/index.theme ${target_dir}/index.theme"
+sudo install -CDm 644 "${source_dir}/index.theme" "${target_dir}/index.theme"
+
+# Close check for westonCursor theme
+fi
+
+# Define systemd unit for Weston (Plow)
+
+WESTON_SERVICE="\
+# plow-weston.service
+# Just a virtual display
+# A customised /usr/lib/systemd/user/plasma-kwin_wayland.service depends on this
+
+[Unit]
+Description=Weston compositor (nested on WSLg)
+# https://manpages.debian.org/trixie/weston/weston.1.en.html
+Documentation=man:weston(1)
+After=graphical-session-pre.target
+# For teardown, stop plow-weston with plasma-kwin_wayland.service
+PartOf=plasma-kwin_wayland.service
+
+[Service]
+Type=notify
+# This is the command to start the service
+# %t resolves to /run/user/\$(id -u)
+ExecStart=/usr/bin/weston --socket=weston --width=1280 --height=960
+# Activating and not activated until the following helper completes
+ExecStartPost=/bin/bash -c 'while [ ! -S %t/weston ]; do sleep 0.1; done'
+Restart=no
+ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
+"
+
+# Define the config change for Plasma
+
+PLASMA_CONF="\
+# plow-plasma.conf
+# Injects plow-weston dependencies into KWin
+# Customises /usr/lib/systemd/user/plasma-kwin_wayland.service
+
+[Unit]
+After=plow-weston.service
+# Enable these services before running plasma-kwin_wayland
+Requires=plow-weston.service
+# When plow-weston stops/dies, apply to kwin too (stronger than Wants)
+BindsTo=plow-weston.service
+# When plow-weston is restarted, apply to customised plasma-kwin_wayland too
+PartOf=plow-weston.service
+# When plow-weston is reloaded, apply to customised plasma-kwin_wayland too
+ReloadPropagatedFrom=plow-weston.service
+
+[Service]
+# Ensure these variables are set as part of plasma-kwin_wayland customisations
+Environment=WAYLAND_DISPLAY=weston
+Environment=XDG_SESSION_CLASS=user
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_SESSION_DESKTOP=KDE
+Environment=XDG_CURRENT_DESKTOP=KDE
+Environment=GALLIUM_DRIVER=llvmpipe
+Environment=LIBGL_ALWAYS_SOFTWARE=1
+"
+
+# Configure system-wide systemd user units
+
+echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
+
+# Set file locations once as variables
+
+WESTON_UNIT_DIR="/etc/systemd/user"
+WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
+PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
+PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
+
+# Configure plow-weston.service systemd unit
+if [ ! -s "${WESTON_UNIT_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_SERVICE}") "${WESTON_UNIT_FILE}"; then
+echo -e "\n${cyanbold}Configure plow-weston.service systemd unit${normal}"
+# Choosing to expand path but not file contents in echo output here
+# Hence backslash escapes for WESTON_SERVICE variable
+echo -e "$ printf \"%s\" \"\${WESTON_SERVICE}\" | sudo tee ${WESTON_UNIT_FILE} \
+> /dev/null"
+printf "%s" "${WESTON_SERVICE}" | sudo tee "${WESTON_UNIT_FILE}" > /dev/null
+USR_UNITS_CHANGED=1
+fi
+
+# Configure plasma-kwin_wayland.service customisation
+if [ ! -s "${PLASMA_CONF_FILE}" ] || \
+! cmp -s <(printf "%s" "${PLASMA_CONF}") "${PLASMA_CONF_FILE}"; then
+echo -e "\n${cyanbold}Customise plasma-kwin_wayland systemd unit${normal}"
+# Choosing to expand path but not file contents in echo output here
+# Hence backslash escapes for PLASMA_CONF variable
+echo -e "$ printf \"%s\" \"\${PLASMA_CONF}\" | sudo tee ${PLASMA_CONF_FILE} > \
+/dev/null"
+printf "%s" "${PLASMA_CONF}" | sudo tee "${PLASMA_CONF_FILE}" > /dev/null
+USR_UNITS_CHANGED=1
+fi
+
+################################################################################
 
 # Log this latest `Config` operation and display runtime
 
