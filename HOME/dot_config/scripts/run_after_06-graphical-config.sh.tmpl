@@ -1,0 +1,72 @@
+{{- /* Only run this when executing chezmoi from inside kde */ -}}
+{{- if eq (env "KDE_FULL_SESSION") "true" -}}
+
+#!/bin/bash
+
+################################################################################
+# Graphical configuration (e.g. kwallet).
+#
+# See `#term-Idempotency` definition at:
+# https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html
+#
+# This shell script attempts to comply with:
+# https://google.github.io/styleguide/shellguide.html
+#
+# Should (hopefully, mostly) pass analysis with ShellCheck, too:
+# https://www.shellcheck.net
+################################################################################
+
+# Set variables
+
+github_username="phil-gg"
+github_project="dotfiles"
+github_branch="main"
+git_filename="run_after_06-graphical-config.sh.tmpl"
+local_filename="06-graphical-config.sh"
+runtime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+normal=$(printf '\033[0m')
+redbold=$(printf '\033[91;1m')
+greenbold=$(printf '\033[92;1m')
+cyanbold=$(printf '\033[96;1m')
+bluebold=$(printf '\033[94;1m')
+
+# Now running `${local_filename}`
+
+echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
+
+# Graphically create kdewallet if it does not already exist
+
+if ! kwallet-query -l kdewallet &> /dev/null; then
+echo -e "\n${cyanbold}Create kdewallet${normal}"
+echo -e "> Opening GUI wizard to create kdewallet"
+echo -e "> Choose blowfish encryption & reuse your system login password"
+echo -e "> These settings should allow for wallet auto-unlock on login"
+echo -e '$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 ""'
+qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 ""
+fi
+
+
+
+# Replicate the fully evaluated script to your target directory
+
+echo -e "\n${cyanbold}Save a copy of ‘${local_filename}’${normal}"
+echo -e "\
+$ install -CDm 755 \"\${BASH_SOURCE[0]}\" ~/.config/scripts/${local_filename}"
+install -CDm 755 "${BASH_SOURCE[0]}" "${HOME}/.config/scripts/${local_filename}"
+
+# Log this latest `Config` operation and display runtime
+
+echo -e "\n${bluebold}${local_filename} run at${normal}"
+echo -e "> ${runtime}\n"
+mkdir -p "${HOME}/git/${github_username}/${github_project}" && \
+echo -e "EXEC-TIME: ${runtime} | FILE: ${local_filename}" \
+>> "${HOME}/git/${github_username}/${github_project}/config-runs.log"
+
+################################################################################
+#
+# Line wrap ruler
+#
+#   5   10   15   20   25   30   35   40   45   50   55   60   65   70   75   80
+#
+################################################################################
+{{- end -}}
