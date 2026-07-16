@@ -102,7 +102,7 @@ echo -e "> 2. (b) Turn ON 'Unlock using system authentication'"
 echo -e "> 2. (c) Turn OFF 'Lock 1Password when computer locks' (noting the security implications of this)\n"
 echo -e "> 3. (a) Navigate to Settings > Developer"
 echo -e "> 3. (b) Turn OFF 'Integrate with 1Password CLI'"
-echo -e "${purplebold}>     *  NOTE: This config manages GUI & CLI logins independently *${normal}"
+echo -e "${purplebold}>     *  NOTE: This config manages GUI & CLI logins independently *${normal}\n"
 echo -e "> 4. Close the Settings window & fully terminate 1Password GUI app"
 echo -e "> 5. Return to this terminal (the script will automatically resume)\n"
 
@@ -119,7 +119,11 @@ while pgrep -x 1password > /dev/null; do
     echo -n "."
     sleep 1
 done
-echo -e "> 1Password has been terminated."
+echo -e "\n> 1Password has been terminated."
+
+# Short wait between app exit and relaunch
+echo -e "$ sleep 3"
+sleep 3
 
 # Close the condtional Secret Service bridge configuration
 fi
