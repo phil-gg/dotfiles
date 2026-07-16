@@ -1,5 +1,11 @@
-{{- /* Only run this when executing chezmoi from inside kde */ -}}
-{{- if eq (env "KDE_FULL_SESSION") "true" -}}
+{{/* Only run this when executing chezmoi from inside kde */ -}}
+{{/* & do not run this again once kdewallet contains 1Password 2FA Token */ -}}
+{{ $bashChecks := print `
+if [[ "${KDE_FULL_SESSION}" == "true" ]] && \
+! kwallet-query -l -f "Secret Service" kdewallet 2>/dev/null | grep -q "1Password 2FA Token"
+then echo -n "0"; else echo -n "1"; fi` -}}
+{{ $checksResult := output "bash" "-c" $bashChecks -}}
+{{ if eq $checksResult "0" -}}
 
 #!/bin/bash
 
