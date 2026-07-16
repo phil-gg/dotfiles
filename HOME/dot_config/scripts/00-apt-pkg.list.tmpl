@@ -83,7 +83,7 @@ klevernotes
 {{- /* These integrate 1password GUI app with kwallet for auto-login */}}
 kwalletmanager
 {{- /* Only need these when NOT on wsl */}}
-{{- if not (and $wsl $wsl.IsDir) }}
+{{- if not (and $wsl $wsl.isDir) }}
 libpam-kwallet5
 {{- end }}
 
@@ -109,7 +109,7 @@ mesa-utils
 kitty
 
 {{- /* Packages that are only needed on WSL */}}
-{{- if and $wsl $wsl.IsDir }}
+{{- if and $wsl $wsl.isDir }}
 weston
 wl-clipboard
 {{- end }}
