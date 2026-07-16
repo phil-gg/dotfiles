@@ -629,6 +629,10 @@ PartOf=plow-weston.service
 ReloadPropagatedFrom=plow-weston.service
 
 [Service]
+# Clear the original ExecStart from the default service file
+ExecStart=
+# Define the new command with --nested included too
+ExecStart=/usr/bin/kwin_wayland_wrapper --nested --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
@@ -636,6 +640,7 @@ Environment=XDG_SESSION_TYPE=wayland
 Environment=XDG_SESSION_DESKTOP=KDE
 Environment=XDG_CURRENT_DESKTOP=KDE
 Environment=KWIN_DRM_DEVICES=/dev/dri/renderD128
+Environment=KWIN_OpenGL_RENDERER=gbm
 # Use Microsoft wsl libraries
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # Set variables to use wayland & accelerate it with graphics hardware
