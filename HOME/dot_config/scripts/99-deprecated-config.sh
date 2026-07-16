@@ -209,6 +209,75 @@ systemctl --user enable --now "${TIMER_FILE}"
 fi
 
 ################################################################################
+# Prioritising Microsoft's proprietary WSLg graphics libraries over the native #
+# open-source Mesa libraries broke KWin nesting inside Weston                  #
+################################################################################
+
+multiarch=$(dpkg-architecture -q DEB_HOST_MULTIARCH)
+libdir="/usr/lib/${multiarch}"
+
+# Note GBM may not do much in this set-up, but there were dri/drm name issues
+# before Mesa 24
+# /usr/lib/x86_64-linux-gnu/gbm/dri_gbm.so must exist (installed with apt)
+if [ -e "${libdir}/gbm/dri_gbm.so" ]; then
+if [ ! -L "${libdir}/gbm/drm_gbm.so" ] \
+|| [ ! -L "${libdir}/dri/dri_gbm.so" ] \
+|| [ ! -L "${libdir}/dri/drm_gbm.so" ]; then
+
+echo -e "\n${cyanbold}Create symlinks to gbm/dri_gbm.so${normal}"
+# Quietly ensure other folder exists (but should already be there)
+sudo mkdir -p "${libdir}/dri"
+
+if [ ! -L "${libdir}/gbm/drm_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/gbm/drm_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/gbm/drm_gbm.so"
+fi
+
+if [ ! -L "${libdir}/dri/dri_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/dri/dri_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/dri/dri_gbm.so"
+fi
+
+if [ ! -L "${libdir}/dri/drm_gbm.so" ]; then
+echo -e "$ sudo ln -s ${libdir}/gbm/dri_gbm.so ${libdir}/dri/drm_gbm.so"
+sudo ln -sf "${libdir}/gbm/dri_gbm.so" "${libdir}/dri/drm_gbm.so"
+fi
+
+# Update the linker cache so the system sees the new libs immediately
+echo -e "$ sudo ldconfig"
+sudo ldconfig
+
+fi
+fi
+
+# Ensure system libraries are loaded.
+# This stops the following environment variable from being needed:
+# LD_LIBRARY_PATH=/usr/lib/wsl/lib:/usr/lib/x86_64-linux-gnu/dri
+
+if [ ! -s "/etc/ld.so.conf.d/phil-wslg.conf" ] || \
+[ ! -s "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
+
+echo -e "\n${cyanbold}Configuring system library paths${normal}"
+# Quietly ensure folder exists (but should already be there)
+sudo mkdir -p /etc/ld.so.conf.d
+
+if [ ! -s "/etc/ld.so.conf.d/phil-wslg.conf" ]; then
+echo -e "$ echo /usr/lib/wsl/lib | sudo tee /etc/ld.so.conf.d/phil-wslg.conf"
+echo /usr/lib/wsl/lib | sudo tee /etc/ld.so.conf.d/phil-wslg.conf > /dev/null
+fi
+
+if [ ! -s "/etc/ld.so.conf.d/phil-dri-gbm.conf" ]; then
+echo -e "$ echo ${libdir}/dri | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf"
+echo "${libdir}/dri" | sudo tee /etc/ld.so.conf.d/phil-dri-gbm.conf > /dev/null
+fi
+
+# Update the linker cache so the system sees the new libs immediately
+echo -e "$ sudo ldconfig"
+sudo ldconfig
+
+fi
+
+################################################################################
 
 # Log this latest `Config` operation and display runtime
 
