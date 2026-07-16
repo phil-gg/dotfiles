@@ -631,8 +631,8 @@ ReloadPropagatedFrom=plow-weston.service
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# Define the new command with --nested included too
-ExecStart=/usr/bin/kwin_wayland_wrapper --nested --xwayland
+# Define the new command without --xwayland
+ExecStart=/usr/bin/kwin_wayland_wrapper
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
