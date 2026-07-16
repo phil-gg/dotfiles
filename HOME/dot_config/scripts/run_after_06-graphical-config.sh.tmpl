@@ -63,32 +63,14 @@ echo -e '$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 "" &> /d
 qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 "" &> /dev/null &
 
 # Pause the script until you finish the GUI wizard and the file appears
-echo -e "> Waiting for wallet creation to complete\n"
+echo -n "> Waiting for wallet creation to complete"
 while [ ! -s "${WALLET_PATH}" ]; do
     echo -n "."
     sleep 1
 done
-echo -e "> Wallet created successfully"
-
-
-# Close kdewallet exists conditional
-fi
+echo -e "\n> Wallet created successfully"
 
 # Enable the Freedesktop Secret Service bridge for 1Password
-WALLET_ENABLED=$(
-kreadconfig6 --file kwalletrc --group Wallet --key Enabled --default "false"
-)
-WALLET_FIRST_USE=$(
-kreadconfig6 --file kwalletrc --group Wallet --key "First Use" --default "true"
-)
-SECRET_API=$(
-kreadconfig6 --file kwalletrc --group org.freedesktop.secrets --key apiEnabled --default "false"
-)
-
-if [[ "${WALLET_ENABLED}" != "true" ||
-      "${WALLET_FIRST_USE}" != "false" ||
-      "${SECRET_API}" != "true" ]]; then
-
 echo -e "\n${cyanbold}Configuring KWallet Secret Service bridge${normal}"
 echo -e "$ kwriteconfig6 --file kwalletrc --group Wallet --key Enabled true"
 kwriteconfig6 --file kwalletrc --group Wallet --key Enabled true
@@ -134,7 +116,7 @@ echo -e "\n> 1Password has been terminated."
 echo -e "$ sleep 3"
 sleep 3
 
-# Close the condtional Secret Service bridge configuration
+# Close kdewallet exists conditional
 fi
 
 # (Re-)launch 1Password GUI app in background (test the auto-login)
