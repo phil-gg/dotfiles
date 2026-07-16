@@ -4,7 +4,7 @@
 #!/bin/bash
 
 ################################################################################
-# Graphical configuration (e.g. kwallet).
+# Graphical configuration (e.g. KWallet & 1Password).
 #
 # See `#term-Idempotency` definition at:
 # https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html
@@ -96,15 +96,18 @@ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 reconfigure &> /dev/null || true
 # 1password settings is part of the same conditional as Secret Service bridge config
 echo -e "\n${cyanbold}Complete 1Password integration${normal}"
 echo -e "> Opening 1Password GUI"
-echo -e "> 1. Unlock the application (manually this time)\n"
-echo -e "> 2. (a) Navigate to Settings > Security"
-echo -e "> 2. (b) Turn ON 'Unlock using system authentication'"
-echo -e "> 2. (c) Turn OFF 'Lock 1Password when computer locks' (noting the security implications of this)\n"
-echo -e "> 3. (a) Navigate to Settings > Developer"
-echo -e "> 3. (b) Turn OFF 'Integrate with 1Password CLI'"
+echo -e "> 1. Unlock the application (master password + TOTP)\n"
+echo -e "> 2. (a) Application opens to Settings > General"
+echo -e "> 2. (b) Turn ON 'Keep 1Pasword in the system tray'"
+echo -e "> 2. (c) Turn ON 'Start at login'\n"
+echo -e "> 3. (a) Navigate to Settings > Security"
+echo -e "> 3. (b) Turn ON 'Unlock using system authentication'"
+echo -e "> 3. (c) Turn OFF 'Lock 1Password when computer locks' (noting the security implications of this)\n"
+echo -e "> 4. (a) Navigate to Settings > Developer"
+echo -e "> 4. (b) Turn OFF 'Integrate with 1Password CLI'"
 echo -e "${purplebold}>     *  NOTE: This config manages GUI & CLI logins independently *${normal}\n"
-echo -e "> 4. Close the Settings window & fully terminate 1Password GUI app"
-echo -e "> 5. Return to this terminal (the script will automatically resume)\n"
+echo -e "> 5. Close the Settings window & fully terminate 1Password GUI app"
+echo -e "> 6. Return to this terminal (the script will automatically resume)\n"
 
 # Trigger 1Password GUI app in the background
 echo -e "$ 1password &> /dev/null &\n"
@@ -131,10 +134,10 @@ fi
 # (Re-)launch 1Password GUI app in background (test the auto-login)
 if ! pgrep -x 1password > /dev/null; then
 echo -e "\n${cyanbold}(Re-)launching 1Password GUI app${normal}"
-echo -e "> Configuration of 1Password GUI app auto-login should now be complete"
+echo -e "> 1Password should not require any TOTP this launch"
 echo -e "> Please verify\n"
-echo -e "$ 1password --silent &> /dev/null &"
-1password --silent &> /dev/null &
+echo -e "$ 1password &> /dev/null &"
+1password &> /dev/null &
 fi
 
 # Replicate the fully evaluated script to your target directory
