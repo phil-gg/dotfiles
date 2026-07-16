@@ -53,8 +53,8 @@ echo -e "$ mkdir -p ${WALLET_DIR}"
 mkdir -p "${WALLET_DIR}"
 
 # Trigger the GUI prompt in the background to prevent D-Bus timeouts
-echo -e "$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 &> /dev/null &\n"
-qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 &> /dev/null &
+echo -e '$ qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 "" &> /dev/null &\n'
+qdbus6 org.kde.kwalletd6 /modules/kwalletd6 open kdewallet 0 "" &> /dev/null &
 
 # Pause the script until you finish the GUI wizard and the file appears
 echo -e "> Waiting for wallet creation to complete\n"
