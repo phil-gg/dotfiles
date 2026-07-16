@@ -1,5 +1,7 @@
+{{- /* /run/WSL exists & is a dir & not executing chezmoi from inside kde */ -}}
 {{- $wsl := stat "/run/WSL" -}}
-{{- if and $wsl $wsl.isDir -}}
+{{- $kdeSession := env "KDE_FULL_SESSION" -}}
+{{- if and $wsl $wsl.IsDir (ne $kdeSession "true") -}}
 
 #!/bin/bash
 
