@@ -639,15 +639,15 @@ Environment=XDG_SESSION_CLASS=user
 Environment=XDG_SESSION_TYPE=wayland
 Environment=XDG_SESSION_DESKTOP=KDE
 Environment=XDG_CURRENT_DESKTOP=KDE
-Environment=KWIN_DRM_DEVICES=/dev/dri/renderD128
+# Environment=KWIN_DRM_DEVICES=/dev/dri/renderD128
 Environment=KWIN_OpenGL_RENDERER=gbm
 # Set variables to use wayland & accelerate it with graphics hardware
 Environment=EGL_PLATFORM=wayland
-Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
-Environment=GALLIUM_DRIVER=d3d12
-Environment=GBM_BACKEND=d3d12
-Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
-Environment=MESA_VK_WSI_PRESENT_MODE=immediate
+# Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
+# Environment=GALLIUM_DRIVER=d3d12
+# Environment=GBM_BACKEND=d3d12
+# Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
+# Environment=MESA_VK_WSI_PRESENT_MODE=immediate
 "
 
 # Add services to share clipboards between host & guest
