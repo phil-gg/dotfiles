@@ -1,8 +1,12 @@
-{{- /* Define WSL test */ -}}
-{{- $wsl := output "bash" "-c" "[[ -d /run/WSL ]]; echo -n $?" -}}
-{{- /* Min pkg list to install all Debian [essential|priority|important] pkgs */ -}}
-{{- output "bash" "-c" "comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) <(aptitude search -F '%p' '~E|~prequired|~pimportant' | xargs apt-cache depends | awk '/Depends:|PreDepends:/ {print $NF}' | tr -d '<>' | sort -u)" -}}
-{{- /* Extra essentials not marked essential priority or important by Debian */ -}}
+{{/* Define WSL test variable */ -}}
+{{ $wsl := stat "/run/WSL" -}}
+{{/* Bash to list all Debian [essential|priority|important] pkgs */ -}}
+{{ output "bash" "-c" `\
+comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) \
+         <(aptitude search -F '%p' '~E|~prequired|~pimportant' | xargs \
+           apt-cache depends | awk '/Depends:|PreDepends:/ {print $NF}' | \
+           tr -d '<>' | sort -u)` -}}
+{{/* Extra essentials not marked essential priority or important by Debian */ -}}
 sudo
 ca-certificates
 
@@ -26,11 +30,12 @@ locales
 keyboard-configuration
 console-setup
 
-{{- /* Debian package tools */}}
+{{- /* Debian packaging tools */}}
 aptitude
-cosign
 debsigs
 equivs
+{{- /* Removed cosign when switched to chezmoi installation from sid repo */}}
+{{- /* cosign */}}
 
 {{- /* Audio packages */}}
 alsa-utils
@@ -43,8 +48,8 @@ firefox-devedition-l10n-en-gb
 libpci3
 libegl1
 
-{{- /* 1password managed elsewhere as not using deb pkg on arm64 */ -}}
-{{- /* 1password dependencies */ -}}
+{{- /* 1password managed elsewhere as not using deb pkg on arm64 */}}
+{{- /* 1password dependencies */}}
 {{- /* TO-DO: Logic here for all other 1password dependencies on arm64 */}}
 libayatana-appindicator3-1
 
@@ -97,8 +102,8 @@ x11-apps
 mesa-utils
 kitty
 
-{{- /* Packages that are only needed on WSL */ -}}
-{{- if eq $wsl "0" }}
+{{- /* Packages that are only needed on WSL */}}
+{{- if and $wsl $wsl.IsDir }}
 weston
 wl-clipboard
 {{- end }}
