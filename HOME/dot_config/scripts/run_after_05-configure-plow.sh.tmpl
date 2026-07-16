@@ -1,7 +1,7 @@
-{{- /* /run/WSL exists & is a dir & not executing chezmoi from inside kde */ -}}
-{{- $wsl := stat "/run/WSL" -}}
-{{- $kdeSession := env "KDE_FULL_SESSION" -}}
-{{- if and $wsl $wsl.isDir (ne $kdeSession "true") -}}
+{{ /* /run/WSL exists & is a dir & not executing chezmoi from inside kde */ -}}
+{{ $wsl := stat "/run/WSL" -}}
+{{ $kdeSession := env "KDE_FULL_SESSION" -}}
+{{ if and $wsl $wsl.isDir (ne $kdeSession "true") -}}
 
 #!/bin/bash
 
@@ -591,9 +591,11 @@ PartOf=plasma-kwin_wayland.service
 
 [Service]
 Type=notify
+# Inject Microsoft wsl libraries into Weston only
+Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # This is the command to start the service
 # %t resolves to /run/user/\$(id -u)
-ExecStart=/usr/bin/weston --socket=weston --width=1280 --height=960
+ExecStart=/usr/bin/weston --socket=weston --width=1920 --height=1080
 # Activating and not activated until the following helper completes
 ExecStartPost=/bin/bash -c 'while [ ! -S %t/weston ]; do sleep 0.1; done'
 Restart=no
