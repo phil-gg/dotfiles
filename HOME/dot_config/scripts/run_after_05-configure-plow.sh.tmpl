@@ -648,11 +648,17 @@ ReloadPropagatedFrom=plow-weston.service
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# Define the new command without --xwayland
-ExecStart=/usr/bin/kwin_wayland_wrapper
+# Explicitly set new ExecStart how we want it (currently same as stock Trixie)
+ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
+# Give KWin access to the WSL hardware translation libraries
+Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
+# Force OpenGL (O2) hardware rendering; prevent silent fallback to QPainter
+Environment=KWIN_COMPOSE=O2
+# Enable verbose logging for the graphics backend to catch any lingering EGL errors
+Environment=QT_LOGGING_RULES=\"kwin_*.debug=true\"
 "
 
 # Add services to share clipboards between host & guest
