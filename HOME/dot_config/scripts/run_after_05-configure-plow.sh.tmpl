@@ -654,10 +654,11 @@ Environment=XDG_SESSION_CLASS=user
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # Force OpenGL (O2) hardware rendering; prevent silent fallback to QPainter
 Environment=KWIN_COMPOSE=O2
-# Force KWin to explicitly use EGL
-Environment=KWIN_OPENGL_INTERFACE=egl
-# Enable verbose logging for the graphics backend to catch any lingering EGL errors
-Environment=QT_LOGGING_RULES=\"kwin_*.debug=true\"
+# These two for troubleshooting EGL initialization failures
+Environment=MESA_DEBUG=1
+Environment=LIBGL_DEBUG=verbose
+# Qt logging for KWin graphics/EGL/Wayland
+Environment=QT_LOGGING_RULES="kwin_*.debug=true;qt.qpa.wayland.debug=true"
 "
 
 # Add services to share clipboards between host & guest
