@@ -307,7 +307,6 @@ EGL_PLATFORM=wayland
 WSA_RENDER_DEVICE=/dev/dri/renderD128
 LIBVA_DRIVER_NAME=d3d12
 GALLIUM_DRIVER=d3d12
-GBM_BACKEND=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 MESA_VK_WSI_PRESENT_MODE=immediate
 
@@ -317,8 +316,6 @@ XDG_SESSION_DESKTOP=KDE
 XDG_CURRENT_DESKTOP=KDE
 XDG_MENU_PREFIX=plasma-
 KWIN_OPENGL_INTERFACE=egl
-# Commented out to let KWin talk to Weston rather than use GBM itself
-# KWIN_OPENGL_RENDERER=gbm
 
 # --- Toolkit / Application Layer ---
 # Qt (KDE, VLC, qBittorrent)
