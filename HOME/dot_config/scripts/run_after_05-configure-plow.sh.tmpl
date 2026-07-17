@@ -551,16 +551,12 @@ echo -e "$ glxinfo -B\n"
 glxinfo -B
 
 echo -e "\n${cyanbold}Show eglinfo${normal}"
-echo -e "$ eglinfo -B"
-eglinfo -B
-
-# echo -e "$ EGL_LOG_LEVEL=debug eglinfo -B"
-# echo -e "${redbold}> Known issue: GBM/EGL (but apparently wslg/d3d12 works \
-# around this)${normal}\n"
-# EGL_LOG_LEVEL=debug eglinfo -p gbm
-# eglinfo -B -p wayland
-# eglinfo -B -p x11
-# eglinfo -B -p surfaceless
+echo -e "$ set -a; source /etc/environment.d/*.conf 2>/dev/null; set +a"
+echo -e "$ eglinfo -B\n"
+eglinfo -B -p gbm
+eglinfo -B -p wayland
+eglinfo -B -p x11
+eglinfo -B -p surfaceless
 
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
