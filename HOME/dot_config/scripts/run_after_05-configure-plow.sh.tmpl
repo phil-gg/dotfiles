@@ -553,7 +553,8 @@ echo -e "$ eglinfo -B\n"
 eglinfo -B -p gbm
 eglinfo -B -p wayland
 eglinfo -B -p x11
-eglinfo -B -p surfaceless
+# Log level suppresses DRI2 errors (don't matter as WSL2 uses DRI3)
+EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
