@@ -612,8 +612,12 @@ PartOf=plasma-kwin_wayland.service
 Type=notify
 # Give Weston access to the Microsoft wsl libraries
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
+# Extra push to hardware accelerate Weston graphics
+Environment=GALLIUM_DRIVER=d3d12
+Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
+Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 # This is the command to start the service
-# %t resolves to /run/user/\$(id -u)
+# %t resolves to /run/user/$ (id -u)
 ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
 Restart=no
 ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
