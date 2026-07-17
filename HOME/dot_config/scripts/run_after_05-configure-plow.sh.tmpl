@@ -645,8 +645,8 @@ ReloadPropagatedFrom=plow-weston.service
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# Explicitly set new ExecStart (force software rendering for X11 apps)
-ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland --no-xwayland-glamor
+# Explicitly set new ExecStart (no xwayland)
+ExecStart=/usr/bin/kwin_wayland_wrapper
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
