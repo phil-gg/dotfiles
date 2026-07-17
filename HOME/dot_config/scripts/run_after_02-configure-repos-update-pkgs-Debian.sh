@@ -929,20 +929,20 @@ sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}")
 )
 if [[ -n "${unmarked_pkgs}" ]]; then
 echo -e "\n${bluebold}> apt-mark manual${normal}"
-echo -e "$ echo ${unmarked_pkgs//$'\n'/ } | xargs sudo apt-mark manual 2>/dev/null"
-echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null |
-grep -v "set to manually installed"
+echo -e "$ echo \"${unmarked_pkgs//$'\n'/ }\" | xargs sudo apt-mark manual 2>/dev/null"
+echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null
+# | grep -v "set to manually installed"
 fi
 
 # End of aptitude only section
 fi
 
-# autoremove now apt mark-manual is correct
+# apt autoremove (now apt-mark manual is correct)
 echo -e "\n${bluebold}> Remove and purge not needed packages${normal}"
 echo -e "$ sudo apt autoremove --purge -y\n"
 sudo apt autoremove --purge -y
 
-# autoclean
+# apt autoclean
 echo -e "\n${bluebold}> Remove obsolete deb package local copies${normal}"
 echo -e "$ sudo apt-get autoclean\n"
 sudo apt-get autoclean
