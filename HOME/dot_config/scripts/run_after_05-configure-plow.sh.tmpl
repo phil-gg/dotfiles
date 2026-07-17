@@ -372,8 +372,9 @@ echo -e "$ systemctl --user start dbus.socket"
 systemctl --user start dbus.socket
 fi
 
-# Add environment variables to D-Bus & systemd too
-echo -e "\n$ dbus-update-activation-environment --systemd --all"
+# Add environment variables to DBus & systemd too
+echo -e "\n${cyanbold}Export environment variables to DBus & systemd${normal}"
+echo -e "$ dbus-update-activation-environment --systemd --all"
 dbus-update-activation-environment --systemd --all
 
 # Print systemd environment variables for review
