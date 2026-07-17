@@ -930,8 +930,8 @@ sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}")
 if [[ -n "${unmarked_pkgs}" ]]; then
 echo -e "\n${bluebold}> apt-mark manual${normal}"
 echo -e "$ echo \"${unmarked_pkgs//$'\n'/ }\" | xargs sudo apt-mark manual 2>/dev/null"
-echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null
-# | grep -v "set to manually installed"
+echo "${unmarked_pkgs}" | xargs sudo apt-mark manual 2>/dev/null \
+| grep -v "set to manually installed"
 fi
 
 # End of aptitude only section
