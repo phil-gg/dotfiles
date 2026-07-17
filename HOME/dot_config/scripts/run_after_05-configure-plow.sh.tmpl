@@ -81,8 +81,8 @@ WESTON_FILE="${WESTON_DIR}/weston.ini"
 WESTON_TEXT="\
 [core]
 # https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
-# Enables support for X11 applications
-xwayland=true
+# All Weston-KWin comms are via Wayland, with Xwayland only enabled in KWin, so this is off
+xwayland=false
 # Force wayland backend
 backend=wayland
 # Use the Kiosk shell to force the nested app to fill the screen
@@ -557,12 +557,13 @@ eglinfo -B -p surfaceless
 
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
-TMP_X_SERVICE="\
-# plow-tmp-x-unix.service
-# System service (root) to fix running XWayland nested within a Plow session
+PLOW_X_SERVICE="\
+# plow-xwayland.service
+# System service (root) to attach KWin XWayland
 
 [Unit]
-Description=Setup writable /tmp/.X11-unix for Xwayland nested in Plow
+Description= Blank /tmp/.X11-unix replacing WSLg with KWin Xwayland \
+(which configures an X0 socket for itself here later)
 # Run after systemd has finished configuring local filesystems
 After=local-fs.target
 # Run before user sessions start
@@ -577,22 +578,15 @@ NotifyAccess=all
 RemainAfterExit=yes
 # This is the command to start the service (wrapped in bash)
 # Unmount existing if present (ignore errors with || true)
-# Mount a writable tmpfs at /tmp/.X11-unix
-# Create /tmp/.X11-unix/X0 location
-# Mount WSLg as X0 only
-# Make X0 read-only (like original WSLg /tmp/.X11-unix mount)
-# Check for writable mount, and X0 mounted to WSLg
-# Check if parent dir is writable AND X0 is a mountpoint
+# Mount a fresh, empty, writable tmpfs at /tmp/.X11-unix
+# Check new tmpfs exists and is writable
 # Notify ready if check true else error
 ExecStart=/bin/bash -c '\
 /usr/bin/umount /tmp/.X11-unix 2>/dev/null || true; \
 /usr/bin/mount -t tmpfs -o mode=1777,size=1m tmpfs /tmp/.X11-unix && \
-/usr/bin/touch /tmp/.X11-unix/X0 && \
-/usr/bin/mount --bind /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/X0 && \
-/usr/bin/mount -o remount,ro,bind /tmp/.X11-unix/X0 && \
-if [ -w /tmp/.X11-unix ] && /usr/bin/mountpoint -q /tmp/.X11-unix/X0; then \
+if [ -w /tmp/.X11-unix ]; then \
 /usr/bin/systemd-notify --ready; \
-else echo \"Error: X11 socket setup failed verification.\" && exit 1; fi'
+else echo \"Error: X11 tmpfs setup failed verification.\" && exit 1; fi'
 
 [Install]
 WantedBy=multi-user.target
@@ -707,8 +701,8 @@ echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
 
 # Set file locations once as variables
 
-TMP_X_UNIT_DIR="/etc/systemd/system"
-TMP_X_UNIT_FILE="${TMP_X_UNIT_DIR}/plow-tmp-x-unix.service"
+PLOW_X_UNIT_DIR="/etc/systemd/system"
+PLOW_X_UNIT_FILE="${PLOW_X_UNIT_DIR}/plow-xwayland.service"
 WESTON_UNIT_DIR="/etc/systemd/user"
 WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
 PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
@@ -717,15 +711,15 @@ PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
 # Quietly ensure folders exist
 sudo mkdir -p "${PLASMA_CONF_DIR}"
 
-# Configure plow-tmp-x-unix.service systemd unit
-if [ ! -s "${TMP_X_UNIT_FILE}" ] || \
-! cmp -s <(printf "%s" "${TMP_X_SERVICE}") "${TMP_X_UNIT_FILE}"; then
-echo -e "\n${cyanbold}Configure plow-tmp-x-unix.service systemd unit${normal}"
+# Configure plow-xwayland.service systemd unit
+if [ ! -s "${PLOW_X_UNIT_FILE}" ] || \
+! cmp -s <(printf "%s" "${PLOW_X_SERVICE}") "${PLOW_X_UNIT_FILE}"; then
+echo -e "\n${cyanbold}Configure plow-xwayland.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
-# Hence backslash escapes for TMP_X_SERVICE variable
-echo -e "$ printf \"%s\" \"\${TMP_X_SERVICE}\" | sudo tee ${TMP_X_UNIT_FILE} > \
+# Hence backslash escapes for PLOW_X_SERVICE variable
+echo -e "$ printf \"%s\" \"\${PLOW_X_SERVICE}\" | sudo tee ${PLOW_X_UNIT_FILE} > \
 /dev/null"
-printf "%s" "${TMP_X_SERVICE}" | sudo tee "${TMP_X_UNIT_FILE}" > /dev/null
+printf "%s" "${PLOW_X_SERVICE}" | sudo tee "${PLOW_X_UNIT_FILE}" > /dev/null
 SYS_UNITS_CHANGED=1
 fi
 
@@ -763,8 +757,8 @@ if [ "${SYS_UNITS_CHANGED}" -eq 1 ]; then
 echo -e "\n${cyanbold}Reload systemd system daemon${normal}"
 echo -e "$ sudo systemctl daemon-reload"
 sudo systemctl daemon-reload
-echo -e "$ sudo systemctl enable --now plow-tmp-x-unix.service"
-sudo systemctl enable --now plow-tmp-x-unix.service
+echo -e "$ sudo systemctl enable --now plow-xwayland.service"
+sudo systemctl enable --now plow-xwayland.service
 fi
 
 # Show all systemd units in context (existing along with new plow & plasma)
