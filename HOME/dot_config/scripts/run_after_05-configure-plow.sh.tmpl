@@ -4,6 +4,7 @@
 {{ if and $wsl $wsl.isDir (ne $kdeSession "true") -}}
 
 #!/bin/bash
+# shellcheck shell=bash disable=SC2034
 
 ################################################################################
 # WSL only idempotent configuration script:
@@ -40,6 +41,37 @@ SYS_UNITS_CHANGED=0
 # Now running `${local_filename}`
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
+
+# Set vgem kernel module to load every boot
+if [ ! -s /etc/modules-load.d/vgem.conf ]; then
+echo -e "\n${cyanbold}Set vgem kernel module to load every boot${normal}"
+echo -e "$ echo \"vgem\" | sudo tee /etc/modules-load.d/vgem.conf"
+echo "vgem" | sudo tee /etc/modules-load.d/vgem.conf
+fi
+
+# Load vgem kernel module now (if not already running)
+if ! lsmod | grep -q vgem; then
+echo -e "\n${cyanbold}Load vgem kernel module now${normal}"
+echo -e "sudo systemctl restart systemd-modules-load.service"
+sudo systemctl restart systemd-modules-load.service
+fi
+
+# Grant permissions for hardware accelerated rendering
+if ! id -nG "${USER}" | grep -qw "video" ||
+   ! id -nG "${USER}" | grep -qw "render"; then
+echo -e "\n${cyanbold}Grant permissions for hardware accelerated rendering${normal}"
+echo -e "$ sudo usermod -aG video,render ${USER}"
+if sudo usermod -aG video,render "${USER}"; then
+# Success only message
+echo -e "\n${redbold}Permissions for hardware accelerated rendering updated but restart required.
+Below, eglinfo will likely still fail.${normal}\n
+Please run:\n
+wsl.exe --shutdown"
+# No else, relying on sterr output for a failure message
+# Close success only message conditional
+fi
+# Close check of permissions for hardware accelerated rendering
+fi
 
 # Create /etc/xdg/weston/weston.ini if it does not exist or has changed
 
@@ -273,6 +305,7 @@ EGL_PLATFORM=wayland
 # Only uncomment when you want (lots!) more wayland logging
 # WAYLAND_DEBUG=1
 WSA_RENDER_DEVICE=/dev/dri/renderD128
+LIBVA_DRIVER_NAME=d3d12
 GALLIUM_DRIVER=d3d12
 GBM_BACKEND=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
@@ -284,6 +317,8 @@ XDG_SESSION_DESKTOP=KDE
 XDG_CURRENT_DESKTOP=KDE
 XDG_MENU_PREFIX=plasma-
 KWIN_OPENGL_INTERFACE=egl
+# Commented out to let KWin talk to Weston rather than use GBM itself
+# KWIN_OPENGL_RENDERER=gbm
 
 # --- Toolkit / Application Layer ---
 # Qt (KDE, VLC, qBittorrent)
@@ -316,16 +351,17 @@ if ! cmp -s <(printf "%s" "${ENV_VARS_TEXT}") "${ENV_VARS_FILE}"; then
 echo -e "\n${cyanbold}Setting system-wide environment variables for WSLg${normal}"
 # Quietly ensure folder exists (but should already be there)
 sudo mkdir -p "${ENV_VARS_DIR}"
-
+# Write /etc/environment.d/01-plasma-on-wslg.conf
 echo -e "$ printf \"%s\" \"\${ENV_VARS_TEXT}\" | sudo tee ${ENV_VARS_FILE}"
 printf "%s" "${ENV_VARS_TEXT}" | sudo tee "${ENV_VARS_FILE}" > /dev/null
 
-echo -e "\n${cyanbold}Add to current systemd user environment${normal}"
-echo -e "> Needed for first launch of Weston & Plasma from this script"
-echo -e "$ echo -e \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
-xargs systemctl --user set-environment"
-echo -e "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | \
-xargs systemctl --user set-environment
+# Export environment variables to shell
+echo -e "\n${cyanbold}Export environment variables to shell${normal}"
+echo -e "> Needed for glxinfo & elginfo below in this script"
+echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
+xargs)"
+# shellcheck disable=SC2046
+export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
 
 # Enable D-Bus if needed
 if ! systemctl --user is-active --quiet dbus.socket; then
@@ -336,21 +372,16 @@ echo -e "$ systemctl --user start dbus.socket"
 systemctl --user start dbus.socket
 fi
 
-# Add environment variables to D-Bus too
+# Add environment variables to D-Bus & systemd too
 echo -e "\n$ dbus-update-activation-environment --systemd --all"
 dbus-update-activation-environment --systemd --all
 
+# Print systemd environment variables for review
 echo -e "\n${cyanbold}Print updated systemd user environment${normal}"
 echo -e "$ systemctl --user show-environment --no-pager\n"
 systemctl --user show-environment --no-pager
 
 fi
-
-echo -e "\n${cyanbold}Export variables to current shell for testing${normal}"
-echo -e "> Needed for glxinfo & elginfo below in this script"
-echo -e "$ export \$(echo \"\${ENV_VARS_TEXT}\" | grep -v '^$' | grep -v '^#' | \
-xargs)"
-export $(echo "${ENV_VARS_TEXT}" | grep -v '^$' | grep -v '^#' | xargs)
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
@@ -525,7 +556,7 @@ glxinfo -B
 echo -e "\n${cyanbold}Show eglinfo${normal}"
 # Backslash to prevent the variable being set from expanding in echo command
 echo -e "$ EGL_LOG_LEVEL=debug eglinfo -B"
-echo -e "${redbold}> Known issue: GBM\\\\EGL (but apparently wslg/d3d12 works \
+echo -e "${redbold}> Known issue: GBM/EGL (but apparently wslg/d3d12 works \
 around this)${normal}\n"
 EGL_LOG_LEVEL=debug eglinfo -p gbm
 eglinfo -B -p wayland
@@ -592,20 +623,11 @@ PartOf=plasma-kwin_wayland.service
 
 [Service]
 Type=notify
-# Use Microsoft wsl libraries
+# Use Microsoft wsl libraries for Weston only
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
-# Set variables to use wayland & accelerate it with graphics hardware
-Environment=EGL_PLATFORM=wayland
-Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
-Environment=GALLIUM_DRIVER=d3d12
-Environment=GBM_BACKEND=d3d12
-Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
-Environment=MESA_VK_WSI_PRESENT_MODE=immediate
 # This is the command to start the service
 # %t resolves to /run/user/\$(id -u)
 ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
-# Activating and not activated until the following helper completes
-ExecStartPost=/bin/bash -c 'while [ ! -S %t/weston ]; do sleep 0.1; done'
 Restart=no
 ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
 "
@@ -636,18 +658,6 @@ ExecStart=/usr/bin/kwin_wayland_wrapper
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
-Environment=XDG_SESSION_TYPE=wayland
-Environment=XDG_SESSION_DESKTOP=KDE
-Environment=XDG_CURRENT_DESKTOP=KDE
-# Environment=KWIN_DRM_DEVICES=/dev/dri/renderD128
-# Environment=KWIN_OpenGL_RENDERER=gbm
-# Set variables to use wayland & accelerate it with graphics hardware
-Environment=EGL_PLATFORM=wayland
-# Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
-# Environment=GALLIUM_DRIVER=d3d12
-# Environment=GBM_BACKEND=d3d12
-# Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
-# Environment=MESA_VK_WSI_PRESENT_MODE=immediate
 "
 
 # Add services to share clipboards between host & guest
