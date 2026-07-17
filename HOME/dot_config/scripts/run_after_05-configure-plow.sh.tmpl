@@ -82,7 +82,7 @@ WESTON_TEXT="\
 [core]
 # https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
 # Enables support for X11 applications
-# xwayland=true
+xwayland=true
 # Force wayland backend
 backend=wayland
 # Use the Kiosk shell to force the nested app to fill the screen
@@ -656,9 +656,9 @@ Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 Environment=KWIN_COMPOSE=O2
 Environment=KWIN_OPENGL_INTERFACE=egl
 # Disable explicit DRM memory modifiers (common nested D3D12 failure point)
-Environment=KWIN_DRM_USE_MODIFIERS=0
+# Environment=KWIN_DRM_USE_MODIFIERS=0
 # Tell XWayland to fall back to software mode gracefully without crashing KWin
-Environment=KWIN_WAYLAND_NO_GLAMOR=1
+# Environment=KWIN_WAYLAND_NO_GLAMOR=1
 # Five verbose log settings to troubleshoot EGL initialization failures
 Environment=EGL_LOG_LEVEL=debug
 Environment=WAYLAND_DEBUG=1
