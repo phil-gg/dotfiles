@@ -645,20 +645,25 @@ ReloadPropagatedFrom=plow-weston.service
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# Explicitly set new ExecStart (no xwayland)
-ExecStart=/usr/bin/kwin_wayland_wrapper
+# Explicitly set new ExecStart (but below is currently same as stock Trixie)
+ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
 # Give KWin access to the Microsoft wsl libraries
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
-# Force OpenGL (O2) hardware rendering; prevent silent fallback to QPainter
+# Force OpenGL (O2/egl) hardware rendering; prevent silent fallback to QPainter
 Environment=KWIN_COMPOSE=O2
+Environment=KWIN_OPENGL_INTERFACE=egl
+# Disable explicit DRM memory modifiers (common nested D3D12 failure point)
+Environment=KWIN_DRM_USE_MODIFIERS=0
+# Tell XWayland to fall back to software mode gracefully without crashing KWin
+Environment=KWIN_WAYLAND_NO_GLAMOR=1
 # These two for troubleshooting EGL initialization failures
 Environment=MESA_DEBUG=1
 Environment=LIBGL_DEBUG=verbose
 # Qt logging for KWin graphics/EGL/Wayland
-Environment=QT_LOGGING_RULES=\"kwin_*.debug=true;qt.qpa.wayland.debug=true\"
+Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
 "
 
 # Add services to share clipboards between host & guest
