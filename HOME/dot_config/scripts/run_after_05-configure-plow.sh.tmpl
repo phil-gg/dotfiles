@@ -347,13 +347,13 @@ _JAVA_AWT_WM_NONREPARENTING=1
 "
 
 if ! cmp -s <(printf "%s" "${ENV_VARS_TEXT}") "${ENV_VARS_FILE}"; then
-
 echo -e "\n${cyanbold}Setting system-wide environment variables for WSLg${normal}"
 # Quietly ensure folder exists (but should already be there)
 sudo mkdir -p "${ENV_VARS_DIR}"
 # Write /etc/environment.d/01-plasma-on-wslg.conf
 echo -e "$ printf \"%s\" \"\${ENV_VARS_TEXT}\" | sudo tee ${ENV_VARS_FILE}"
 printf "%s" "${ENV_VARS_TEXT}" | sudo tee "${ENV_VARS_FILE}" > /dev/null
+fi
 
 # Export environment variables to shell
 echo -e "\n${cyanbold}Export environment variables to shell${normal}"
@@ -381,8 +381,6 @@ dbus-update-activation-environment --systemd --all
 echo -e "\n${cyanbold}Print updated systemd user environment${normal}"
 echo -e "$ systemctl --user show-environment --no-pager\n"
 systemctl --user show-environment --no-pager
-
-fi
 
 # KDE Plasma config:
 #  - Disable screen lock & sleep / shutdown /restart functionality
@@ -554,15 +552,18 @@ fi
 echo -e "\n${cyanbold}Show glxinfo${normal}"
 echo -e "$ glxinfo -B\n"
 glxinfo -B
+
 echo -e "\n${cyanbold}Show eglinfo${normal}"
-# Backslash to prevent the variable being set from expanding in echo command
-echo -e "$ EGL_LOG_LEVEL=debug eglinfo -B"
-echo -e "${redbold}> Known issue: GBM/EGL (but apparently wslg/d3d12 works \
-around this)${normal}\n"
-EGL_LOG_LEVEL=debug eglinfo -p gbm
-eglinfo -B -p wayland
-eglinfo -B -p x11
-eglinfo -B -p surfaceless
+echo -e "$ eglinfo -B"
+eglinfo -B
+
+# echo -e "$ EGL_LOG_LEVEL=debug eglinfo -B"
+# echo -e "${redbold}> Known issue: GBM/EGL (but apparently wslg/d3d12 works \
+# around this)${normal}\n"
+# EGL_LOG_LEVEL=debug eglinfo -p gbm
+# eglinfo -B -p wayland
+# eglinfo -B -p x11
+# eglinfo -B -p surfaceless
 
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
