@@ -301,13 +301,11 @@ ENV_VARS_FILE="${ENV_VARS_DIR}/01-plasma-on-wslg.conf"
 
 ENV_VARS_TEXT="\
 # --- Driver / Hardware Layer ---
-EGL_PLATFORM=wayland
-# Only uncomment when you want (lots!) more wayland logging
-# WAYLAND_DEBUG=1
 WSA_RENDER_DEVICE=/dev/dri/renderD128
 LIBVA_DRIVER_NAME=d3d12
 GALLIUM_DRIVER=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
+# On WSL, have just Windows host do vsync, not Linux guest too
 MESA_VK_WSI_PRESENT_MODE=immediate
 
 # --- Session Identity ---
@@ -315,7 +313,6 @@ XDG_SESSION_TYPE=wayland
 XDG_SESSION_DESKTOP=KDE
 XDG_CURRENT_DESKTOP=KDE
 XDG_MENU_PREFIX=plasma-
-KWIN_OPENGL_INTERFACE=egl
 
 # --- Toolkit / Application Layer ---
 # Qt (KDE, VLC, qBittorrent)
@@ -618,7 +615,7 @@ PartOf=plasma-kwin_wayland.service
 
 [Service]
 Type=notify
-# Use Microsoft wsl libraries for Weston only
+# Give Weston access to the Microsoft wsl libraries
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # This is the command to start the service
 # %t resolves to /run/user/\$(id -u)
@@ -653,10 +650,12 @@ ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
-# Give KWin access to the WSL hardware translation libraries
+# Give KWin access to the Microsoft wsl libraries
 Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # Force OpenGL (O2) hardware rendering; prevent silent fallback to QPainter
 Environment=KWIN_COMPOSE=O2
+# Force KWin to explicitly use EGL
+Environment=KWIN_OPENGL_INTERFACE=egl
 # Enable verbose logging for the graphics backend to catch any lingering EGL errors
 Environment=QT_LOGGING_RULES=\"kwin_*.debug=true\"
 "
