@@ -633,7 +633,7 @@ RPI_SOURCES="\
 # Available components: main beta untested
 # Available architectures: amd64 arm64 armhf i386
 Types: deb
-URIs: http://archive.raspberrypi.org/debian/
+URIs: https://archive.raspberrypi.org/debian/
 Suites: trixie
 Components: main
 Architectures: ${pkgarch}
