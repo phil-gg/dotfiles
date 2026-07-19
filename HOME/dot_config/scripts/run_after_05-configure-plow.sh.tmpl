@@ -654,6 +654,7 @@ Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
 # Force OpenGL (O2/egl) hardware rendering; prevent silent fallback to QPainter
 Environment=KWIN_COMPOSE=O2
 Environment=KWIN_OPENGL_INTERFACE=egl
+Environment=KWIN_DIRECT_GL=1
 # Disable explicit DRM memory modifiers (common nested D3D12 failure point)
 Environment=KWIN_DRM_USE_MODIFIERS=0
 # Tell XWayland to fall back to software mode gracefully without crashing KWin
