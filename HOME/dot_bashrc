@@ -15,7 +15,7 @@ HISTSIZE=5000
 HISTFILESIZE=500000
 
 # Append timestamps to bash history
-HISTTIMEFORMAT="%Y-%m-%dT%H:%M:%SZ - "
+HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S - "
 
 # Append to the history file rather than overwrite (default in most .bashrc)
 shopt -s histappend
