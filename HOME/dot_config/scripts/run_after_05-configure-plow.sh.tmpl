@@ -551,6 +551,14 @@ After=graphical-session-pre.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/startplasma-wayland
+# Set KWin to manage wayland-1
+Environment=WAYLAND_DISPLAY=wayland-1
+# 1. Clean up dead sockets so KWin can cleanly claim wayland-1
+# 2. Push the target to dbus & systemd so all Plasma child services use it
+ExecStartPre=/bin/bash -c 'rm -f %t/wayland-1*; dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-1'
+ExecStart=/usr/bin/startplasma-wayland
+# Revert the global environment variable back to WSLg default when the session ends
+ExecStopPost=/bin/bash -c 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-0'
 Restart=no
 "
 
@@ -561,12 +569,12 @@ PLASMA_CONF="\
 # Customises /usr/lib/systemd/user/plasma-kwin_wayland.service
 
 [Service]
-# Clear the original ExecStart from the default service file
-ExecStart=
 # Explicitly set new ExecStart (but below is currently same as stock Trixie)
 ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Run user desktop, not greeter, nor lock-screen
 Environment=XDG_SESSION_CLASS=user
+# KWin must pass its wayland-1 display to WSLg managed wayland-0
+Environment=WAYLAND_DISPLAY=wayland-0
 # Five verbose log settings to troubleshoot EGL initialization failures
 Environment=EGL_LOG_LEVEL=debug
 Environment=WAYLAND_DEBUG=1
