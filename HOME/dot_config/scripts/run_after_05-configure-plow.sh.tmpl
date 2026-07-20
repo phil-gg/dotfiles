@@ -664,12 +664,12 @@ ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
 # Five verbose log settings to troubleshoot EGL initialization failures
-# Environment=EGL_LOG_LEVEL=debug
-# Environment=WAYLAND_DEBUG=1
-# Environment=MESA_DEBUG=1
-# Environment=LIBGL_DEBUG=verbose
+Environment=EGL_LOG_LEVEL=debug
+Environment=WAYLAND_DEBUG=1
+Environment=MESA_DEBUG=1
+Environment=LIBGL_DEBUG=verbose
 # Qt logging for KWin graphics/EGL/Wayland
-# Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
+Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
 "
 
 # Add services to share clipboards between host & guest
