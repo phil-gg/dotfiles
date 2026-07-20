@@ -301,12 +301,22 @@ ENV_VARS_FILE="${ENV_VARS_DIR}/01-plasma-on-wslg.conf"
 
 ENV_VARS_TEXT="\
 # --- Driver / Hardware Layer ---
+LD_LIBRARY_PATH=/usr/lib/wsl/lib
 WSA_RENDER_DEVICE=/dev/dri/renderD128
 LIBVA_DRIVER_NAME=d3d12
 GALLIUM_DRIVER=d3d12
+GBM_BACKEND=d3d12
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 # On WSL, have just Windows host do vsync, not Linux guest too
 MESA_VK_WSI_PRESENT_MODE=immediate
+
+# --- KWin Config ---
+KWIN_COMPOSE=O2ES
+KWIN_OPENGL_INTERFACE=egl
+KWIN_DIRECT_GL=1
+KWIN_DRM_DEVICES=/dev/dri/renderD128
+# Run just KWin XWayland without OpenGL hardware acceleration
+KWIN_WAYLAND_NO_GLAMOR=1
 
 # --- Session Identity ---
 XDG_SESSION_TYPE=wayland
@@ -317,8 +327,6 @@ XDG_MENU_PREFIX=plasma-
 # --- Toolkit / Application Layer ---
 # Qt (KDE, VLC, qBittorrent)
 QT_QPA_PLATFORM=wayland
-# KWin Direct Rendering Manager No Atomic Mode Setting
-KWIN_DRM_NO_AMS=1
 # Set KDE version for file paths
 KDE_SESSION_VERSION=6
 # GTK (GNOME, GIMP, LibreOffice)
@@ -610,12 +618,6 @@ PartOf=plasma-kwin_wayland.service
 
 [Service]
 Type=notify
-# Give Weston access to the Microsoft wsl libraries
-Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
-# Extra push to hardware accelerate Weston graphics
-Environment=GALLIUM_DRIVER=d3d12
-Environment=WSA_RENDER_DEVICE=/dev/dri/renderD128
-Environment=MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 # This is the command to start the service
 # %t resolves to /run/user/$ (id -u)
 ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
@@ -649,23 +651,13 @@ ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
-# Give KWin access to the Microsoft wsl libraries
-Environment=LD_LIBRARY_PATH=/usr/lib/wsl/lib
-# Force OpenGL (O2/egl) hardware rendering; prevent silent fallback to QPainter
-Environment=KWIN_COMPOSE=O2
-Environment=KWIN_OPENGL_INTERFACE=egl
-Environment=KWIN_DIRECT_GL=1
-# Disable explicit DRM memory modifiers (common nested D3D12 failure point)
-Environment=KWIN_DRM_USE_MODIFIERS=0
-# Tell XWayland to fall back to software mode gracefully without crashing KWin
-Environment=KWIN_WAYLAND_NO_GLAMOR=1
 # Five verbose log settings to troubleshoot EGL initialization failures
-Environment=EGL_LOG_LEVEL=debug
-Environment=WAYLAND_DEBUG=1
-Environment=MESA_DEBUG=1
-Environment=LIBGL_DEBUG=verbose
+# Environment=EGL_LOG_LEVEL=debug
+# Environment=WAYLAND_DEBUG=1
+# Environment=MESA_DEBUG=1
+# Environment=LIBGL_DEBUG=verbose
 # Qt logging for KWin graphics/EGL/Wayland
-Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
+# Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
 "
 
 # Add services to share clipboards between host & guest
