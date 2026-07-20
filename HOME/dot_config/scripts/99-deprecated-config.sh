@@ -278,6 +278,124 @@ sudo ldconfig
 fi
 
 ################################################################################
+# Deprecated when weston replaced with cage (July 2026)
+################################################################################
+
+# Create /etc/xdg/weston/weston.ini if it does not exist or has changed
+
+WESTON_DIR="/etc/xdg/weston"
+WESTON_FILE="${WESTON_DIR}/weston.ini"
+
+WESTON_TEXT="\
+[core]
+# https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
+# All Weston-KWin comms are via Wayland, with Xwayland only enabled in KWin, so this is off
+xwayland=false
+# Force wayland backend
+backend=wayland
+# Use the Kiosk shell to force the nested app to fill the screen
+shell=kiosk-shell.so
+# Load the systemd notification module
+modules=systemd-notify.so
+# Set output repaint window to 8 ms maximum, which should support up to 125 Hz display refresh rates
+repaint-window=8
+# Disable screen blanking
+idle-time=0
+# Force graphics acceleration
+renderer=gl
+
+[libinput]
+# Enables tap to click on touchpad devices
+enable-tap=true
+# Enables tap and drag on touchpad devices
+tap-and-drag=true
+# Disable other devices while typing on keyboard
+disable-while-typing=false
+# Disable clicking both left and right buttons together simulating middle click
+middle-button-emulation=false
+# Enable touchscreen calibrator interface
+touchscreen_calibrator=false
+
+[shell]
+# Set background color to opaque black
+background-color=0xff000000
+# Enables screen locking (Boolean)
+locking=false
+# Opening new windows animation
+animation=none
+# Closing windows animation
+close-animation=none
+# Effect used by desktop-shell when starting up
+startup-animation=none
+# Effect used with focused vs unfocused windows
+focus-animation=dim-layer
+# Weston quits when the Ctrl-Alt-Backspace key combination is pressed
+allow-zap=false
+# Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
+binding-modifier=alt
+# Set the cursor theme
+cursor-theme=westonCursor
+# Set the cursor size
+cursor-size=96
+
+[keyboard]
+keymap_model=pc105
+keymap_layout=gb
+keymap_variant=extd
+"
+
+if [ ! -s "${WESTON_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_TEXT}") "${WESTON_FILE}"; then
+echo -e "\n${cyanbold}Configure weston${normal}"
+echo -e "$ sudo mkdir -p ${WESTON_DIR}"
+sudo mkdir -p "${WESTON_DIR}"
+echo -e "$ printf \"%s\" \"\${WESTON_TEXT}\" | sudo tee ${WESTON_FILE} > \
+/dev/null"
+printf "%s" "${WESTON_TEXT}" | sudo tee "${WESTON_FILE}" > /dev/null
+echo -e "$ ln -sf ${WESTON_FILE} ~/.config/weston.ini"
+ln -sf "${WESTON_FILE}" "${HOME}/.config/weston.ini"
+fi
+
+# Define systemd unit for Weston (Plow)
+
+WESTON_SERVICE="\
+# plow-weston.service
+# Just a virtual display
+# A customised /usr/lib/systemd/user/plasma-kwin_wayland.service depends on this
+
+[Unit]
+Description=Weston compositor (nested on WSLg)
+# https://manpages.debian.org/trixie/weston/weston.1.en.html
+Documentation=man:weston(1)
+After=graphical-session-pre.target
+# For teardown, stop plow-weston with plasma-kwin_wayland.service
+PartOf=plasma-kwin_wayland.service
+
+[Service]
+Type=notify
+# This is the command to start the service
+ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
+# %t resolves to /run/user/$ (id -u)
+ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
+Restart=no
+"
+
+WESTON_UNIT_DIR="/etc/systemd/user"
+WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
+
+# Configure plow-weston.service systemd unit
+if [ ! -s "${WESTON_UNIT_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_SERVICE}") "${WESTON_UNIT_FILE}"; then
+echo -e "\n${cyanbold}Configure plow-weston.service systemd unit${normal}"
+# Choosing to expand path but not file contents in echo output here
+# Hence backslash escapes for WESTON_SERVICE variable
+echo -e "$ printf \"%s\" \"\${WESTON_SERVICE}\" | sudo tee ${WESTON_UNIT_FILE} \
+> /dev/null"
+printf "%s" "${WESTON_SERVICE}" | sudo tee "${WESTON_UNIT_FILE}" > /dev/null
+USR_UNITS_CHANGED=1
+fi
+
+################################################################################
 
 # Log this latest `Config` operation and display runtime
 
