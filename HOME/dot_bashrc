@@ -84,11 +84,8 @@ fi
 # colored GCC warnings and errors
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
+# Load alias definitions from ~/.bash_aliases
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
 if [ -s ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
@@ -106,7 +103,6 @@ fi
 
 # On WSL2 with systemd running only
 # Pull variables loaded by /etc/environment.d into Windows Terminal
-
 if [ -d /run/WSL ] && command -v systemctl &> /dev/null
 then
     if env_vars=$(systemctl --user show-environment --no-pager 2>/dev/null)
