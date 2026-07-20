@@ -396,6 +396,33 @@ USR_UNITS_CHANGED=1
 fi
 
 ################################################################################
+# Deprecated when dropped cage (no window decorations, July 2026)
+################################################################################
+
+# Define systemd unit for Cage (Plow)
+
+CAGE_SERVICE="\
+# plow-cage.service
+# This calls a customised /usr/lib/systemd/user/plasma-kwin_wayland.service
+
+[Unit]
+Description=Plow desktop session (WSLg > Cage > KDE Plasma 6)
+# https://manpages.debian.org/trixie/cage/cage.1.en.html
+Documentation=man:cage(1)
+After=graphical-session-pre.target
+
+[Service]
+Type=simple
+# Environment variables to set the cursor
+Environment=XCURSOR_PATH=/usr/share/icons
+Environment=XCURSOR_THEME=westonCursor
+Environment=XCURSOR_SIZE=96
+# This is the command to start the service
+ExecStart=/usr/bin/cage -m last -d -- /usr/bin/startplasma-wayland
+Restart=no
+"
+
+################################################################################
 
 # Log this latest `Config` operation and display runtime
 
