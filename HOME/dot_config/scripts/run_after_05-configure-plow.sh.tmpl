@@ -631,37 +631,47 @@ PartOf=plasma-kwin_wayland.service
 [Service]
 Type=notify
 # This is the command to start the service
-# %t resolves to /run/user/$ (id -u)
 ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
-Restart=no
+# %t resolves to /run/user/$ (id -u)
 ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
+Restart=no
+"
+
+# Define systemd unit for Cage (Plow)
+
+CAGE_SERVICE="\
+# plow-cage.service
+# This calls a customised /usr/lib/systemd/user/plasma-kwin_wayland.service
+
+[Unit]
+Description=Plow desktop session (WSLg > Cage > KDE Plasma 6)
+# https://manpages.debian.org/trixie/cage/cage.1.en.html
+Documentation=man:cage(1)
+After=graphical-session-pre.target
+
+[Service]
+Type=simple
+# Environment variables to set the cursor
+Environment=XCURSOR_PATH=/usr/share/icons
+Environment=XCURSOR_THEME=westonCursor
+Environment=XCURSOR_SIZE=96
+# This is the command to start the service
+ExecStart=/usr/bin/cage -m last -d -- /usr/bin/startplasma-wayland
+Restart=no
 "
 
 # Define the config change for Plasma
 
 PLASMA_CONF="\
 # plow-plasma.conf
-# Injects plow-weston dependencies into KWin
 # Customises /usr/lib/systemd/user/plasma-kwin_wayland.service
-
-[Unit]
-After=plow-weston.service
-# Enable these services before running plasma-kwin_wayland
-Requires=plow-weston.service
-# When plow-weston stops/dies, apply to kwin too (stronger than Wants)
-BindsTo=plow-weston.service
-# When plow-weston is restarted, apply to customised plasma-kwin_wayland too
-PartOf=plow-weston.service
-# When plow-weston is reloaded, apply to customised plasma-kwin_wayland too
-ReloadPropagatedFrom=plow-weston.service
 
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
 # Explicitly set new ExecStart (but below is currently same as stock Trixie)
 ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
-# Ensure these variables are set as part of plasma-kwin_wayland customisations
-Environment=WAYLAND_DISPLAY=weston
+# Run user desktop, not greeter, nor lock-screen
 Environment=XDG_SESSION_CLASS=user
 # Five verbose log settings to troubleshoot EGL initialization failures
 Environment=EGL_LOG_LEVEL=debug
