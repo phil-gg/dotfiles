@@ -42,6 +42,11 @@ SYS_UNITS_CHANGED=0
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
+# TO_DO: Manage these two files
+# WIN_USER="$(/mnt/c/Windows/System32/cmd.exe /c 'echo %USERNAME%' 2> /dev/null | tr -d '\r')"
+# /mnt/c/Users/${WIN_USER}/.wslconfig
+# /etc/wsl.conf
+
 # Set vgem kernel module to load every boot
 if [ ! -s /etc/modules-load.d/vgem.conf ]; then
 echo -e "\n${cyanbold}Set vgem kernel module to load every boot${normal}"
