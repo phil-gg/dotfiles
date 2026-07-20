@@ -534,8 +534,8 @@ fi
 # Check WSL kernel version
 
 echo -e "\n${cyanbold}Show WSL kernel version${normal}"
-echo -e "$ wsl.exe --version < /dev/null | tr -cd '\\\\040-\\\\176\\\\012'\n"
-WSL_VERSION=$(wsl.exe --version < /dev/null | tr -cd '\040-\176\012')
+echo -e "$ /mnt/c/Windows/System32/wsl.exe --version < /dev/null | tr -cd '\\\\040-\\\\176\\\\012'\n"
+WSL_VERSION=$(/mnt/c/Windows/System32/wsl.exe --version < /dev/null | tr -cd '\040-\176\012')
 echo "${WSL_VERSION}"
 
 echo -e "\n$ uname -a\n"
