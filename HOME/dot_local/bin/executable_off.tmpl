@@ -1,5 +1,5 @@
 {{ $wsl := stat "/run/WSL" -}}
 {{ if and $wsl $wsl.isDir -}}
 #!/bin/bash
-wsl.exe --shutdown
+/mnt/c/Windows/System32/wsl.exe --shutdown
 {{ end -}}
