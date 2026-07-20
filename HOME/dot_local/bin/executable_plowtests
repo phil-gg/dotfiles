@@ -1,0 +1,5 @@
+#! /bin/bash
+echo -e 'qdbus6 org.kde.KWin /KWin supportInformation | tail -n +10 | grep -iEC 1 "opengl|gles|composit"'
+qdbus6 org.kde.KWin /KWin supportInformation | tail -n +10 | grep -iEC 1 "opengl|gles|composit"
+echo -e 'journalctl --user -u plasma-kwin_wayland.service --no-pager'
+journalctl --user -u plasma-kwin_wayland.service --no-pager
