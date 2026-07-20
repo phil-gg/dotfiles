@@ -553,16 +553,26 @@ fi
 
 # Now can test mesa using d3d12 and nvidia graphics without passing variables
 
+# Only test glxinfo from within kde plow session
+if [[ "${KDE_FULL_SESSION}" == "true" ]]; then
 echo -e "\n${cyanbold}Show glxinfo${normal}"
 echo -e "$ glxinfo -B\n"
 glxinfo -B
+fi
 
 echo -e "\n${cyanbold}Show eglinfo${normal}"
 echo -e "$ set -a; source /etc/environment.d/*.conf 2>/dev/null; set +a"
 echo -e "$ eglinfo -B\n"
+
 eglinfo -B -p gbm
+
 eglinfo -B -p wayland
+
+# Only test x11 from within kde plow session
+if [[ "${KDE_FULL_SESSION}" == "true" ]]; then
 eglinfo -B -p x11
+fi
+
 # Log level suppresses DRI2 errors (don't matter as WSL2 uses DRI3)
 EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 
