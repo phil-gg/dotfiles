@@ -165,7 +165,7 @@ reorder-after <U034F>   % COMBINING GRAPHEME JOINER
 % Close the sort before ISO/IEC 14651 block
 reorder-end
 % For these characters put them after default ISO/IEC 14651 rules in this order
-reorder-after <UFFFD>   % REPLACEMENT CHARACTER
+reorder-after <UFFFC>   % OBJECT REPLACEMENT CHARACTER
 <U0001>  % SOH (Start of Heading)
 <U0002>  % STX (Start of Text)
 <U0003>  % ETX (End of Text)
