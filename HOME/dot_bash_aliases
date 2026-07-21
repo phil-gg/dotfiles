@@ -42,6 +42,6 @@ l() {
     # Default to current directory if no argument provided
     local ARGS=("${@:-.}")
     echo ""
-    ls -1AFvX --color=always --group-directories-first --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
+    ls -1AFv --color=always --group-directories-first --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
     echo ""
 }
