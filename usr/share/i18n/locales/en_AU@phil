@@ -44,13 +44,13 @@ translit_end
 END LC_CTYPE
 
 LC_COLLATE
-% First defined primary weight has the highest priority
-collating-symbol <PUNCT>
 % For most characters apply the default ordering rules from ISO/IEC 14651
 copy "iso14651_t1"
+collating-symbol <PUNCT>
 % The last character before digit zero is Georgian Lari (ISO 4217 code: GEL)
 % Put these characters before digit zero in this order
 reorder-after <U20BE> % LARI SIGN
+<PUNCT>
 <U0020> <PUNCT>;<BASE>;<MIN>;<U0020> % Space (SP)
 <U002E> <PUNCT>;<BASE>;<MIN>;<U002E> % . (Full Stop) / Period
 <U002C> <PUNCT>;<BASE>;<MIN>;<U002C> % , (Comma)
@@ -151,7 +151,6 @@ reorder-after <U20BE> % LARI SIGN
 <U2117> <PUNCT>;<BASE>;<MIN>;<U2117> % ℗ (Sound Recording Copyright) / Phonogram Symbol
 <U00B6> <PUNCT>;<BASE>;<MIN>;<U00B6> % ¶ (Pilcrow Sign)
 <U204B> <PUNCT>;<BASE>;<MIN>;<U204B> % ⁋ (Reversed Pilcrow Sign)
-% Close the sort before ISO/IEC 14651 block
 reorder-end
 END LC_COLLATE
 
