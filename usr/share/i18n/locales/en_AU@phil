@@ -104,7 +104,7 @@ reorder-after <U20BE> % LARI SIGN
 <U00AC> <S00AC>;<BASE>;<MIN>;<U00AC> % ¬ (Not Sign)
 <U002D> <S002D>;<BASE>;<MIN>;<U002D> % - (Hyphen-Minus)
 <U2010> <S2010>;<BASE>;<MIN>;<U2010> % ‐ (Hyphen)
-<U2011> <S2011>;<BASE>;<MIN>;<U2011> % ‑ (Non-Breaking Hyphen)
+<U2011> <S2010>;<BASE>;<MIN>;<U2011> % ‑ (Non-Breaking Hyphen)
 <U2012> <S2012>;<BASE>;<MIN>;<U2012> % ‒ (Figure Dash)
 <U2013> <S2013>;<BASE>;<MIN>;<U2013> % – (En Dash)
 <U2014> <S2014>;<BASE>;<MIN>;<U2014> % — (Em Dash)
