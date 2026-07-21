@@ -218,7 +218,7 @@ reorder-after <RES-1>
 <U209B>  % ₛ (Latin Subscript Small Letter S)
 <U209C>  % ₜ (Latin Subscript Small Letter T)
 <U2093>  % ₓ (Latin Subscript Small Letter X)
-%Close the sort before ISO/IEC 14651 block
+% Close the sort before ISO/IEC 14651 block
 reorder-end
 % For these characters put them after default ISO/IEC 14651 rules in this order
 reorder-after <SFFFF>
@@ -329,7 +329,7 @@ reorder-after <SFFFF>
 <U206E>  % National Digit Shapes
 <U206F>  % Nominal Digit Shapes
 <U0000>  % NUL (Null character)
-%Close the sort after ISO/IEC 14651 block
+% Close the sort after ISO/IEC 14651 block
 reorder-end
 END LC_COLLATE
 
