@@ -391,7 +391,7 @@ reorder-after <U0000>
 %Close the sort before ISO/IEC 14651 block
 reorder-end
 % For these characters put them after default ISO/IEC 14651 rules in this order
-reorder-after <U0010FFFF>
+reorder-after <U0002FA1D>
 <U0001>
 % SOH (Start of Heading)
 <U0002>
