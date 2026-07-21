@@ -44,7 +44,570 @@ translit_end
 END LC_CTYPE
 
 LC_COLLATE
+% For most characters apply the default ordering rules from ISO/IEC 14651
 copy "iso14651_t1"
+% For these characters put them before default ISO/IEC 14651 rules in this order
+reorder-after <U0000>
+<U0020>
+% Space (SP)
+<U002E>
+% . (Full Stop) / Period
+<U002C>
+% , (Comma)
+<U003A>
+% : (Colon)
+<U003B>
+% ; (Semicolon)
+<U204F>
+% ⁏ (Reversed Semicolon)
+<U0021>
+% ! (Exclamation Mark)
+<U00A1>
+% ¡ (Inverted Exclamation Mark)
+<U003F>
+% ? (Question Mark)
+<U00BF>
+% ¿ (Inverted Question Mark)
+<U203C>
+% ‼ (Double Exclamation Mark)
+<U203D>
+% ‽ (Interrobang)
+<U2047>
+% ⁇ (Double Question Mark)
+<U2048>
+% ⁈ (Question Exclamation Mark)
+<U2049>
+% ⁉ (Exclamation Question Mark)
+<U0060>
+% ` (Grave Accent)
+<U0027>
+% ' (Apostrophe)
+<U0022>
+% " (Quotation Mark)
+<U2018>
+% ‘ (Left Single Quotation Mark)
+<U201B>
+% ‛ (Single High-Reversed-9 Quotation Mark)
+<U2035>
+% ‵ (Reversed Prime)
+<U201C>
+% “ (Left Double Quotation Mark)
+<U201F>
+% ‟ (Double High-Reversed-9 Quotation Mark)
+<U2036>
+% ‶ (Reversed Double Prime)
+<U2037>
+% ‷ (Reversed Triple Prime)
+<U2019>
+% ’ (Right Single Quotation Mark)
+<U2032>
+% ′ (Prime)
+<U201D>
+% ” (Right Double Quotation Mark)
+<U2033>
+% ″ (Double Prime)
+<U2034>
+% ‴ (Triple Prime)
+<U2057>
+% ⁗ (Quadruple Prime)
+<U201A>
+% ‚ (Single Low-9 Quotation Mark)
+<U201E>
+% „ (Double Low-9 Quotation Mark)
+<U0024>
+% $ (Dollar Sign)
+<U00A2>
+% ¢ (Cent Sign)
+<U00A3>
+% £ (Pound Sign)
+<U00A4>
+% ¤ (Currency Sign)
+<U00A5>
+% ¥ (Yen Sign)
+<U20AC>
+% € (Euro Sign)
+<U0192>
+% ƒ (Latin Small Letter F with Hook) / Florin / Guilder
+<U0025>
+% % (Percent Sign)
+<U2030>
+% ‰ (Per Mille Sign)
+<U2031>
+% ‱ (Per Ten Thousand Sign)
+<U005E>
+% ^ (Circumflex Accent) / Hat / Caret
+<U2038>
+% ‸ (Caret)
+<U0026>
+% & (Ampersand)
+<U0040>
+% @ (Commercial At)
+<U0023>
+% # (Number Sign) / Hash Sign / Octothorpe
+<U005C>
+% \ (Reverse Solidus) / Backslash
+<U002F>
+% / (Solidus) / Forward Slash
+<U00F7>
+% ÷ (Division Sign)
+<U00D7>
+% × (Multiplication Sign)
+<U002A>
+% * (Asterisk)
+<U204E>
+% ⁎ (Low Asterisk)
+<U2051>
+% ⁑ (Two Asterisks Aligned Vertically)
+<U2055>
+% ⁕ (Flower Punctuation Mark)
+<U205C>
+% ⁜ (Dotted Cross)
+<U203B>
+% ※ (Reference Mark)
+<U002B>
+% + (Plus Sign)
+<U005F>
+% _ (Low Line) / Underscore
+<U2017>
+% ‗ (Double Low Line)
+<U00B1>
+% ± (Plus-Minus Sign)
+<U00AC>
+% ¬ (Not Sign)
+<U002D>
+% - (Hyphen-Minus)
+<U2010>
+% ‐ (Hyphen)
+<U2011>
+% ‑ (Non-Breaking Hyphen)
+<U2012>
+% ‒ (Figure Dash)
+<U2013>
+% – (En Dash)
+<U2014>
+% — (Em Dash)
+<U2015>
+% ― (Horizontal Bar)
+<U003D>
+% = (Equals Sign)
+<U003C>
+% < (Less-Than Sign)
+<U003E>
+% > (Greater-Than Sign)
+<U2039>
+% ‹ (Single Left-Pointing Angle Quotation Mark)
+<U203A>
+% › (Single Right-Pointing Angle Quotation Mark)
+<U00AB>
+% « (Left-Pointing Double Angle Quotation Mark)
+<U00BB>
+% » (Right-Pointing Double Angle Quotation Mark)
+<U0028>
+% ( (Left Parenthesis)
+<U0029>
+% ) (Right Parenthesis)
+<U005B>
+% [ (Left Square Bracket)
+<U005D>
+% ] (Right Square Bracket)
+<U007B>
+% { (Left Curly Bracket)
+<U007D>
+% } (Right Curly Bracket)
+<U007E>
+% ~ (Tilde)
+<U2053>
+% ⁓ (Swung Dash)
+<U2016>
+% ‖ (Double Vertical Line)
+<U007C>
+% | (Vertical Line)
+<U00A6>
+% ¦ (Broken Bar)
+<U00A7>
+% § (Section Sign)
+<U2042>
+% ⁂ (Asterism)
+<U2020>
+% † (Dagger)
+<U2021>
+% ‡ (Double Dagger)
+<U2043>
+% ⁃ (Hyphen Bullet)
+<U2023>
+% ‣ (Triangular Bullet)
+<U2022>
+% • (Bullet)
+<U00B0>
+% ° (Degree Sign)
+<U00B7>
+% · (Middle Dot)
+<U2024>
+% ․ (One Dot Leader)
+<U2025>
+% ‥ (Two Dot Leader)
+<U2026>
+% … (Horizontal Ellipsis)
+<U205E>
+% ⁞ (Vertical Four Dots)
+<U205D>
+% ⁝ (Tricolon)
+<U205A>
+% ⁚ (Two Dot Punctuation)
+<U2056>
+% ⁖ (Three Dot Punctuation)
+<U2058>
+% ⁘ (Four Dot Punctuation)
+<U2059>
+% ⁙ (Five Dot Punctuation)
+<U205B>
+% ⁛ (Four Dot Mark)
+<U2027>
+% ‧ (Hyphenation Point)
+<U00A9>
+% © (Copyright Sign)
+<U00AE>
+% ® (Registered Sign)
+<U2117>
+% ℗ (Sound Recording Copyright) / Phonogram Symbol
+<U00B5>
+% µ (Micro Sign)
+<U00B6>
+% ¶ (Pilcrow Sign)
+<U204B>
+% ⁋ (Reversed Pilcrow Sign)
+<U0030>
+% 0 (Digit Zero)
+<U0031>
+% 1 (Digit One)
+<U0032>
+% 2 (Digit Two)
+<U0033>
+% 3 (Digit Three)
+<U0034>
+% 4 (Digit Four)
+<U0035>
+% 5 (Digit Five)
+<U0036>
+% 6 (Digit Six)
+<U0037>
+% 7 (Digit Seven)
+<U0038>
+% 8 (Digit Eight)
+<U0039>
+% 9 (Digit Nine)
+<U2044>
+% ⁄ (Fraction Slash)
+<U2070>
+% ⁰ (Superscript Zero)
+<U2080>
+% ₀ (Subscript Zero)
+<U00B9>
+% ¹ (Superscript One)
+<U2081>
+% ₁ (Subscript One)
+<U00B2>
+% ² (Superscript Two)
+<U2082>
+% ₂ (Subscript Two)
+<U00B3>
+% ³ (Superscript Three)
+<U2083>
+% ₃ (Subscript Three)
+<U2074>
+% ⁴ (Superscript Four)
+<U2084>
+% ₄ (Subscript Four)
+<U2075>
+% ⁵ (Superscript Five)
+<U2085>
+% ₅ (Subscript Five)
+<U2076>
+% ⁶ (Superscript Six)
+<U2086>
+% ₆ (Subscript Six)
+<U2077>
+% ⁷ (Superscript Seven)
+<U2087>
+% ₇ (Subscript Seven)
+<U2078>
+% ⁸ (Superscript Eight)
+<U2088>
+% ₈ (Subscript Eight)
+<U2079>
+% ⁹ (Superscript Nine)
+<U2089>
+% ₉ (Subscript Nine)
+<U207A>
+% ⁺ (Superscript Plus Sign)
+<U208A>
+% ₊ (Subscript Plus Sign)
+<U207B>
+% ⁻ (Superscript Minus)
+<U208B>
+% ₋ (Subscript Minus)
+<U207C>
+% ⁼ (Superscript Equals Sign)
+<U208C>
+% ₌ (Subscript Equals Sign)
+<U207D>
+% ⁽ (Superscript Left Parenthesis)
+<U208D>
+% ₍ (Subscript Left Parenthesis)
+<U207E>
+% ⁾ (Superscript Right Parenthesis)
+<U208E>
+% ₎ (Subscript Right Parenthesis)
+<U2090>
+% ₐ (Latin Subscript Small Letter A)
+<U2091>
+% ₑ (Latin Subscript Small Letter E)
+<U2094>
+% ₔ (Latin Subscript Small Letter Schwa)
+<U2095>
+% ₕ (Latin Subscript Small Letter H)
+<U2071>
+% ⁱ (Superscript Latin Small Letter I)
+<U2096>
+% ₖ (Latin Subscript Small Letter K)
+<U2097>
+% ₗ (Latin Subscript Small Letter L)
+<U2098>
+% ₘ (Latin Subscript Small Letter M)
+<U207F>
+% ⁿ (Superscript Latin Small Letter N)
+<U2099>
+% ₙ (Latin Subscript Small Letter N)
+<U2092>
+% ₒ (Latin Subscript Small Letter O)
+<U209A>
+% ₚ (Latin Subscript Small Letter P)
+<U209B>
+% ₛ (Latin Subscript Small Letter S)
+<U209C>
+% ₜ (Latin Subscript Small Letter T)
+<U2093>
+% ₓ (Latin Subscript Small Letter X)
+%Close the sort before ISO/IEC 14651 block
+reorder-end
+% For these characters put them after default ISO/IEC 14651 rules in this order
+reorder-after <U0010FFFF>
+<U0001>
+% SOH (Start of Heading)
+<U0002>
+% STX (Start of Text)
+<U0003>
+% ETX (End of Text)
+<U0004>
+% EOT (End of Transmission)
+<U0005>
+% ENQ (Enquiry)
+<U0006>
+% ACK (Acknowledge)
+<U0007>
+% BEL (Bell)
+<U0008>
+% BS (Backspace)
+<U0009>
+% HT (Horizontal Tab)
+<U000A>
+% LF (Line Feed)
+<U000B>
+% VT (Vertical Tab)
+<U000C>
+% FF (Form Feed)
+<U000D>
+% CR (Carriage Return)
+<U000E>
+% SO (Shift Out)
+<U000F>
+% SI (Shift In)
+<U0010>
+% DLE (Data Link Escape)
+<U0011>
+% DC1 (Device Control 1)
+<U0012>
+% DC2 (Device Control 2)
+<U0013>
+% DC3 (Device Control 3)
+<U0014>
+% DC4 (Device Control 4)
+<U0015>
+% NAK (Negative Acknowledge)
+<U0016>
+% SYN (Synchronous Idle)
+<U0017>
+% ETB (End of Transmission Block)
+<U0018>
+% CAN (Cancel)
+<U0019>
+% EM (End of Medium)
+<U001A>
+% SUB (Substitute)
+<U001B>
+% ESC (Escape)
+<U001C>
+% FS (File Separator)
+<U001D>
+% GS (Group Separator)
+<U001E>
+% RS (Record Separator)
+<U001F>
+% US (Unit Separator)
+<U007F>
+% DEL (Delete)
+<U0080>
+% PAD (Padding Character)
+<U0081>
+% HOP (High Octet Preset)
+<U0082>
+% BPH (Break Permitted Here)
+<U0083>
+% NBH (No Break Here)
+<U0084>
+% IND (Index)
+<U0085>
+% NEL (Next Line)
+<U0086>
+% SSA (Start of Selected Area)
+<U0087>
+% ESA (End of Selected Area)
+<U0088>
+% HTS (Character Tabulation Set)
+<U0089>
+% HTJ (Character Tabulation with Justification)
+<U008A>
+% VTS (Line Tabulation Set)
+<U008B>
+% PLD (Partial Line Down)
+<U008C>
+% PLU (Partial Line Backward)
+<U008D>
+% RI (Reverse Index)
+<U008E>
+% SS2 (Single Shift Two)
+<U008F>
+% SS3 (Single Shift Three)
+<U0090>
+% DCS (Device Control String)
+<U0091>
+% PU1 (Private Use One)
+<U0092>
+% PU2 (Private Use Two)
+<U0093>
+% STS (Set Transmit State)
+<U0094>
+% CCH (Cancel Character)
+<U0095>
+% MW (Message Waiting)
+<U0096>
+% SPA (Start of Guarded Area)
+<U0097>
+% EPA (End of Guarded Area)
+<U0098>
+% SOS (Start of String)
+<U0099>
+% SGC (Single Graphic Character Introducer)
+<U009A>
+% SCI (Single Character Introducer)
+<U009B>
+% CSI (Control Sequence Introducer)
+<U009C>
+% ST (String Terminator)
+<U009D>
+% OSC (Operating System Command)
+<U009E>
+% PM (Privacy Message)
+<U009F>
+% APC (Application Program Command)
+<U00A0>
+% NBSP (Non-Breaking Space)
+<U00AD>
+% SHY (Soft Hyphen)
+<U2000>
+% NSQP (En Quad)
+<U2001>
+% MQSP (Em Quad)
+<U2002>
+% ENSP (En Space)
+<U2003>
+% EMSP (Em Space)
+<U2004>
+% 3/MSP (Three-Per-Em Space)
+<U2005>
+% 4/MSP (Four-Per-Em Space)
+<U2006>
+% 6/MSP (Six-Per-Em Space)
+<U2007>
+% FSP (Figure Space)
+<U2008>
+% PSP (Punctuation Space)
+<U2009>
+% THSP (Thin Space)
+<U200A>
+% HSP (Hair Space)
+<U200B>
+% ZWSP (Zero Width Space)
+<U200C>
+% ZWNJ (Zero Width Non-Joiner)
+<U200D>
+% ZWJ (Zero Width Joiner)
+<U200E>
+% LRM (Left-to-Right Mark)
+<U200F>
+% RLM (Right-to-Left Mark)
+<U2028>
+% LS (Line Separator)
+<U2029>
+% PS (Paragraph Separator)
+<U202A>
+% LRE (Left-to-Right Embedding)
+<U202B>
+% RLE (Right-to-Left Embedding)
+<U202C>
+% PDF (Pop Directional Formatting)
+<U202D>
+% LRO (Left-to-Right Override)
+<U202E>
+% RLO (Right-to-Left Override)
+<U202F>
+% NNBSP (Narrow No-Break Space)
+<U205F>
+% MMSP (Medium Mathematical Space)
+<U2060>
+% WJ (Word Joiner)
+<U2066>
+% LRI (Left-to-Right Isolate)
+<U2067>
+% RLI (Right-to-Left Isolate)
+<U2068>
+% FSI (First Strong Isolate)
+<U2069>
+% PDI (Pop Directional Isolate)
+<U2061>
+% Function Application
+<U2062>
+% Invisible Times
+<U2063>
+% Invisible Separator
+<U2064>
+% Invisible Plus
+<U206A>
+% Inhibit Symmetric Swapping
+<U206B>
+% Activate Symmetric Swapping
+<U206C>
+% Inhibit Arabic Form Shaping
+<U206D>
+% Activate Arabic Form Shaping
+<U206E>
+% National Digit Shapes
+<U206F>
+% Nominal Digit Shapes
+<U0000>
+% NUL (Null character)
+%Close the sort after ISO/IEC 14651 block
+reorder-end
 END LC_COLLATE
 
 LC_TIME
@@ -72,26 +635,25 @@ abmon           "Jan";/
                 "Oct";/
                 "Nov";/
                 "Dec"
-% Start with Monday to match choice below in week
-day             "Monday";/
+day             "Sunday";/
+                "Monday";/
                 "Tuesday";/
                 "Wednesday";/
                 "Thursday";/
                 "Friday";/
-                "Saturday";/
-                "Sunday"
-% Start with Mon to match choice below in week
-abday           "Mon";/
+                "Saturday"
+abday           "Sun";/
+                "Mon";/
                 "Tue";/
                 "Wed";/
                 "Thu";/
                 "Fri";/
-                "Sat";/
-                "Sun"
+                "Sat"
 % 20240101 was a Monday
 % ISO 8601 week numbering (hence final 4)
 week            7;20240101;4
-first_weekday   1
+% Make Monday the first day of the week
+first_weekday   2
 d_t_fmt         "%a-%d-%b-%Y %T %z"
 d_fmt           "%a-%d-%b-%Y"
 t_fmt           "%H:%M:%S %z"
