@@ -165,9 +165,8 @@ reorder-after <U20BE> % LARI SIGN
 <U204B> <S204B>;<BASE>;<MIN>;<U204B> % ⁋ (Reversed Pilcrow Sign)
 % Close the sort before ISO/IEC 14651 block
 reorder-end
-% The last Latin character is Capital Letter Egyptological Ain
-% Put these characters after z/Z and Ain in this order
-reorder-after <UA724> % LATIN CAPITAL LETTER EGYPTOLOGICAL AIN
+% Put these characters at the end, in this order
+reorder-after <UFFFD> % REPLACEMENT CHARACTER
 <U0001> <S0001>;<BASE>;<MIN>;<U0001> % SOH (Start of Heading)
 <U0002> <S0002>;<BASE>;<MIN>;<U0002> % STX (Start of Text)
 <U0003> <S0003>;<BASE>;<MIN>;<U0003> % ETX (End of Text)
