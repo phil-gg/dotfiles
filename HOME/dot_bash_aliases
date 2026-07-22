@@ -23,7 +23,7 @@ ll() {
       # ls -b escapes spaces in filenames with backslash
       # sed is replacing '\ ' with '\␠'
       # shellcheck disable=SC2012
-      ls -lbhv \
+      ls -lbh \
          --color=always \
          --group-directories-first \
          --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
@@ -45,7 +45,7 @@ la() {
       # ls -b escapes spaces in filenames with backslash
       # sed is replacing '\ ' with '\␠'
       # shellcheck disable=SC2012
-      ls -lAbhv \
+      ls -lAbh \
          --color=always \
          --group-directories-first \
          --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
@@ -59,7 +59,7 @@ l() {
     local ARGS=("${@:-.}")
     echo ""
     # Number 1 for one column format rather than letter l for long format
-    ls -1AbFv \
+    ls -1AbF \
          --color=always \
          --group-directories-first \
          --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
