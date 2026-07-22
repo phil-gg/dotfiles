@@ -18,8 +18,16 @@ ll() {
     echo -e "Total size on disk = $SIZE"
     { echo -e "\033[1;35mMODE # OWNER GROUP SIZE MOD-TIMESTAMP NAME\033[0m"
       # Only inject spacer when one argument is passed and it is a directory
-      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "; fi
-      ls -lvh --color=always --group-directories-first --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
+      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "
+      fi
+      # ls -b escapes spaces in filenames with backslash
+      # sed is replacing '\ ' with '\␠'
+      # shellcheck disable=SC2012
+      ls -lbhv \
+         --color=always \
+         --group-directories-first \
+         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
+      | sed $'s/\\\\\u0020/\\\\\2420/g'
     } | column -t -R 2,3,4,5,6
 }
 
@@ -32,8 +40,16 @@ la() {
     echo -e "Total size on disk = $SIZE"
     { echo -e "\033[1;35mMODE # OWNER GROUP SIZE MOD-TIMESTAMP NAME\033[0m"
       # Only inject spacer when one argument is passed and it is a directory
-      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "; fi
-      ls -lAvh --color=always --group-directories-first --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
+      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "
+      fi
+      # ls -b escapes spaces in filenames with backslash
+      # sed is replacing '\ ' with '\␠'
+      # shellcheck disable=SC2012
+      ls -lAbhv \
+         --color=always \
+         --group-directories-first \
+         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
+      | sed $'s/\\\\\u0020/\\\\\2420/g'
     } | column -t -R 2,3,4,5,6
 }
 
@@ -42,6 +58,10 @@ l() {
     # Default to current directory if no argument provided
     local ARGS=("${@:-.}")
     echo ""
-    ls -1AFv --color=always --group-directories-first --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
+    # Number 1 for one column format rather than letter l for long format
+    ls -1AbFv \
+         --color=always \
+         --group-directories-first \
+         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
     echo ""
 }
