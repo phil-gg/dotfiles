@@ -7,7 +7,7 @@ if localectl list-keymaps 2>/dev/null | grep -iq "UK" \
 && grep -iq "UTF-8" /etc/default/console-setup \
 && grep -iq "Lat15" /etc/default/console-setup \
 && timedatectl status | grep -iq "Australia/Brisbane" \
-&& cmp -s "` .chezmoi.sourceDir `/usr/share/i18n/locales/en_AU@phil" "/usr/share/i18n/locales/en_AU@phil" \
+&& cmp -s "` .chezmoi.homeDir `.config/.ROOT/usr/share/i18n/locales/en_AU@phil" "/usr/share/i18n/locales/en_AU@phil" \
 && cmp -s "` .chezmoi.sourceDir `/usr/share/i18n/SUPPORTED" "/usr/share/i18n/SUPPORTED" \
 && cmp -s "` .chezmoi.sourceDir `/etc/locale.gen" "/etc/locale.gen" \
 && cmp -s "` .chezmoi.sourceDir `/etc/locale.conf" "/etc/locale.conf"; then
@@ -162,8 +162,7 @@ timedatectl status
 
 # Locale configuration
 
-gitlocalefile="${HOME}/git/${github_username}/${github_project}\
-/usr/share/i18n/locales/en_AU@phil"
+gitlocalefile="${HOME}/.config/.ROOT/usr/share/i18n/locales/en_AU@phil"
 syslocalefile="\
 /usr/share/i18n/locales/en_AU@phil"
 
