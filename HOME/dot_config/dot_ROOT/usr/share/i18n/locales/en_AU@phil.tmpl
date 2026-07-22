@@ -1,0 +1,162 @@
+comment_char    %
+escape_char     /
+
+% This file is part of the GNU C Library and contains locale data.
+% The Free Software Foundation does not claim any copyright interest
+% in the locale data contained in this file.  The foregoing does not
+% affect the license of the GNU C Library as a whole.  It does not
+% exempt you from the conditions of the license if your use would
+% otherwise be governed by that license.
+
+LC_IDENTIFICATION
+title           "Phil customised English locale for Australia"
+source          ""
+address         ""
+contact         ""
+email           ""
+tel             ""
+fax             ""
+language        "Australian English"
+territory       "Australia"
+revision        "1.1"
+date            "2025-07-01"
+
+category        "i18n:2012";LC_IDENTIFICATION
+category        "i18n:2012";LC_CTYPE
+category        "i18n:2012";LC_COLLATE
+category        "i18n:2012";LC_TIME
+category        "i18n:2012";LC_NUMERIC
+category        "i18n:2012";LC_MONETARY
+category        "i18n:2012";LC_PAPER
+category        "i18n:2012";LC_MEASUREMENT
+category        "i18n:2012";LC_MESSAGES
+category        "i18n:2012";LC_NAME
+category        "i18n:2012";LC_ADDRESS
+category        "i18n:2012";LC_TELEPHONE
+END LC_IDENTIFICATION
+
+LC_CTYPE
+copy            "i18n"
+translit_start
+include         "translit_combining";/
+                ""
+translit_end
+END LC_CTYPE
+
+LC_COLLATE
+% For most characters apply the default ordering rules from ISO/IEC 14651
+copy "iso14651_t1"
+% Null Character <U0000> and other punctuation are IGNORE;IGNORE;IGNORE;
+reorder-after <U0000>
+% Update all these to <S0009>;<BASE>;<MIN>;
+% New collate sort order is punctuation then 0-9 then Aa-Zz
+{{ output "awk" "/IGNORE;IGNORE;IGNORE;/ && /^<U/ { sub(/IGNORE;IGNORE;IGNORE;/, \"<S0009>;<BASE>;<MIN>;\"); print $0 }" "/usr/share/i18n/locales/iso14651_t1_common" -}}
+reorder-end
+END LC_COLLATE
+
+LC_TIME
+mon             "January";/
+                "February";/
+                "March";/
+                "April";/
+                "May";/
+                "June";/
+                "July";/
+                "August";/
+                "September";/
+                "October";/
+                "November";/
+                "December"
+abmon           "Jan";/
+                "Feb";/
+                "Mar";/
+                "Apr";/
+                "May";/
+                "Jun";/
+                "Jul";/
+                "Aug";/
+                "Sep";/
+                "Oct";/
+                "Nov";/
+                "Dec"
+day             "Sunday";/
+                "Monday";/
+                "Tuesday";/
+                "Wednesday";/
+                "Thursday";/
+                "Friday";/
+                "Saturday"
+abday           "Sun";/
+                "Mon";/
+                "Tue";/
+                "Wed";/
+                "Thu";/
+                "Fri";/
+                "Sat"
+% 20240101 was a Monday
+% ISO 8601 week numbering (hence final 4)
+week            7;20240101;4
+% Make Monday the first day of the week
+first_weekday   2
+d_t_fmt         "%a-%d-%b-%Y %T %z"
+d_fmt           "%a-%d-%b-%Y"
+t_fmt           "%H:%M:%S %z"
+am_pm           "am";"pm"
+t_fmt_ampm      "%l:%M:%S %p %z"
+date_fmt        "%a-%d-%b-%Y %T %z"
+END LC_TIME
+
+LC_NUMERIC
+decimal_point           "."
+% Fig. sp. [ ]
+thousands_sep           "<U2007>"
+grouping                3
+END LC_NUMERIC
+
+LC_MONETARY
+currency_symbol         "$ "
+int_curr_symbol         "AUD "
+mon_decimal_point       "."
+% Fig. sp. [ ]
+mon_thousands_sep       "<U2007>"
+mon_grouping            3
+positive_sign           " + "
+negative_sign           " - "
+frac_digits             2
+int_frac_digits         2
+p_cs_precedes           1
+p_sep_by_space          0
+n_cs_precedes           1
+n_sep_by_space          0
+p_sign_posn             1
+n_sign_posn             1
+END LC_MONETARY
+
+LC_PAPER
+% A4: height=297, width=210
+% Letter: height=279, width=216
+height                  297
+width                   210
+END LC_PAPER
+
+LC_MEASUREMENT
+% 1 for Metric system | 2 for US
+measurement             1
+END LC_MEASUREMENT
+
+LC_MESSAGES
+copy "en_US"
+END LC_MESSAGES
+
+LC_NAME
+copy "en_US"
+END LC_NAME
+
+LC_ADDRESS
+copy "en_AU"
+END LC_ADDRESS
+
+LC_TELEPHONE
+copy "en_AU"
+END LC_TELEPHONE
+
