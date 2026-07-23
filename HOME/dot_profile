@@ -12,17 +12,6 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-# Set PATH so it includes this private bin if it exists
-if [ -d "$HOME/.local/bin" ]; then
-    case ":$PATH:" in
-        *":$HOME/.local/bin:"*) 
-            ;; # private bin is already in PATH, do nothing
-        *) 
-            PATH="$HOME/.local/bin:$PATH" 
-            ;; # private bin is missing from PATH, prepend it
-    esac
-fi
-
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -50,4 +39,16 @@ if [ "${KDE_FULL_SESSION}" != "true" ] &&
    [ -L /tmp/.X11-unix/X1 ] &&
    [ "$(readlink /tmp/.X11-unix/X1)" = "/mnt/wslg/.X11-unix/X0" ]; then
     export DISPLAY=:1
+fi
+
+# Set PATH so it includes this private bin if it exists
+# After export vars for Windows Terminal / WSL2 so it does not get clobbered
+if [ -d "$HOME/.local/bin" ]; then
+    case ":$PATH:" in
+        *":$HOME/.local/bin:"*) 
+            ;; # private bin is already in PATH, do nothing
+        *) 
+            PATH="$HOME/.local/bin:$PATH" 
+            ;; # private bin is missing from PATH, prepend it
+    esac
 fi
