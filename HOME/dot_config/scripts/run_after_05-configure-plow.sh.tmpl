@@ -242,8 +242,6 @@ KWIN_COMPOSE=O2ES
 KWIN_OPENGL_INTERFACE=egl
 KWIN_DIRECT_GL=1
 KWIN_DRM_DEVICES=/dev/dri/renderD128
-# Run just KWin XWayland without OpenGL hardware acceleration
-# KWIN_WAYLAND_NO_GLAMOR=1
 
 # --- Session Identity ---
 XDG_SESSION_TYPE=wayland
@@ -504,12 +502,11 @@ EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
 PLOW_X_SERVICE="\
-# plow-xwayland.service
-# System service (root) to attach KWin XWayland
+# plow-x-config.service
+# System service (root) shared by WSLg (X1) & KWin XWayland (X0)
 
 [Unit]
-Description= Blank /tmp/.X11-unix replacing WSLg with KWin Xwayland \
-(which configures an X0 socket for itself here later)
+Description= Writable /tmp/.X11-unix with WSLg symlink at X1
 # Run after systemd has finished configuring local filesystems
 After=local-fs.target
 # Run before user sessions start
@@ -525,12 +522,18 @@ RemainAfterExit=yes
 # This is the command to start the service (wrapped in bash)
 # Unmount existing if present (ignore errors with || true)
 # Mount a fresh, empty, writable tmpfs at /tmp/.X11-unix
-# Check new tmpfs exists and is writable
+# Delete WSLg X0 lock file so KWin can safely claim display :0
+# Symlink WSLg to X1
+# Check new tmpfs exists and is writable, with WSLg at X1
 # Notify ready if check true else error
 ExecStart=/bin/bash -c '\
 /usr/bin/umount /tmp/.X11-unix 2>/dev/null || true; \
 /usr/bin/mount -t tmpfs -o mode=1777,size=1m tmpfs /tmp/.X11-unix && \
-if [ -w /tmp/.X11-unix ]; then \
+rm -f /tmp/.X0-lock && \
+/usr/bin/ln -s /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/X1 && \
+if [ -w /tmp/.X11-unix ] && \
+   [ -L /tmp/.X11-unix/X1 ] && \
+   [ \"\$(readlink /tmp/.X11-unix/X1)\" = /mnt/wslg/.X11-unix/X0 ]; then \
 /usr/bin/systemd-notify --ready; \
 else echo \"Error: X11 tmpfs setup failed verification.\" && exit 1; fi'
 
@@ -552,12 +555,15 @@ After=graphical-session-pre.target
 Type=simple
 # Set KWin to manage wayland-1
 Environment=WAYLAND_DISPLAY=wayland-1
-# 1. Clean up dead sockets so KWin can cleanly claim wayland-1
-# 2. Push the target to dbus & systemd so all Plasma child services use it
-ExecStartPre=/bin/bash -c 'rm -f %t/wayland-1*; dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-1'
+# Clean up dead sockets so KWin can cleanly claim wayland-1
+# Push targets to dbus & systemd so all Plasma child services use them
+ExecStartPre=/bin/bash -c '\
+rm -f %t/wayland-1* /tmp/.X11-unix/X0 /tmp/.X0-lock; \
+dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-1 DISPLAY=:0'
 ExecStart=/usr/bin/startplasma-wayland
-# Revert the global environment variable back to WSLg default when the session ends
-ExecStopPost=/bin/bash -c 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-0'
+# Revert global environment variables back to WSLg defaults when session ends
+ExecStopPost=/bin/bash -c '\
+dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-0 DISPLAY=:1'
 Restart=no
 "
 
@@ -570,18 +576,14 @@ PLASMA_CONF="\
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# Explicitly set new ExecStart (but below is currently same as stock Trixie)
-ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
+# KWin desktop on wayland-1, rendering to X0 (WSLg X11 server), with XWayland
+ExecStart=/usr/bin/kwin_wayland_wrapper --x11-display :1 --socket=wayland-1 --xwayland --width 2112 --height 1320
 # Run user desktop, not greeter, nor lock-screen
 Environment=XDG_SESSION_CLASS=user
-# KWin must pass its wayland-1 display to WSLg managed wayland-0
-Environment=WAYLAND_DISPLAY=wayland-0
-# Five verbose log settings to troubleshoot EGL initialization failures
-Environment=EGL_LOG_LEVEL=debug
-Environment=MESA_DEBUG=1
-Environment=LIBGL_DEBUG=verbose
-# Qt logging for KWin graphics/EGL/Wayland
-Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
+# Point KWin to the WSLg X server at :1
+Environment=DISPLAY=:1
+# Unset wayland display so that KWin does not try to render to it
+Environment=WAYLAND_DISPLAY=
 "
 
 # Add services to share clipboards between host & guest
@@ -624,7 +626,7 @@ echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
 # Set file locations once as variables
 
 PLOW_X_UNIT_DIR="/etc/systemd/system"
-PLOW_X_UNIT_FILE="${PLOW_X_UNIT_DIR}/plow-xwayland.service"
+PLOW_X_UNIT_FILE="${PLOW_X_UNIT_DIR}/plow-x-config.service"
 PLOW_UNIT_DIR="/etc/systemd/user"
 PLOW_UNIT_FILE="${PLOW_UNIT_DIR}/plow.service"
 PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
@@ -633,10 +635,10 @@ PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
 # Quietly ensure folders exist
 sudo mkdir -p "${PLASMA_CONF_DIR}"
 
-# Configure plow-xwayland.service systemd unit
+# Configure plow-x-config.service systemd unit
 if [ ! -s "${PLOW_X_UNIT_FILE}" ] || \
 ! cmp -s <(printf "%s" "${PLOW_X_SERVICE}") "${PLOW_X_UNIT_FILE}"; then
-echo -e "\n${cyanbold}Configure plow-xwayland.service systemd unit${normal}"
+echo -e "\n${cyanbold}Configure plow-x-config.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
 # Hence backslash escapes for PLOW_X_SERVICE variable
 echo -e "$ printf \"%s\" \"\${PLOW_X_SERVICE}\" | sudo tee ${PLOW_X_UNIT_FILE} > \
@@ -679,8 +681,8 @@ if [ "${SYS_UNITS_CHANGED}" -eq 1 ]; then
 echo -e "\n${cyanbold}Reload systemd system daemon${normal}"
 echo -e "$ sudo systemctl daemon-reload"
 sudo systemctl daemon-reload
-echo -e "$ sudo systemctl enable --now plow-xwayland.service"
-sudo systemctl enable --now plow-xwayland.service
+echo -e "$ sudo systemctl enable --now plow-x-config.service"
+sudo systemctl enable --now plow-x-config.service
 fi
 
 # Show all systemd units in context (existing along with new plow & plasma)
