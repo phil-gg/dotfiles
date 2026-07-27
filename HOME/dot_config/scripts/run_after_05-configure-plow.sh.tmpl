@@ -455,12 +455,10 @@ fi
 
 echo -e "\n${cyanbold}Build mesa from source${normal}"
 
-echo -e "$ sudo dpkg --add-architecture i386"
-sudo dpkg --add-architecture i386
 echo -e "$ sudo apt update"
 sudo apt update
-echo -e "$ sudo apt build-dep -a i386 -t trixie-backports mesa"
-sudo apt build-dep -a i386 -t trixie-backports mesa
+echo -e "$ sudo apt build-dep -t trixie-backports mesa"
+sudo apt build-dep -t trixie-backports mesa
 
 echo -e "$ mkdir -p ${HOME}/git/mesa/mesa"
 mkdir -p "${HOME}/git/mesa/mesa"
@@ -486,10 +484,8 @@ echo -e "${redbold}> No valid release tag found for ${MESA_TARGET}, ending mesa 
 else
 
 VERSION_DIR="${HOME}/git/mesa/${LATEST_VER}"
-BUILD_DIR64="${VERSION_DIR}/builddir64"
-STAGE_DIR64="${VERSION_DIR}/mesa-wsl-64bit"
-BUILD_DIR32="${VERSION_DIR}/builddir32"
-STAGE_DIR32="${VERSION_DIR}/mesa-wsl-32bit"
+BUILD_DIR="${VERSION_DIR}/builddir"
+STAGE_DIR="${VERSION_DIR}/mesa-wsl"
 
 # Build each version only once
 if [ -d "${VERSION_DIR}" ]; then
@@ -499,134 +495,55 @@ else
 echo -e "$ git checkout ${LATEST_VER}"
 git checkout "${LATEST_VER}"
 
-echo -e "$ meson setup ${BUILD_DIR64} \
+echo -e "$ meson setup ${BUILD_DIR} \
 -Dprefix=/usr \
 -Dlibdir=lib/${DEB_HOST_MULTIARCH} \
 -Dgallium-drivers=d3d12,swrast \
 -Dvulkan-drivers=microsoft-experimental \
--Dgallium-nine=true \
 -Dgallium-va=enabled \
 -Dplatforms=wayland,x11 \
 -Dbuildtype=release \
 -Dstrip=true"
-meson setup "${BUILD_DIR64}" \
+meson setup "${BUILD_DIR}" \
 -Dprefix=/usr \
 -Dlibdir="lib/${DEB_HOST_MULTIARCH}" \
 -Dgallium-drivers=d3d12,swrast \
 -Dvulkan-drivers=microsoft-experimental \
--Dgallium-nine=true \
 -Dgallium-va=enabled \
 -Dplatforms=wayland,x11 \
 -Dbuildtype=release \
 -Dstrip=true
 
-echo -e "$ DESTDIR=${STAGE_DIR64} ninja -C ${BUILD_DIR64} install"
-DESTDIR="${STAGE_DIR64}" ninja -C "${BUILD_DIR64}" install
+echo -e "$ DESTDIR=${STAGE_DIR} ninja -C ${BUILD_DIR} install"
+DESTDIR="${STAGE_DIR}" ninja -C "${BUILD_DIR}" install
 
-echo -e "$ mkdir -p ${STAGE_DIR64}/DEBIAN"
-mkdir -p "${STAGE_DIR64}/DEBIAN"
+echo -e "$ mkdir -p ${STAGE_DIR}/DEBIAN"
+mkdir -p "${STAGE_DIR}/DEBIAN"
 
-echo -e "> ${STAGE_DIR64}/DEBIAN/control"
-cat << EOF > "${STAGE_DIR64}/DEBIAN/control"
-Package: mesa-wsl2-64bit
+echo -e "> ${STAGE_DIR}/DEBIAN/control"
+cat << EOF > "${STAGE_DIR}/DEBIAN/control"
+Package: mesa-wsl2
 Version: ${LATEST_VER#mesa-}
 Architecture: amd64
 Maintainer: ${USER}
 Section: graphics
 Priority: optional
-Provides: libd3dadapter9-mesa, libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa, vulkan-icd
-Replaces: libd3dadapter9-mesa, libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
-Conflicts: libd3dadapter9-mesa, libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
+Provides: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa, vulkan-icd
+Replaces: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
+Conflicts: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
 Description: Custom 64-bit ${LATEST_VER} build optimised for WSL2
  Provides core D3D12 drivers, and Gallium Nine
 EOF
 
-echo -e "$ dpkg-deb --build ${STAGE_DIR64} ${VERSION_DIR}/mesa-wsl2-64bit_${LATEST_VER#mesa-}.deb"
-dpkg-deb --build "${STAGE_DIR64}" "${VERSION_DIR}/mesa-wsl2-64bit_${LATEST_VER#mesa-}.deb"
+echo -e "$ dpkg-deb --build ${STAGE_DIR} ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+dpkg-deb --build "${STAGE_DIR}" "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 
-echo -e "$ sudo dpkg -i ${VERSION_DIR}/mesa-wsl2-64bit_${LATEST_VER#mesa-}.deb"
-sudo dpkg -i "${VERSION_DIR}/mesa-wsl2-64bit_${LATEST_VER#mesa-}.deb"
+echo -e "$ sudo dpkg -i ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+sudo dpkg -i "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 
-CROSS_COMP_TEXT="\
-[binaries]
-c = 'gcc'
-cpp = 'g++'
-pkgconfig = 'i686-linux-gnu-pkg-config'
-[built-in options]
-c_args = ['-m32']
-c_link_args = ['-m32']
-cpp_args = ['-m32']
-cpp_link_args = ['-m32']
-[host_machine]
-system = 'linux'
-cpu_family = 'x86'
-cpu = 'i686'
-endian = 'little'
-"
-
-CROSS_COMP_DIR="${VERSION_DIR}"
-CROSS_COMP_FILE="${VERSION_DIR}/mesa-i386-cross.txt"
-
-# Configure cross-compilation file 
-if [ ! -s "${CROSS_COMP_FILE}" ] || \
-! cmp -s <(printf "%s" "${CROSS_COMP_TEXT}") "${CROSS_COMP_FILE}"; then
-echo -e "> ${VERSION_DIR}/mesa-i386-cross.txt"
-# Choosing to expand path but not file contents in echo output here
-# Hence backslash escapes for CROSS_COMP_TEXT variable
-echo -e "$ printf \"%s\" \"\${CROSS_COMP_TEXT}\" | tee ${CROSS_COMP_FILE} > \
-/dev/null"
-printf "%s" "${CROSS_COMP_TEXT}" | tee "${CROSS_COMP_FILE}" > /dev/null
-fi
-
-echo -e "$ meson setup ${BUILD_DIR32} \
---cross-file ${CROSS_COMP_FILE} \
--Dprefix=/usr \
--Dlibdir=lib/i386-linux-gnu \
--Dgallium-drivers=d3d12,swrast \
--Dgallium-nine=true \
--Dplatforms=x11 \
--Dbuildtype=release \
--Dstrip=true"
-meson setup "${BUILD_DIR32}" \
---cross-file "${CROSS_COMP_FILE}" \
--Dprefix=/usr \
--Dlibdir=lib/i386-linux-gnu \
--Dgallium-drivers=d3d12,swrast \
--Dgallium-nine=true \
--Dplatforms=x11 \
--Dbuildtype=release \
--Dstrip=true
-
-echo -e "$ DESTDIR=${STAGE_DIR32} ninja -C ${BUILD_DIR32} install"
-DESTDIR="${STAGE_DIR32}" ninja -C "${BUILD_DIR32}" install
-
-echo -e "$ mkdir -p ${STAGE_DIR32}/DEBIAN"
-mkdir -p "${STAGE_DIR32}/DEBIAN"
-
-echo -e "> ${STAGE_DIR32}/DEBIAN/control"
-cat << EOF > "${STAGE_DIR32}/DEBIAN/control"
-Package: mesa-wsl2-32bit
-Version: ${LATEST_VER#mesa-}
-Architecture: i386
-Maintainer: ${USER}
-Section: graphics
-Priority: optional
-Provides: libd3dadapter9-mesa
-Replaces: libd3dadapter9-mesa
-Conflicts: libd3dadapter9-mesa
-Description: Custom 32-bit ${LATEST_VER} build optimised for WSL2
- Provides 32-bit Gallium Nine support for Wine applications.
-EOF
-
-echo -e "$ dpkg-deb --build ${STAGE_DIR32} ${VERSION_DIR}/mesa-wsl2-32bit_${LATEST_VER#mesa-}.deb"
-dpkg-deb --build "${STAGE_DIR32}" "${VERSION_DIR}/mesa-wsl2-32bit_${LATEST_VER#mesa-}.deb"
-
-echo -e "$ sudo dpkg -i ${VERSION_DIR}/mesa-wsl2-32bit_${LATEST_VER#mesa-}.deb"
-sudo dpkg -i "${VERSION_DIR}/mesa-wsl2-32bit_${LATEST_VER#mesa-}.deb"
-
-# End of catch invalid MESA_TARGET
-fi
 # End of build each version only once
+fi
+# End of catch invalid MESA_TARGET
 fi
 
 # Check WSL kernel version
