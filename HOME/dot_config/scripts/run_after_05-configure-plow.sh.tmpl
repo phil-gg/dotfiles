@@ -528,12 +528,10 @@ Architecture: amd64
 Maintainer: ${USER}
 Section: graphics
 Priority: optional
-
 Provides: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, vulkan-icd
 Replaces: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
 Conflicts: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
 Description: Custom 64-bit ${LATEST_VER} build optimised for WSL2
- d3d12 and vulkan-dzn and llvmpipe
 EOF
 
 echo -e "$ dpkg-deb --root-owner-group --build ${STAGE_DIR} ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
