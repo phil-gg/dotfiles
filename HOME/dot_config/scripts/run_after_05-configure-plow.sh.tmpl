@@ -454,8 +454,14 @@ fi
 # Build mesa from source
 
 echo -e "\n${cyanbold}Build mesa from source${normal}"
-echo -e "$ sudo apt build-dep mesa"
-sudo apt build-dep mesa
+
+echo -e "$ sudo dpkg --add-architecture i386"
+sudo dpkg --add-architecture i386
+echo -e "$ sudo apt update"
+sudo apt update
+echo -e "$ sudo apt build-dep -a i386 -t trixie-backports mesa"
+sudo apt build-dep -a i386 -t trixie-backports mesa
+
 echo -e "$ mkdir -p ${HOME}/git/mesa/mesa"
 mkdir -p "${HOME}/git/mesa/mesa"
 echo -e "$ cd ${HOME}/git/mesa/mesa"
@@ -471,7 +477,7 @@ fi
 echo -e "$ git fetch --tags origin"
 git fetch --tags origin
 
-MESA_TARGET="mesa-26.0"
+MESA_TARGET="mesa-26.1"
 LATEST_VER=$(git tag -l "${MESA_TARGET}.*" --sort=-v:refname | grep -E "^${MESA_TARGET}\.[0-9]+$" | head -n 1)
 
 # Catch invalid MESA_TARGET
