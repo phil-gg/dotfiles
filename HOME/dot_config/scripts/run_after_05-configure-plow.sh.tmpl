@@ -498,7 +498,7 @@ git checkout "${LATEST_VER}"
 echo -e "$ meson setup ${BUILD_DIR} \
 -Dprefix=/usr \
 -Dlibdir=lib/${DEB_HOST_MULTIARCH} \
--Dgallium-drivers=d3d12,swrast \
+-Dgallium-drivers=d3d12,llvmpipe \
 -Dvulkan-drivers=microsoft-experimental \
 -Dgallium-va=enabled \
 -Dplatforms=wayland,x11 \
@@ -507,7 +507,7 @@ echo -e "$ meson setup ${BUILD_DIR} \
 meson setup "${BUILD_DIR}" \
 -Dprefix=/usr \
 -Dlibdir="lib/${DEB_HOST_MULTIARCH}" \
--Dgallium-drivers=d3d12,swrast \
+-Dgallium-drivers=d3d12,llvmpipe \
 -Dvulkan-drivers=microsoft-experimental \
 -Dgallium-va=enabled \
 -Dplatforms=wayland,x11 \
@@ -532,11 +532,10 @@ Provides: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, lib
 Replaces: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
 Conflicts: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
 Description: Custom 64-bit ${LATEST_VER} build optimised for WSL2
- Provides core D3D12 drivers, and Gallium Nine
 EOF
 
-echo -e "$ dpkg-deb --build ${STAGE_DIR} ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
-dpkg-deb --build "${STAGE_DIR}" "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+echo -e "$ dpkg-deb --root-owner-group --build ${STAGE_DIR} ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+dpkg-deb --root-owner-group --build "${STAGE_DIR}" "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 
 echo -e "$ sudo dpkg -i ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 sudo dpkg -i "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
