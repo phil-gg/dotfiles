@@ -512,7 +512,7 @@ SECURITY_SOURCES="\
 # trixie available components: main contrib non-free-firmware non-free
 # trixie available architectures: amd64 arm64 armel armhf i386 ppc64el riscv64 \
 s390x
-Types: deb deb-src
+Types: deb
 URIs: https://security.debian.org/debian-security/
 Suites: trixie-security
 Components: main contrib non-free-firmware non-free
@@ -542,7 +542,7 @@ don't exceed release version for testing (forky)
 backports-sloppy\"
 # available components: main contrib non-free-firmware non-free
 # available architectures: amd64 arm64 armel armhf i386 ppc64el riscv64 s390x
-Types: deb deb-src
+Types: deb
 URIs: https://deb.debian.org/debian/
 Suites: trixie trixie-updates trixie-proposed-updates trixie-backports \
 trixie-backports-sloppy
