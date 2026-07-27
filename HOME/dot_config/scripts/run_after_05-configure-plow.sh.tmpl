@@ -537,8 +537,8 @@ EOF
 echo -e "$ dpkg-deb --root-owner-group --build ${STAGE_DIR} ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 dpkg-deb --root-owner-group --build "${STAGE_DIR}" "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 
-echo -e "$ sudo apt install -y {VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
-sudo apt install -y "{VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+echo -e "$ sudo apt install -y ${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
+sudo apt install -y "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 
 # End of build each version only once
 fi
