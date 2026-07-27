@@ -25,6 +25,17 @@ fastfetch
 graphicsmagick
 imagemagick
 
+{{- /* packages to build mesa from source (other than sudo apt build-dep mesa) */}}
+meson
+ninja-build
+libdirectx-headers-dev
+dpkg-dev
+gcc-multilib
+g++-multilib
+pkg-config:i386
+libx11-dev:i386
+libdrm-dev:i386
+
 {{- /* Localisation tools */}}
 locales
 keyboard-configuration
