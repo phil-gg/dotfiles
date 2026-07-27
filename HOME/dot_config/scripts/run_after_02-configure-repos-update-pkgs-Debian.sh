@@ -516,7 +516,7 @@ Types: deb deb-src
 URIs: https://security.debian.org/debian-security/
 Suites: trixie-security
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386
 Signed-By: ${debiansecuritykeyfile}
 "
 
@@ -547,7 +547,7 @@ URIs: https://deb.debian.org/debian/
 Suites: trixie trixie-updates trixie-proposed-updates trixie-backports \
 trixie-backports-sloppy
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386
 Signed-By: ${debianarchivekeyfile}
 "
 
@@ -572,7 +572,7 @@ Types: deb deb-src
 URIs: https://deb.debian.org/debian/
 Suites: sid
 Components: main contrib non-free-firmware non-free
-Architectures: ${pkgarch}
+Architectures: amd64 i386
 Signed-By: ${debianarchivekeyfile}
 "
 
