@@ -528,9 +528,10 @@ Architecture: amd64
 Maintainer: ${USER}
 Section: graphics
 Priority: optional
-Provides: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa, vulkan-icd
-Replaces: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
-Conflicts: libegl-mesa0, libgl1-mesa-dri, libgl1-mesa-dev, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, libglapi-mesa
+
+Provides: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, libxatracker-dev, libxatracker2, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, vulkan-icd
+Replaces: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, libxatracker-dev, libxatracker2, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
+Conflicts: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, libxatracker-dev, libxatracker2, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
 Description: Custom 64-bit ${LATEST_VER} build optimised for WSL2
 EOF
 
