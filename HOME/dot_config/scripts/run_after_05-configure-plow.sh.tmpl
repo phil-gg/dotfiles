@@ -457,8 +457,8 @@ echo -e "\n${cyanbold}Build mesa from source${normal}"
 
 echo -e "$ sudo apt update"
 sudo apt update
-echo -e "$ sudo apt build-dep -t trixie-backports mesa"
-sudo apt build-dep -t trixie-backports mesa
+echo -e "$ sudo apt build-dep -y -t trixie-backports mesa"
+sudo apt build-dep -y -t trixie-backports mesa
 
 echo -e "$ mkdir -p ${HOME}/git/mesa/mesa"
 mkdir -p "${HOME}/git/mesa/mesa"
