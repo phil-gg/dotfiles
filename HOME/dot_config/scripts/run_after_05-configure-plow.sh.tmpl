@@ -471,7 +471,7 @@ fi
 echo -e "$ git fetch --tags origin"
 git fetch --tags origin
 
-MESA_TARGET="mesa-26.1"
+MESA_TARGET="mesa-26.0"
 LATEST_VER=$(git tag -l "${MESA_TARGET}.*" --sort=-v:refname | grep -E "^${MESA_TARGET}\.[0-9]+$" | head -n 1)
 
 # Catch invalid MESA_TARGET
