@@ -528,7 +528,7 @@ Architecture: amd64
 Maintainer: ${USER}
 Section: graphics
 Priority: optional
-Provides: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers, vulkan-icd
+Provides: libegl-mesa0 (= ${LATEST_VER#mesa-}), libgbm-dev (= ${LATEST_VER#mesa-}), libgbm1 (= ${LATEST_VER#mesa-}), libgl1-mesa-dev (= ${LATEST_VER#mesa-}), libgl1-mesa-dri (= ${LATEST_VER#mesa-}), libglapi-mesa (= ${LATEST_VER#mesa-}), libgles2-mesa-dev (= ${LATEST_VER#mesa-}), libglx-mesa0 (= ${LATEST_VER#mesa-}), mesa-libgallium (= ${LATEST_VER#mesa-}), mesa-va-drivers (= ${LATEST_VER#mesa-}), mesa-vulkan-drivers (= ${LATEST_VER#mesa-}), vulkan-icd (= ${LATEST_VER#mesa-})
 Replaces: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
 Conflicts: libegl-mesa0, libgbm-dev, libgbm1, libgl1-mesa-dev, libgl1-mesa-dri, libglapi-mesa, libgles2-mesa-dev, libglx-mesa0, mesa-libgallium, mesa-va-drivers, mesa-vulkan-drivers
 Description: Custom 64-bit ${LATEST_VER} build optimised for WSL2
