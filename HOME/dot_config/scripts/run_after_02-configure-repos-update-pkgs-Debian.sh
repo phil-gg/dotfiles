@@ -287,7 +287,7 @@ echo -e "> Installing ${PKG_FILE}\n"
     TMP_DEB="$(mktemp)"
     trap 'rm -f "${TMP_DEB}"' EXIT
     curl -fsSL -o "${TMP_DEB}" "${PKG_DIR}${PKG_FILE}"
-    sudo dpkg -i "${TMP_DEB}"
+    sudo apt install -y "${TMP_DEB}"
 )
 fi
 
@@ -810,8 +810,8 @@ cat "${DUMMY_PKG}"
 echo -e "\n$ equivs-build ${DUMMY_PKG}\n"
 equivs-build "${DUMMY_PKG}"
 
-echo -e "\n$ sudo dpkg -i ${DUMMY_PKG}_1.0_all.deb\n"
-sudo dpkg -i "${DUMMY_PKG}_1.0_all.deb"
+echo -e "\n$ sudo apt install -y ./${DUMMY_PKG}_1.0_all.deb\n"
+sudo apt install -y ./"${DUMMY_PKG}_1.0_all.deb"
 
 echo -e "$ cd ~/git/${github_username}/${github_project}"
 cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
@@ -825,7 +825,7 @@ fi
 }
 
 # Create dummy packages
-# (Don't need GUI tools for network, power, or bluetooth in WSL2)
+# (Don't need GUI tools for power or bluetooth in WSL2)
 # equivs dependency was installed by script 01
 
 if ! command -v equivs-build &> /dev/null; then
@@ -837,6 +837,70 @@ create_dummy_pkg "bluedevil"
 fi
 
 # End WSL only dummy packages section
+fi
+
+# libappindicatorfix package is needed not in WSL, too
+# First catch missing equivs not in WSL
+if ! command -v equivs-build &> /dev/null; then
+echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
+exit 114
+else
+
+PKG_NAME="libappindicatorfix"
+PKG_PAYLOAD="\
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+
+Package: libappindicatorfix
+Version: 1.0
+Depends: libayatana-appindicator3-1
+Provides: libappindicator3-1, libappindicator1
+Conflicts: libappindicator3-1, libappindicator1
+Replaces: libappindicator3-1, libappindicator1
+Architecture: all
+Description: libayatana-appindicator3-1 replaces libappindicator3-1 and libappindicator1
+"
+TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
+
+PKG_REQD="$(dpkg -l "${PKG_NAME}" 2> /dev/null | grep -oP "^ii\\s+${PKG_NAME}")"
+DPKG_ERROR=$?
+
+if [ -z "${PKG_REQD}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
+echo -e "\n${cyanbold}Installing ${PKG_NAME} package${normal}"
+
+echo -e "$ mkdir -p ${TMP_DIR}"
+mkdir -p "${TMP_DIR}"
+
+# equivs-build always outputs package to current working directory
+echo -e "$ cd ${TMP_DIR}"
+cd "${TMP_DIR}" 2> /dev/null \
+|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
+; exit 112; }
+
+# Show payload variable without expansion here (with backslash escapes)
+echo -e "$ printf \"%s\" \"\${PKG_PAYLOAD}\" | sudo tee ${PKG_NAME} > /dev/null"
+printf "%s" "${PKG_PAYLOAD}" | tee "${PKG_NAME}" > /dev/null
+echo -e "$ cat ${PKG_NAME}\n"
+cat "${PKG_NAME}"
+
+echo -e "\n$ equivs-build ${PKG_NAME}\n"
+equivs-build "${PKG_NAME}"
+
+echo -e "\n$ sudo apt install -y ./${PKG_NAME}_1.0_all.deb\n"
+sudo apt install -y ./"${PKG_NAME}_1.0_all.deb"
+
+echo -e "$ cd ~/git/${github_username}/${github_project}"
+cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
+|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
+; exit 113; }
+
+echo -e "$ rm -rf ${TMP_DIR}"
+rm -rf "${TMP_DIR}"
+
+fi
+
+# end of libappindicatorfix package build, including not on WSL
 fi
 
 # Construct PACKAGES list
