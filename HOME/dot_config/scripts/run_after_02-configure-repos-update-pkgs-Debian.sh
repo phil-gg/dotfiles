@@ -880,7 +880,7 @@ PACKAGES+=(
 fi
 
 # Deduplicate the array while preserving the original order
-readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk '!seen[$0]++')
+readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk 'NF && !seen[$0]++')
 
 # Show array
 echo -e "\n${bluebold}PACKAGES list${normal}"
