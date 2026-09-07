@@ -856,10 +856,8 @@ Package: libappindicatorfix
 Version: 1.0
 Depends: libayatana-appindicator3-1
 Provides: libappindicator3-1, libappindicator1
-Conflicts: libappindicator3-1, libappindicator1
-Replaces: libappindicator3-1, libappindicator1
 Architecture: all
-Description: libayatana-appindicator3-1 replaces libappindicator3-1 and libappindicator1
+Description: libayatana-appindicator3-1 provides libappindicator3-1 and libappindicator1
 "
 TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
 
