@@ -906,6 +906,66 @@ readarray -t MANUAL_PKGS < <(apt-mark showmanual | awk -F':' '{print $1}' | sort
 
 # Create the knowndups variable
 knowndups=(
+adduser
+apt
+base-files
+base-passwd
+ca-certificates
+cron
+cron-daemon-common
+curl
+debconf
+debian-archive-keyring
+debianutils
+directx-headers-dev/sid
+dmidecode
+dolphin
+dpkg
+dpkg-dev
+fdisk
+firefox-devedition
+git
+gpg
+init-system-helpers
+iproute2
+keyboard-configuration
+kio-fuse
+kmod
+ksystemstats
+kwin-wayland
+libc-bin
+libegl1
+libpam-modules
+libpam-modules-bin
+libpam-runtime
+libpci3
+libwayland-dev
+login.defs
+man-db
+mawk
+mount
+netbase
+ninja-build
+nordvpn
+passwd
+perl-base
+plasma-nm
+procps
+python3
+python3-pyside6.qtcore
+python3-pyside6.qtgui
+readline-common
+sed
+sensible-utils
+sudo
+systemd
+systemd-sysv
+systemsettings
+sysvinit-utils
+tar
+tzdata
+udev
+vim-common
 )
 
 # Show duplicates in chezmoi config
@@ -924,6 +984,7 @@ ignorepkgs=(
 1password-cli
 bluedevil-dummy
 powerdevil-dummy
+directx-headers-dev
 )
 pkgwarning=$(
 comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") <(printf '%s\n' "${PACKAGES[@]}" |
