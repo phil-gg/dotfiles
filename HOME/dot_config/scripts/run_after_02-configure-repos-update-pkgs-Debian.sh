@@ -390,11 +390,6 @@ fi
 
 if [[ -d "/run/WSL" ]]; then
 WSL_PREFS="\
-Explanation: Don't want network manager on plasma when running inside WSL2
-Package: plasma-nm
-Pin: version *
-Pin-Priority: -1
-
 Explanation: Don't want power management within plasma when running inside WSL2
 Package: powerdevil
 Pin: version *
@@ -821,7 +816,6 @@ if ! command -v equivs-build &> /dev/null; then
 echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
 exit 114
 else
-create_dummy_pkg "plasma-nm"
 create_dummy_pkg "powerdevil"
 create_dummy_pkg "bluedevil"
 fi
@@ -908,7 +902,6 @@ ignorepkgs=(
 1password
 1password-cli
 bluedevil-dummy
-plasma-nm-dummy
 powerdevil-dummy
 )
 pkgwarning=$(
