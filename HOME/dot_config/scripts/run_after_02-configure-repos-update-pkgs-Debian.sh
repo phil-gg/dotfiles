@@ -854,10 +854,10 @@ Standards-Version: 3.9.2
 
 Package: libappindicatorfix
 Version: 1.0
-Depends: libayatana-appindicator3-1
-Provides: libappindicator3-1, libappindicator1
+Depends: libappindicator3-1
+Provides: libappindicator1
 Architecture: all
-Description: libayatana-appindicator3-1 provides libappindicator3-1 and libappindicator1
+Description: libappindicator3-1 provides libappindicator1
 "
 TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
 
