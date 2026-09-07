@@ -772,7 +772,7 @@ if [[ -d "/run/WSL" ]]; then
 create_dummy_pkg() {
 local TARGET_PKG="$1"
 local DUMMY_PKG="${TARGET_PKG}-dummy"
-local TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
+local TMP_DIR="$(mktemp -d)"
 
 DUMMY_REQD="$(dpkg -l "${DUMMY_PKG}" 2> /dev/null | grep -oP "^ii\\s+${DUMMY_PKG}")"
 DPKG_ERROR=$?
@@ -859,8 +859,7 @@ Provides: libappindicator1
 Architecture: all
 Description: libappindicator3-1 provides libappindicator1
 "
-TMP_DIR="${HOME}/git/${github_username}/${github_project}/tmp"
-
+TMP_DIR="$(mktemp -d)"
 PKG_REQD="$(dpkg -l "${PKG_NAME}" 2> /dev/null | grep -oP "^ii\\s+${PKG_NAME}")"
 DPKG_ERROR=$?
 
