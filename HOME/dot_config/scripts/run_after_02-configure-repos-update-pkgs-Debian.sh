@@ -906,42 +906,6 @@ readarray -t MANUAL_PKGS < <(apt-mark showmanual | awk -F':' '{print $1}' | sort
 
 # Create the knowndups variable
 knowndups=(
-adduser
-apt
-base-files
-base-passwd
-ca-certificates
-chezmoi
-cron
-cron-daemon-common
-curl
-debconf
-debian-archive-keyring
-debianutils
-dpkg
-gpg
-init-system-helpers
-iproute2
-keyboard-configuration
-libc-bin
-libpam-modules
-libpam-modules-bin
-libpam-runtime
-login.defs
-mawk
-mount
-netbase
-passwd
-perl-base
-procps
-readline-common
-sensible-utils
-systemd
-systemd-sysv
-sysvinit-utils
-tar
-tzdata
-vim-common
 )
 
 # Show duplicates in chezmoi config
