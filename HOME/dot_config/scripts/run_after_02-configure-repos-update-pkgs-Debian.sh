@@ -35,7 +35,7 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 # Force sudo password prompt to show here if not already warm
 
 if ! sudo -n true 2>/dev/null; then
-    echo -e "$ sudo -v"
+    echo -e "\n$ sudo -v"
     sudo -v
 fi
 
