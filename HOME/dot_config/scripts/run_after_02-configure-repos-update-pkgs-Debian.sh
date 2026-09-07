@@ -32,6 +32,13 @@ pkgarch=$(dpkg --print-architecture)
 
 echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 
+# Force sudo password prompt to show here if not already warm
+
+if ! sudo -n true 2>/dev/null; then
+    echo -e "$ sudo -v"
+    sudo -v
+fi
+
 debianarchivekeyfile="/usr/share/keyrings/debian-archive-trixie-automatic.asc"
 debiansecuritykeyfile="/usr/share/keyrings/debian-archive-trixie-security-automatic.asc"
 debianreleasekeyfile="/usr/share/keyrings/debian-archive-trixie-stable.asc"
@@ -897,26 +904,14 @@ sudo aptitude markauto '~i (~RDepends:~i | ~RPreDepends:~i)'
 # Create the MANUAL_PKGS array variable
 readarray -t MANUAL_PKGS < <(apt-mark showmanual | awk -F':' '{print $1}' | sort -u)
 
-# Show duplicates in chezmoi config
-pkgduplicates=$(
-comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}") | sort -u
-)
-if [[ -n "$pkgduplicates" ]]; then
-echo -e "\n${cyanbold}Duplicate packages in chezmoi template (INFO ONLY)${normal}"
-echo -e "${pkgduplicates}"
-fi
-
-# Warn about installed packages not in chezmoi config
-ignorepkgs=(
-1password
-1password-cli
-bluedevil-dummy
-powerdevil-dummy
+# Create the knowndups variable
+knowndups=(
 adduser
 apt
 base-files
 base-passwd
 ca-certificates
+chezmoi
 cron
 cron-daemon-common
 curl
@@ -947,6 +942,24 @@ sysvinit-utils
 tar
 tzdata
 vim-common
+)
+
+# Show duplicates in chezmoi config
+pkgduplicates=$(
+comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}") |
+comm -23 - <(printf '%s\n' "${knowndups[@]}" | sort -u)
+)
+if [[ -n "$pkgduplicates" ]]; then
+echo -e "\n${cyanbold}Duplicate packages in chezmoi template (INFO ONLY)${normal}"
+echo -e "${pkgduplicates}"
+fi
+
+# Warn about installed packages not in chezmoi config
+ignorepkgs=(
+1password
+1password-cli
+bluedevil-dummy
+powerdevil-dummy
 )
 pkgwarning=$(
 comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") <(printf '%s\n' "${PACKAGES[@]}" |
