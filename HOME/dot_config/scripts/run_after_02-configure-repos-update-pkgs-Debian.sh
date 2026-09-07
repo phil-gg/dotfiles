@@ -994,6 +994,7 @@ kio-fuse
 kmod
 ksystemstats
 kwin-wayland
+libayatana-appindicator3-1
 libc-bin
 libegl1
 libpam-modules
@@ -1045,6 +1046,7 @@ ignorepkgs=(
 1password-cli
 bluedevil-dummy
 powerdevil-dummy
+libappindicatorfix
 directx-headers-dev
 )
 pkgwarning=$(
