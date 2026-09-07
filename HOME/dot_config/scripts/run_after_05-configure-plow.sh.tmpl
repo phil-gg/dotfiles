@@ -6,7 +6,7 @@
 
 ################################################################################
 # WSL only idempotent configuration script:
-#  • {wslg > kde-plasma} nested desktop environment
+#  • {wslg > weston > kde-plasma} nested desktop environment
 #  • This nested DE is called 'plow', short for Plasma on WSLg)
 #
 # See `#term-Idempotency` definition at:
@@ -74,6 +74,81 @@ wsl.exe --shutdown"
 # Close success only message conditional
 fi
 # Close check of permissions for hardware accelerated rendering
+fi
+
+# Create /etc/xdg/weston/weston.ini if it does not exist or has changed
+
+WESTON_DIR="/etc/xdg/weston"
+WESTON_FILE="${WESTON_DIR}/weston.ini"
+
+WESTON_TEXT="\
+[core]
+# https://manpages.debian.org/trixie/weston/weston.ini.5.en.html
+# All Weston-KWin comms are via Wayland, with Xwayland only enabled in KWin, so this is off
+xwayland=false
+# Force wayland backend
+backend=wayland
+# Use the Kiosk shell to force the nested app to fill the screen
+shell=kiosk-shell.so
+# Load the systemd notification module
+modules=systemd-notify.so
+# Set output repaint window to 8 ms maximum, which should support up to 125 Hz display refresh rates
+repaint-window=8
+# Disable screen blanking
+idle-time=0
+# Force graphics acceleration
+renderer=gl
+
+[libinput]
+# Enables tap to click on touchpad devices
+enable-tap=true
+# Enables tap and drag on touchpad devices
+tap-and-drag=true
+# Disable other devices while typing on keyboard
+disable-while-typing=false
+# Disable clicking both left and right buttons together simulating middle click
+middle-button-emulation=false
+# Enable touchscreen calibrator interface
+touchscreen_calibrator=false
+
+[shell]
+# Set background color to opaque black
+background-color=0xff000000
+# Enables screen locking (Boolean)
+locking=false
+# Opening new windows animation
+animation=none
+# Closing windows animation
+close-animation=none
+# Effect used by desktop-shell when starting up
+startup-animation=none
+# Effect used with focused vs unfocused windows
+focus-animation=dim-layer
+# Weston quits when the Ctrl-Alt-Backspace key combination is pressed
+allow-zap=false
+# Modifier key for bindings - see https://manpages.debian.org/trixie/weston/weston-bindings.7.en.html
+binding-modifier=alt
+# Set the cursor theme
+cursor-theme=westonCursor
+# Set the cursor size
+cursor-size=96
+
+[keyboard]
+keymap_model=pc105
+keymap_layout=gb
+keymap_variant=extd
+"
+
+if [ ! -s "${WESTON_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_TEXT}") "${WESTON_FILE}"; then
+echo -e "\n${cyanbold}Configure weston${normal}"
+echo -e "$ sudo mkdir -p ${WESTON_DIR}"
+sudo mkdir -p "${WESTON_DIR}"
+echo -e "$ printf \"%s\" \"\${WESTON_TEXT}\" | sudo tee ${WESTON_FILE} > \
+/dev/null"
+printf "%s" "${WESTON_TEXT}" | sudo tee "${WESTON_FILE}" > /dev/null
+echo -e "$ ln -sf ${WESTON_FILE} ~/.config/weston.ini"
+ln -sf "${WESTON_FILE}" "${HOME}/.config/weston.ini"
 fi
 
 # Configure ALSA to use PulseAudio as the default backend
@@ -146,7 +221,7 @@ for (var i = 0; i < allPanels.length; i++) { allPanels[i].remove(); }
 
 // Build the new Plow panel
 var taskbar = new Panel();
-taskbar.location = \"top\";
+taskbar.location = \"bottom\";
 taskbar.height = 44;
 taskbar.floating = 0;
 
@@ -457,8 +532,8 @@ echo -e "\n${cyanbold}Build mesa from source${normal}"
 
 echo -e "$ sudo apt update"
 sudo apt update
-echo -e "$ sudo apt build-dep -y -t trixie-backports mesa"
-sudo apt build-dep -y -t trixie-backports mesa
+echo -e "$ sudo apt build-dep -y -t sid mesa"
+sudo apt build-dep -y -t sid mesa
 
 echo -e "$ mkdir -p ${HOME}/git/mesa/mesa"
 mkdir -p "${HOME}/git/mesa/mesa"
@@ -569,9 +644,12 @@ fi
 
 # Now can test mesa using d3d12 and nvidia graphics without passing variables
 
+# Only test glxinfo from within kde plow session
+if [[ "${KDE_FULL_SESSION}" == "true" ]]; then
 echo -e "\n${cyanbold}Show glxinfo${normal}"
 echo -e "$ glxinfo -B\n"
 glxinfo -B
+fi
 
 echo -e "\n${cyanbold}Show eglinfo${normal}"
 echo -e "$ set -a; source /etc/environment.d/*.conf 2>/dev/null; set +a"
@@ -581,7 +659,10 @@ eglinfo -B -p gbm
 
 eglinfo -B -p wayland
 
+# Only test x11 from within kde plow session
+if [[ "${KDE_FULL_SESSION}" == "true" ]]; then
 eglinfo -B -p x11
+fi
 
 # Log level suppresses DRI2 errors (don't matter as WSL2 uses DRI3)
 EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
@@ -589,11 +670,12 @@ EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
 PLOW_X_SERVICE="\
-# plow-x-config.service
-# System service (root) shared by WSLg (X1) & KWin XWayland (X0)
+# plow-xwayland.service
+# System service (root) to attach KWin XWayland
 
 [Unit]
-Description= Writable /tmp/.X11-unix with WSLg symlink at X1
+Description= Blank /tmp/.X11-unix replacing WSLg with KWin Xwayland \
+(which configures an X0 socket for itself here later)
 # Run after systemd has finished configuring local filesystems
 After=local-fs.target
 # Run before user sessions start
@@ -609,18 +691,12 @@ RemainAfterExit=yes
 # This is the command to start the service (wrapped in bash)
 # Unmount existing if present (ignore errors with || true)
 # Mount a fresh, empty, writable tmpfs at /tmp/.X11-unix
-# Delete WSLg X0 lock file so KWin can safely claim display :0
-# Symlink WSLg to X1
-# Check new tmpfs exists and is writable, with WSLg at X1
+# Check new tmpfs exists and is writable
 # Notify ready if check true else error
 ExecStart=/bin/bash -c '\
 /usr/bin/umount /tmp/.X11-unix 2>/dev/null || true; \
 /usr/bin/mount -t tmpfs -o mode=1777,size=1m tmpfs /tmp/.X11-unix && \
-rm -f /tmp/.X0-lock && \
-/usr/bin/ln -s /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/X1 && \
-if [ -w /tmp/.X11-unix ] && \
-   [ -L /tmp/.X11-unix/X1 ] && \
-   [ \"\$(readlink /tmp/.X11-unix/X1)\" = /mnt/wslg/.X11-unix/X0 ]; then \
+if [ -w /tmp/.X11-unix ]; then \
 /usr/bin/systemd-notify --ready; \
 else echo \"Error: X11 tmpfs setup failed verification.\" && exit 1; fi'
 
@@ -628,49 +704,63 @@ else echo \"Error: X11 tmpfs setup failed verification.\" && exit 1; fi'
 WantedBy=multi-user.target
 "
 
-# Define systemd unit for Plow
+# Define systemd unit for Weston (Plow)
 
-PLOW_SERVICE="\
-# plow.service
-# This calls a customised /usr/lib/systemd/user/plasma-kwin_wayland.service
+WESTON_SERVICE="\
+# plow-weston.service
+# Just a virtual display
+# A customised /usr/lib/systemd/user/plasma-kwin_wayland.service depends on this
 
 [Unit]
-Description=Plow desktop session (WSLg > KDE Plasma 6)
+Description=Weston compositor (nested on WSLg)
+# https://manpages.debian.org/trixie/weston/weston.1.en.html
+Documentation=man:weston(1)
 After=graphical-session-pre.target
+# For teardown, stop plow-weston with plasma-kwin_wayland.service
+PartOf=plasma-kwin_wayland.service
 
 [Service]
-Type=simple
-# Set KWin to manage wayland-1
-Environment=WAYLAND_DISPLAY=wayland-1
-# Clean up dead sockets so KWin can cleanly claim wayland-1
-# Push targets to dbus & systemd so all Plasma child services use them
-ExecStartPre=/bin/bash -c '\
-rm -f %t/wayland-1* /tmp/.X11-unix/X0 /tmp/.X0-lock; \
-dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-1 DISPLAY=:0'
-ExecStart=/usr/bin/startplasma-wayland
-# Revert global environment variables back to WSLg defaults when session ends
-ExecStopPost=/bin/bash -c '\
-dbus-update-activation-environment --systemd WAYLAND_DISPLAY=wayland-0 DISPLAY=:1'
+Type=notify
+# This is the command to start the service
+# %t resolves to /run/user/$ (id -u)
+ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
 Restart=no
+ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
 "
 
 # Define the config change for Plasma
 
 PLASMA_CONF="\
 # plow-plasma.conf
+# Injects plow-weston dependencies into KWin
 # Customises /usr/lib/systemd/user/plasma-kwin_wayland.service
+
+[Unit]
+After=plow-weston.service
+# Enable these services before running plasma-kwin_wayland
+Requires=plow-weston.service
+# When plow-weston stops/dies, apply to kwin too (stronger than Wants)
+BindsTo=plow-weston.service
+# When plow-weston is restarted, apply to customised plasma-kwin_wayland too
+PartOf=plow-weston.service
+# When plow-weston is reloaded, apply to customised plasma-kwin_wayland too
+ReloadPropagatedFrom=plow-weston.service
 
 [Service]
 # Clear the original ExecStart from the default service file
 ExecStart=
-# KWin desktop on wayland-1, rendering to X0 (WSLg X11 server), with XWayland
-ExecStart=/usr/bin/kwin_wayland_wrapper --x11-display :1 --socket=wayland-1 --xwayland --width 2112 --height 1320
-# Run user desktop, not greeter, nor lock-screen
+# Explicitly set new ExecStart (but below is currently same as stock Trixie)
+ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
+# Ensure these variables are set as part of plasma-kwin_wayland customisations
+Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
-# Point KWin to the WSLg X server at :1
-Environment=DISPLAY=:1
-# Unset wayland display so that KWin does not try to render to it
-Environment=WAYLAND_DISPLAY=
+# Five verbose log settings to troubleshoot EGL initialization failures
+Environment=EGL_LOG_LEVEL=debug
+Environment=WAYLAND_DEBUG=1
+Environment=MESA_DEBUG=1
+Environment=LIBGL_DEBUG=verbose
+# Qt logging for KWin graphics/EGL/Wayland
+Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
 "
 
 # Add services to share clipboards between host & guest
@@ -713,19 +803,19 @@ echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
 # Set file locations once as variables
 
 PLOW_X_UNIT_DIR="/etc/systemd/system"
-PLOW_X_UNIT_FILE="${PLOW_X_UNIT_DIR}/plow-x-config.service"
-PLOW_UNIT_DIR="/etc/systemd/user"
-PLOW_UNIT_FILE="${PLOW_UNIT_DIR}/plow.service"
+PLOW_X_UNIT_FILE="${PLOW_X_UNIT_DIR}/plow-xwayland.service"
+WESTON_UNIT_DIR="/etc/systemd/user"
+WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
 PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
 PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
 
 # Quietly ensure folders exist
 sudo mkdir -p "${PLASMA_CONF_DIR}"
 
-# Configure plow-x-config.service systemd unit
+# Configure plow-xwayland.service systemd unit
 if [ ! -s "${PLOW_X_UNIT_FILE}" ] || \
 ! cmp -s <(printf "%s" "${PLOW_X_SERVICE}") "${PLOW_X_UNIT_FILE}"; then
-echo -e "\n${cyanbold}Configure plow-x-config.service systemd unit${normal}"
+echo -e "\n${cyanbold}Configure plow-xwayland.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
 # Hence backslash escapes for PLOW_X_SERVICE variable
 echo -e "$ printf \"%s\" \"\${PLOW_X_SERVICE}\" | sudo tee ${PLOW_X_UNIT_FILE} > \
@@ -734,15 +824,15 @@ printf "%s" "${PLOW_X_SERVICE}" | sudo tee "${PLOW_X_UNIT_FILE}" > /dev/null
 SYS_UNITS_CHANGED=1
 fi
 
-# Configure plow.service systemd unit
-if [ ! -s "${PLOW_UNIT_FILE}" ] || \
-! cmp -s <(printf "%s" "${PLOW_SERVICE}") "${PLOW_UNIT_FILE}"; then
-echo -e "\n${cyanbold}Configure plow.service systemd unit${normal}"
+# Configure plow-weston.service systemd unit
+if [ ! -s "${WESTON_UNIT_FILE}" ] || \
+! cmp -s <(printf "%s" "${WESTON_SERVICE}") "${WESTON_UNIT_FILE}"; then
+echo -e "\n${cyanbold}Configure plow-weston.service systemd unit${normal}"
 # Choosing to expand path but not file contents in echo output here
-# Hence backslash escapes for PLOW_SERVICE variable
-echo -e "$ printf \"%s\" \"\${PLOW_SERVICE}\" | sudo tee ${PLOW_UNIT_FILE} \
+# Hence backslash escapes for WESTON_SERVICE variable
+echo -e "$ printf \"%s\" \"\${WESTON_SERVICE}\" | sudo tee ${WESTON_UNIT_FILE} \
 > /dev/null"
-printf "%s" "${PLOW_SERVICE}" | sudo tee "${PLOW_UNIT_FILE}" > /dev/null
+printf "%s" "${WESTON_SERVICE}" | sudo tee "${WESTON_UNIT_FILE}" > /dev/null
 USR_UNITS_CHANGED=1
 fi
 
@@ -768,8 +858,8 @@ if [ "${SYS_UNITS_CHANGED}" -eq 1 ]; then
 echo -e "\n${cyanbold}Reload systemd system daemon${normal}"
 echo -e "$ sudo systemctl daemon-reload"
 sudo systemctl daemon-reload
-echo -e "$ sudo systemctl enable --now plow-x-config.service"
-sudo systemctl enable --now plow-x-config.service
+echo -e "$ sudo systemctl enable --now plow-xwayland.service"
+sudo systemctl enable --now plow-xwayland.service
 fi
 
 # Show all systemd units in context (existing along with new plow & plasma)
@@ -783,7 +873,7 @@ SPS_FILE="/usr/bin/sps"
 SPS_TEXT="\
 #!/bin/bash
 if ! systemctl --user is-active plasma-workspace.target > /dev/null
-then systemctl --user start plow.service
+then startplasma-wayland & disown
 fi
 "
 
@@ -796,7 +886,7 @@ echo -e "$ sudo chmod +x ${SPS_FILE}"
 sudo chmod +x "${SPS_FILE}"
 echo -e "${bluebold}Command within /usr/bin/sps is:"
 echo -e "${cyanbold}if ! systemctl --user is-active plasma-workspace.target > \
-/dev/null; then systemctl --user start plow.service; fi"
+/dev/null; then startplasma-wayland & disown; fi"
 else
 echo -e "> /usr/bin/sps is already up-to-date"
 fi
@@ -825,9 +915,9 @@ fi
 
 # Error logs for Plow
 echo -e "\n${bluebold}View error logs for Plow with:${normal}"
-echo -e "${cyanbold}systemctl --user status plow plasma-kwin_wayland \
+echo -e "${cyanbold}systemctl --user status plow-weston plasma-kwin_wayland \
 plasma-workspace.target --no-pager${normal}"
-echo -e "${cyanbold}journalctl --user -x -b -u plow.service \
+echo -e "${cyanbold}journalctl --user -x -b -u plow-weston.service \
 --no-pager${normal}"
 echo -e "${cyanbold}journalctl --user -x -b -u plasma-kwin_wayland.service \
 --no-pager${normal}"
@@ -859,12 +949,12 @@ response="${response,,}"
 if [[ "${response}" == "y" || "${response}" == "yes" ]]; then
 # This runs plow-plasma.service
 echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then systemctl --user start plow.service; fi\n"
+then startplasma-wayland & disown; fi\n"
 if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
-systemctl --user start plow.service; else \
+startplasma-wayland & disown; else \
 echo -e "${redbold}> Plow session already running\n"; fi
 else echo ""
-# Close the reponse conditional
+# Close the response conditional
 fi
 # Close the interactive terminal & kde plasma conditional
 fi
