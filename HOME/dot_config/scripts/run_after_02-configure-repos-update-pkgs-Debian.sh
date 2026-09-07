@@ -1008,9 +1008,14 @@ fi
 if (( firefoxnotinstalled == 3 )) && [[ -d "/run/WSL" ]]; then
 echo -e "
 ${redbold}Restart needed to prevent firefox errors about org.a11y.Bus${normal}
+
 Please run:
 
-wsl.exe --shutdown"
+$ off
+
+  OR
+
+$ wsl.exe --shutdown"
 fi
 
 if (( nordvpnconfigneeded == 3 )); then
@@ -1021,10 +1026,14 @@ echo -e "$ xdg-mime default nordvpn.desktop x-scheme-handler/nordvpn"
 xdg-mime default nordvpn.desktop x-scheme-handler/nordvpn
 echo -e "
 ${redbold}Restart needed for nordvpn to work${normal}
-Please run one of:
-sudo reboot
-OR
-wsl.exe --shutdown"
+
+Please run:
+
+$ off
+
+  OR
+
+$ wsl.exe --shutdown"
 fi
 
 if [ -s "/usr/share/applications/qterminal-drop.desktop" ]; then
