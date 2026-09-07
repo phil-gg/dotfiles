@@ -528,6 +528,8 @@ fi
 
 # Build mesa from source
 
+: << 'DISABLED'
+
 echo -e "\n${cyanbold}Build mesa from source${normal}"
 
 echo -e "$ sudo apt update"
@@ -619,6 +621,8 @@ sudo apt install -y "${VERSION_DIR}/mesa-wsl2_${LATEST_VER#mesa-}.deb"
 fi
 # End of catch invalid MESA_TARGET
 fi
+
+DISABLED
 
 # Check WSL kernel version
 
