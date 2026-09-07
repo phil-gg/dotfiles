@@ -353,13 +353,15 @@ fi
 
 # modernise deb package config files
 
-sourceslistfile="/etc/apt/sources.list"
+legacysourceslist="/etc/apt/sources.list"
+sourceslistfile="/etc/apt/sources.list.d/0000debian.sources"
 pinprefsfile="/etc/apt/preferences.d/01-pin-prefs"
 debiansecuritysourcesfile="/etc/apt/sources.list.d/01-trixie-security.sources"
 debianstablesourcesfile="/etc/apt/sources.list.d/02-trixie-debian.sources"
 debiansidsourcesfile="/etc/apt/sources.list.d/99-sid-debian.sources"
 
-if [[ -f "${sourceslistfile}"
+if [[ -f "${legacysourceslist}"
+   || -f "${sourceslistfile}"
    || ! -f "${pinprefsfile}"
    || ! -f "${debiansecuritysourcesfile}"
    || ! -f "${debianstablesourcesfile}"
@@ -368,6 +370,13 @@ echo -e "\n${cyanbold}Updating package sources to deb822 format${normal}"
 fi
 
 # Remove legacy single sources file
+
+if [[ -f "${legacysourceslist}" ]]; then
+echo -e "$ sudo rm \"${legacysourceslist}\""
+sudo rm "${legacysourceslist}"
+fi
+
+# Remove default sources file
 
 if [[ -f "${sourceslistfile}" ]]; then
 echo -e "$ sudo rm \"${sourceslistfile}\""
