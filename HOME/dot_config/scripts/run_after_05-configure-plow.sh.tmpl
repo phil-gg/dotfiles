@@ -306,6 +306,9 @@ ENV_VARS_TEXT="\
 # --- Driver / Hardware Layer ---
 DEB_HOST_MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
 LD_LIBRARY_PATH=/usr/lib/wsl/lib
+EGL_PLATFORM=wayland
+# Only uncomment when you want (lots!) more wayland logging
+# WAYLAND_DEBUG=1
 WSA_RENDER_DEVICE=/dev/dri/renderD128
 LIBVA_DRIVER_NAME=d3d12
 GALLIUM_DRIVER=d3d12
@@ -730,6 +733,8 @@ Type=notify
 # This is the command to start the service
 # %t resolves to /run/user/$ (id -u)
 ExecStart=/usr/bin/weston --socket=weston --width=2112 --height=1320
+# Activating and not activated until the following helper completes
+ExecStartPost=/bin/bash -c 'while [ ! -S %t/weston ]; do sleep 0.1; done'
 Restart=no
 ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
 "
@@ -760,6 +765,9 @@ ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland
 # Ensure these variables are set as part of plasma-kwin_wayland customisations
 Environment=WAYLAND_DISPLAY=weston
 Environment=XDG_SESSION_CLASS=user
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_SESSION_DESKTOP=KDE
+Environment=XDG_CURRENT_DESKTOP=KDE
 # Five verbose log settings to troubleshoot EGL initialization failures
 Environment=EGL_LOG_LEVEL=debug
 Environment=WAYLAND_DEBUG=1
