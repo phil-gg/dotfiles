@@ -227,7 +227,9 @@ sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
 
 echo -e "\n${redbold}Locale updated but restart required${normal}\n
 Please run:\n
-wsl.exe --shutdown\n
+$ off\n
+  OR\n
+$ wsl.exe --shutdown\n
 Afterwards, you can re-run this script to see locale test results"
 exit 0
 fi
