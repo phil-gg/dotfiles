@@ -69,7 +69,9 @@ if sudo usermod -aG video,render "${USER}"; then
 echo -e "\n${redbold}Permissions for hardware accelerated rendering updated but restart required.
 Below, eglinfo will likely still fail.${normal}\n
 Please run:\n
-wsl.exe --shutdown"
+$ off\n
+  OR\n
+$ wsl.exe --shutdown"
 # No else, relying on sterr output for a failure message
 # Close success only message conditional
 fi
