@@ -48,7 +48,7 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 # plasma-nm config on wsl2
 
 NM_CONF_DIR="/etc/NetworkManager/conf.d"
-NM_CONF_FILE="${NM_CONF_DIR}/10-wsl-unmanaged.conf"
+NM_CONF_FILE="${NM_CONF_DIR}/01-wsl-unmanaged.conf"
 
 NM_CONF_TEXT="\
 [device]
@@ -72,6 +72,36 @@ if [[ -n "${nm_profiles}" ]]; then
 echo -e "\n${cyanbold}Delete unwanted connection profiles from plasma-nm${normal}"
 echo -e "$ sudo nmcli connection delete\n${nm_profiles}\n"
 echo "${nm_profiles}" | xargs -r sudo nmcli connection delete
+fi
+
+# Bypass Polkit authentication prompts for inactive logind sessions (WSL2 quirk)
+
+POLKIT_DIR="/etc/polkit-1/rules.d"
+POLKIT_FILE="${POLKIT_DIR}/01-wsl-bypass-prompts.rules"
+
+POLKIT_TEXT="\
+// Allow users in the sudo group to manage network & colour settings without a
+// password prompt, bypassing strict inactive/remote session checks in WSL2.
+
+polkit.addRule(function(action, subject) {
+    if ((action.id.indexOf(\"org.freedesktop.NetworkManager.\") === 0 ||
+         action.id.indexOf(\"org.freedesktop.color-manager.\") === 0) &&
+        subject.isInGroup(\"sudo\")) {
+        return polkit.Result.YES;
+    }
+});
+"
+
+if [ ! -s "${POLKIT_FILE}" ] || \
+! cmp -s <(printf "%s" "${POLKIT_TEXT}") "${POLKIT_FILE}"; then
+echo -e "\n${cyanbold}Configure Polkit rule for WSL2${normal}"
+echo -e "$ sudo mkdir -p ${POLKIT_DIR}"
+sudo mkdir -p "${POLKIT_DIR}"
+echo -e "$ printf \"%s\" \"\${POLKIT_TEXT}\" | sudo tee ${POLKIT_FILE} > \
+/dev/null"
+printf "%s" "${POLKIT_TEXT}" | sudo tee "${POLKIT_FILE}" > /dev/null
+echo -e "$ sudo systemctl restart polkit.service"
+sudo systemctl restart polkit.service || true
 fi
 
 # Set vgem kernel module to load every boot
