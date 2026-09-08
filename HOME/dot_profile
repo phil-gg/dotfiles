@@ -24,7 +24,8 @@ fi
 # Pull variables loaded by /etc/environment.d into Windows Terminal
 if [ -d /run/WSL ] && command -v systemctl > /dev/null 2>&1; then
     if env_vars=$(
-        systemctl --user show-environment --no-pager 2> /dev/null
+        systemctl --user show-environment --no-pager 2> /dev/null |
+        grep -vE '^(CHEZMOI|PWD=|LS_COLORS=|_=)'
     ); then
         while IFS= read -r line; do
             export "${line?}"
