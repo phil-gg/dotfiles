@@ -887,7 +887,7 @@ SPS_FILE="/usr/bin/sps"
 SPS_TEXT="\
 #!/bin/bash
 if ! systemctl --user is-active plasma-workspace.target > /dev/null
-then startplasma-wayland & disown
+then startplasma-wayland &> /dev/null & disown
 fi
 "
 
