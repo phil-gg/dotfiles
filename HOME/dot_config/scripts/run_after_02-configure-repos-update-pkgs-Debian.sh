@@ -773,6 +773,7 @@ create_dummy_pkg() {
 local TARGET_PKG="$1"
 local DUMMY_PKG="${TARGET_PKG}-dummy"
 local TMP_DIR="$(mktemp -d)"
+chmod 755 "${TMP_DIR}"
 
 DUMMY_REQD="$(dpkg -l "${DUMMY_PKG}" 2> /dev/null | grep -oP "^ii\\s+${DUMMY_PKG}")"
 DPKG_ERROR=$?
@@ -860,6 +861,7 @@ Architecture: all
 Description: libappindicator3-1 provides libappindicator1
 "
 TMP_DIR="$(mktemp -d)"
+chmod 755 "${TMP_DIR}"
 PKG_REQD="$(dpkg -l "${PKG_NAME}" 2> /dev/null | grep -oP "^ii\\s+${PKG_NAME}")"
 DPKG_ERROR=$?
 
