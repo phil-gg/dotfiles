@@ -840,68 +840,6 @@ fi
 # End WSL only dummy packages section
 fi
 
-# libappindicatorfix package is needed not in WSL, too
-# First catch missing equivs not in WSL
-if ! command -v equivs-build &> /dev/null; then
-echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
-exit 114
-else
-
-PKG_NAME="libappindicatorfix"
-PKG_PAYLOAD="\
-Section: misc
-Priority: optional
-Standards-Version: 3.9.2
-
-Package: libappindicatorfix
-Version: 1.0
-Depends: libappindicator3-1
-Provides: libappindicator1
-Architecture: all
-Description: libappindicator3-1 provides libappindicator1
-"
-TMP_DIR="$(mktemp -d)"
-chmod 755 "${TMP_DIR}"
-PKG_REQD="$(dpkg -l "${PKG_NAME}" 2> /dev/null | grep -oP "^ii\\s+${PKG_NAME}")"
-DPKG_ERROR=$?
-
-if [ -z "${PKG_REQD}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
-echo -e "\n${cyanbold}Installing ${PKG_NAME} package${normal}"
-
-echo -e "$ mkdir -p ${TMP_DIR}"
-mkdir -p "${TMP_DIR}"
-
-# equivs-build always outputs package to current working directory
-echo -e "$ cd ${TMP_DIR}"
-cd "${TMP_DIR}" 2> /dev/null \
-|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 112; }
-
-# Show payload variable without expansion here (with backslash escapes)
-echo -e "$ printf \"%s\" \"\${PKG_PAYLOAD}\" | sudo tee ${PKG_NAME} > /dev/null"
-printf "%s" "${PKG_PAYLOAD}" | tee "${PKG_NAME}" > /dev/null
-echo -e "$ cat ${PKG_NAME}\n"
-cat "${PKG_NAME}"
-
-echo -e "\n$ equivs-build ${PKG_NAME}\n"
-equivs-build "${PKG_NAME}"
-
-echo -e "\n$ sudo apt install -y ./${PKG_NAME}_1.0_all.deb\n"
-sudo apt install -y ./"${PKG_NAME}_1.0_all.deb"
-
-echo -e "$ cd ~/git/${github_username}/${github_project}"
-cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
-|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 113; }
-
-echo -e "$ rm -rf ${TMP_DIR}"
-rm -rf "${TMP_DIR}"
-
-fi
-
-# end of libappindicatorfix package build, including not on WSL
-fi
-
 # Construct PACKAGES list
 declare -a PACKAGES
 
