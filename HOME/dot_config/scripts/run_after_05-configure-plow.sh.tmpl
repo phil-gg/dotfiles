@@ -45,6 +45,37 @@ echo -e "\n${bluebold}Now running ‘${local_filename}’${normal}"
 # /mnt/c/Users/${WIN_USER}/.wslconfig
 # /etc/wsl.conf
 
+# plasma-nm config on wsl2
+
+NM_CONF_DIR="/etc/NetworkManager/conf.d"
+NM_CONF_FILE="${NM_CONF_DIR}/10-wsl-unmanaged.conf"
+
+NM_CONF_TEXT="\
+[device]
+match-device=type:ethernet;type:loopback
+managed=0
+"
+
+if [ ! -s "${NM_CONF_FILE}" ] || \
+! cmp -s <(printf "%s" "${NM_CONF_TEXT}") "${NM_CONF_FILE}"; then
+echo -e "\n${cyanbold}Configure plasma-nm${normal}"
+echo -e "$ sudo mkdir -p ${NM_CONF_DIR}"
+sudo mkdir -p "${NM_CONF_DIR}"
+echo -e "$ printf \"%s\" \"\${NM_CONF_TEXT}\" | sudo tee ${NM_CONF_FILE} > \
+/dev/null"
+printf "%s" "${NM_CONF_TEXT}" | sudo tee "${NM_CONF_FILE}" > /dev/null
+echo -e "$ ln -sf ${NM_CONF_FILE} ~/.config/weston.ini"
+ln -sf "${NM_CONF_FILE}" "${HOME}/.config/weston.ini"
+fi
+
+nm_profiles=$(nmcli -t -f UUID,TYPE connection show | awk -F: '$2 ~ /ethernet|loopback/ {print $1}')
+
+if [[ -n "${nm_profiles}" ]]; then
+echo -e "\n${cyanbold}Delete unwanted connection profiles from plasma-nm${normal}"
+echo -e "$ sudo nmcli connection delete ${nm_profiles}"
+echo "${nm_profiles}" | xargs -r sudo nmcli connection delete
+fi
+
 # Set vgem kernel module to load every boot
 if [ ! -s /etc/modules-load.d/vgem.conf ]; then
 echo -e "\n${cyanbold}Set vgem kernel module to load every boot${normal}"
