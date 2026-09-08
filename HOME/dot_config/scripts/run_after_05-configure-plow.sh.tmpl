@@ -918,7 +918,7 @@ SPS_FILE="/usr/bin/sps"
 SPS_TEXT="\
 #!/bin/bash
 if ! systemctl --user is-active plasma-workspace.target > /dev/null
-then startplasma-wayland &> /dev/null & disown
+then nohup startplasma-wayland &> /dev/null & disown
 fi
 "
 
@@ -931,7 +931,7 @@ echo -e "$ sudo chmod +x ${SPS_FILE}"
 sudo chmod +x "${SPS_FILE}"
 echo -e "${bluebold}Command within /usr/bin/sps is:"
 echo -e "${cyanbold}if ! systemctl --user is-active plasma-workspace.target > \
-/dev/null; then startplasma-wayland & disown; fi"
+/dev/null; then nohup startplasma-wayland &> /dev/null & disown; fi"
 else
 echo -e "> /usr/bin/sps is already up-to-date"
 fi
@@ -994,9 +994,9 @@ response="${response,,}"
 if [[ "${response}" == "y" || "${response}" == "yes" ]]; then
 # This runs plow-plasma.service
 echo -e "$ if ! systemctl --user is-active plasma-workspace.target > /dev/null; \
-then startplasma-wayland & disown; fi\n"
+then nohup startplasma-wayland &> /dev/null & disown; fi\n"
 if ! systemctl --user is-active plasma-workspace.target > /dev/null; then \
-startplasma-wayland & disown; else \
+nohup startplasma-wayland &> /dev/null & disown; else \
 echo -e "${redbold}> Plow session already running\n"; fi
 else echo ""
 # Close the response conditional
