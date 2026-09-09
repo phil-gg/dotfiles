@@ -367,10 +367,17 @@ EGL_PLATFORM=wayland
 # WAYLAND_DEBUG=1
 WSA_RENDER_DEVICE=/dev/dri/renderD128
 LIBVA_DRIVER_NAME=d3d12
+# Dozen option
 GALLIUM_DRIVER=d3d12
+# Zink option
+# GALLIUM_DRIVER=zink
+# MESA_LOADER_DRIVER_OVERRIDE=zink
 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 # On WSL, have just Windows host do vsync, not Linux guest too
 MESA_VK_WSI_PRESENT_MODE=immediate
+# For Vulkan Loader 1.3+, superseding the older VK_ICD_FILENAMES variable
+# Double-check this path with $ find /usr -name 'dzn_icd*.json'
+# VK_DRIVER_FILES=/usr/local/share/vulkan/icd.d/dzn_icd.x86_64.json
 
 # --- KWin Config ---
 KWIN_COMPOSE=O2ES
