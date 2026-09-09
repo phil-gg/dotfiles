@@ -1,0 +1,11 @@
+#!/bin/bash
+# Enhanced ls -1A list
+# Default to current directory if no argument provided
+local ARGS=("${@:-.}")
+echo ""
+# Number 1 for one column format rather than letter l for long format
+ls -1AbF \
+  --color=always \
+  --group-directories-first \
+  --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
+echo ""
