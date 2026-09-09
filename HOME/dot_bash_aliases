@@ -1,6 +1,9 @@
 #!/bin/bash
 # Do not need above shebang here, but isn't going to break anything
 
+# Space after makes bash check for (more) aliases after command
+alias sudo='sudo '
+
 # Aliases that enable colour
 alias ls='ls --color=auto'
 alias dir='dir --color=auto'
@@ -8,60 +11,3 @@ alias vdir='vdir --color=auto'
 alias grep='grep --color=auto'
 alias fgrep='grep -F --color=auto'
 alias egrep='grep -E --color=auto'
-
-# Custom ll function
-ll() {
-    # Default to current directory if no argument provided
-    local ARGS=("${@:-.}")
-    local SIZE
-    SIZE="$(du -shc "${ARGS[@]}" 2> /dev/null | tail -n1 | cut -f1)"
-    echo -e "Total size on disk = $SIZE"
-    { echo -e "\033[1;35mMODE # OWNER GROUP SIZE MOD-TIMESTAMP NAME\033[0m"
-      # Only inject spacer when one argument is passed and it is a directory
-      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "
-      fi
-      # ls -b escapes spaces in filenames with backslash
-      # sed is replacing '\ ' with '\␠'
-      # shellcheck disable=SC2012
-      ls -lbh \
-         --color=always \
-         --group-directories-first \
-         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
-      | sed $'s/\\\\\u0020/\\\\\u2420/g'
-    } | column -t -R 2,3,4,5,6
-}
-
-# Custom la function
-la() {
-    # Default to current directory if no argument provided
-    local ARGS=("${@:-.}")
-    local SIZE
-    SIZE="$(du -shc "${ARGS[@]}" 2> /dev/null | tail -n1 | cut -f1)"
-    echo -e "Total size on disk = $SIZE"
-    { echo -e "\033[1;35mMODE # OWNER GROUP SIZE MOD-TIMESTAMP NAME\033[0m"
-      # Only inject spacer when one argument is passed and it is a directory
-      if [[ ${#ARGS[@]} -eq 1 && -d "${ARGS[0]}" ]]; then echo -ne "-> -> -> "
-      fi
-      # ls -b escapes spaces in filenames with backslash
-      # sed is replacing '\ ' with '\␠'
-      # shellcheck disable=SC2012
-      ls -lAbh \
-         --color=always \
-         --group-directories-first \
-         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}" \
-      | sed $'s/\\\\\u0020/\\\\\u2420/g'
-    } | column -t -R 2,3,4,5,6
-}
-
-# Custom l function
-l() {
-    # Default to current directory if no argument provided
-    local ARGS=("${@:-.}")
-    echo ""
-    # Number 1 for one column format rather than letter l for long format
-    ls -1AbF \
-         --color=always \
-         --group-directories-first \
-         --time-style="+%Y-%m-%d｜%H:%M:%S" "${ARGS[@]}"
-    echo ""
-}
