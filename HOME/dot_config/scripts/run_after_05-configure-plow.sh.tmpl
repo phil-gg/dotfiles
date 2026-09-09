@@ -804,7 +804,7 @@ Restart=no
 ExecStopPost=/bin/rm -f %t/weston %t/weston.lock
 "
 
-# Define the config change for Plasma
+# Define config change for Plasma
 
 PLASMA_CONF="\
 # plow-plasma.conf
@@ -840,6 +840,20 @@ Environment=MESA_DEBUG=1
 Environment=LIBGL_DEBUG=verbose
 # Qt logging for KWin graphics/EGL/Wayland
 Environment=QT_LOGGING_RULES=kwin_*.debug=true;qt.qpa.wayland.debug=true
+"
+
+# Define config change for xdg-desktop-portal
+
+PORTAL_CONF="\
+# plow-xdg-portal.conf
+# Injects plasma-kwin_wayland dependency into xdg-desktop-portal
+# Customises /usr/lib/systemd/user/xdg-desktop-portal.service
+
+[Unit]
+# Ensure the portal waits for the nested Wayland compositor
+After=plasma-kwin_wayland.service
+# Require it to be running
+Requires=plasma-kwin_wayland.service
 "
 
 # Add services to share clipboards between host & guest
@@ -887,9 +901,12 @@ WESTON_UNIT_DIR="/etc/systemd/user"
 WESTON_UNIT_FILE="${WESTON_UNIT_DIR}/plow-weston.service"
 PLASMA_CONF_DIR="/etc/systemd/user/plasma-kwin_wayland.service.d"
 PLASMA_CONF_FILE="${PLASMA_CONF_DIR}/plow-plasma.conf"
+XDG_PORTAL_DIR="/etc/systemd/user/xdg-desktop-portal.service.d"
+XDG_PORTAL_FILE="${XDG_PORTAL_DIR}/plow-xdg-portal.conf"
 
 # Quietly ensure folders exist
 sudo mkdir -p "${PLASMA_CONF_DIR}"
+sudo mkdir -p "${XDG_PORTAL_DIR}"
 
 # Configure plow-xwayland.service systemd unit
 if [ ! -s "${PLOW_X_UNIT_FILE}" ] || \
@@ -924,6 +941,18 @@ echo -e "\n${cyanbold}Customise plasma-kwin_wayland systemd unit${normal}"
 echo -e "$ printf \"%s\" \"\${PLASMA_CONF}\" | sudo tee ${PLASMA_CONF_FILE} > \
 /dev/null"
 printf "%s" "${PLASMA_CONF}" | sudo tee "${PLASMA_CONF_FILE}" > /dev/null
+USR_UNITS_CHANGED=1
+fi
+
+# Configure xdg-desktop-portal.service customisation
+if [ ! -s "${XDG_PORTAL_FILE}" ] || \
+! cmp -s <(printf "%s" "${PORTAL_CONF}") "${XDG_PORTAL_FILE}"; then
+echo -e "\n${cyanbold}Customise xdg-desktop-portal systemd unit${normal}"
+# Choosing to expand path but not file contents in echo output here
+# Hence backslash escapes for PORTAL_CONF variable
+echo -e "$ printf \"%s\" \"\${PORTAL_CONF}\" | sudo tee ${XDG_PORTAL_FILE} > \
+/dev/null"
+printf "%s" "${PORTAL_CONF}" | sudo tee "${XDG_PORTAL_FILE}" > /dev/null
 USR_UNITS_CHANGED=1
 fi
 
