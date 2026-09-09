@@ -24,14 +24,9 @@ man-db
 fastfetch
 graphicsmagick
 imagemagick
-
-{{- /* packages to build mesa from source (other than sudo apt build-dep mesa) */}}
-meson
-ninja-build
-directx-headers-dev/sid
-dpkg-dev
-libva-dev
-libwayland-dev
+x11-apps
+mesa-utils
+kitty
 
 {{- /* Localisation tools */}}
 locales
@@ -66,6 +61,22 @@ libayatana-appindicator3-1
 nordvpn
 nordvpn-gui
 
+{{- /* Font packages */}}
+fonts-hack
+fonts-noto
+fonts-noto-color-emoji
+
+{{- /* Python packages */}}
+python3
+{{- /* Used by svg-theme-to-xcursor.py */}}
+python3-pyside6.qtcore
+python3-pyside6.qtgui
+python3-pyside6.qtsvg
+
+{{- /* Raspberry Pi packages */}}
+raspberrypi-archive-keyring
+rp-bookshelf
+
 {{- /* KDE Plasma Desktop Environment */}}
 plasma-desktop
 plasma-workspace-doc
@@ -96,6 +107,7 @@ klevernotes
 
 {{- /* These integrate 1password GUI app with kwallet for auto-login */}}
 kwalletmanager
+
 {{- /* Only need these when NOT on wsl */}}
 {{- if not (and $wsl $wsl.isDir) }}
 libpam-kwallet5
@@ -103,29 +115,16 @@ kde-spectacle
 kcolorchooser
 {{- end }}
 
-{{- /* Font packages */}}
-fonts-hack
-fonts-noto
-fonts-noto-color-emoji
-
-{{- /* Python packages */}}
-python3
-{{- /* Used by svg-theme-to-xcursor.py */}}
-python3-pyside6.qtcore
-python3-pyside6.qtgui
-python3-pyside6.qtsvg
-
-{{- /* Raspberry Pi packages */}}
-raspberrypi-archive-keyring
-rp-bookshelf
-
-{{- /* Other packages */}}
-x11-apps
-mesa-utils
-kitty
-
 {{- /* Packages that are only needed on WSL */}}
 {{- if and $wsl $wsl.isDir }}
 weston
 wl-clipboard
+
+{{- /* packages to build mesa from source (other than sudo apt build-dep mesa) */}}
+meson
+ninja-build
+directx-headers-dev/sid
+dpkg-dev
+libva-dev
+libwayland-dev
 {{- end }}
