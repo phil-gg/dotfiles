@@ -10,7 +10,7 @@
 
 # The default umask is set in /etc/profile; for setting the umask
 # for ssh logins, install and configure the libpam-umask package.
-#umask 022
+umask 022
 
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
@@ -33,13 +33,6 @@ if [ -d /run/WSL ] && command -v systemctl > /dev/null 2>&1; then
 $env_vars
 EOF
     fi
-fi
-
-# Plasma on WSL2 config moves WSLg to X1, with KWin XWayland on X0
-if [ "${KDE_FULL_SESSION}" != "true" ] &&
-   [ -L /tmp/.X11-unix/X1 ] &&
-   [ "$(readlink /tmp/.X11-unix/X1)" = "/mnt/wslg/.X11-unix/X0" ]; then
-    export DISPLAY=:1
 fi
 
 # Set PATH so it includes this private bin if it exists
