@@ -87,7 +87,6 @@ dolphin
 gwenview
 okular
 okular-extra-backends
-kde-spectacle
 khelpcenter
 kinfocenter
 klevernotes
@@ -100,6 +99,8 @@ kwalletmanager
 {{- /* Only need these when NOT on wsl */}}
 {{- if not (and $wsl $wsl.isDir) }}
 libpam-kwallet5
+kde-spectacle
+kcolorchooser
 {{- end }}
 
 {{- /* Font packages */}}
