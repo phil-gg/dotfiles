@@ -617,6 +617,7 @@ cd "${DL_DIR}" 2> /dev/null \
 
 echo -e "> Download latest mesa source package"
 echo -e "$ apt source --download-only mesa/sid"
+apt source --download-only mesa/sid
 
 cd "${BUILD_DIR}" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
