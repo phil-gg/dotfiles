@@ -602,12 +602,14 @@ LATEST_MESA_VER="$(
 apt-cache madison mesa |awk '/sid.*Sources/ {print $3}' | sort -V | tail -n 1
 )"
 BUILD_DIR="${HOME}/git/mesa/${LATEST_MESA_VER}"
-DL_DIR="${BUILD_DIR}/dl"
+DL_DIR="${HOME}/git/mesa/dl-tmp"
 
 # Only build if a build dir for this mesa version does not already exist
 if [ ! -d "${BUILD_DIR}" ]; then
 
 echo -e "\n${cyanbold}Build mesa version ${LATEST_MESA_VER}${normal}"
+echo -e "$ mkdir -p ${BUILD_DIR}"
+mkdir -p "${BUILD_DIR}"
 echo -e "$ mkdir -p ${DL_DIR}"
 mkdir -p "${DL_DIR}"
 echo -e "$ cd ${DL_DIR}"
