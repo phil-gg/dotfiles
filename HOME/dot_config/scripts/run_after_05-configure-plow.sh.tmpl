@@ -598,6 +598,32 @@ fi
 
 # Build mesa from source
 
+LATEST_MESA_VER="$(
+apt-cache madison mesa |awk '/sid.*Sources/ {print $3}' | sort -V | tail -n 1
+)"
+BUILD_DIR="${HOME}/git/mesa/${LATEST_MESA_VER}"
+DL_DIR="${BUILD_DIR}/dl"
+
+# Only build if a build dir for this mesa version does not already exist
+if ! -d "${BUILD_DIR}"; then
+
+echo -e "\n${cyanbold}Build mesa version ${LATEST_MESA_VER}${normal}"
+echo -e "$ mkdir -p ${DL_DIR}"
+echo -e "$ cd ${DL_DIR}"
+cd "${DL_DIR}" 2> /dev/null \
+|| { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
+; exit 101; }
+
+echo -e "> Download latest mesa source package"
+echo -e "$ apt source --download-only mesa/sid"
+
+cd "${BUILD_DIR}" 2> /dev/null \
+|| { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
+; exit 102; }
+
+# End conditional build each mesa version only once
+fi
+
 : << 'DISABLED'
 
 echo -e "\n${cyanbold}Build mesa from source${normal}"
