@@ -627,12 +627,12 @@ cd "${HOME}/git" 2> /dev/null \
 echo -e "> Extract latest mesa source package"
 DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
 echo -e "\
-$ dpkg-source --require-valid-signature
-              --keyring=/usr/share/keyrings/debian-keyring.gpg
+$ dpkg-source --require-valid-signature \\
+              --keyring=/usr/share/keyrings/debian-keyring.gpg \\
                -x ${DSC_FILE} ${BUILD_DIR}
 "
-dpkg-source --require-valid-signature
-            --keyring=/usr/share/keyrings/debian-keyring.gpg
+dpkg-source --require-valid-signature \
+            --keyring=/usr/share/keyrings/debian-keyring.gpg \
              -x ${DSC_FILE} ${BUILD_DIR}
 
 echo -e "\n> Clean up"
