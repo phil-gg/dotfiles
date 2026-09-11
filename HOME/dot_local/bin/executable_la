@@ -1,8 +1,7 @@
 #!/bin/bash
 # Enhanced ls -A table
 # Default to current directory if no argument provided
-local ARGS=("${@:-.}")
-local SIZE
+ARGS=("${@:-.}")
 SIZE="$(du -shc "${ARGS[@]}" 2> /dev/null | tail -n1 | cut -f1)"
 echo -e "Total size on disk = $SIZE"
 { echo -e "\033[1;35mMODE # OWNER GROUP SIZE MOD-TIMESTAMP NAME\033[0m"
