@@ -605,23 +605,32 @@ BUILD_DIR="${HOME}/git/mesa/${LATEST_MESA_VER}"
 DL_DIR="${BUILD_DIR}/dl"
 
 # Only build if a build dir for this mesa version does not already exist
-if ! -d "${BUILD_DIR}"; then
+if [ ! -d "${BUILD_DIR}" ]; then
 
 echo -e "\n${cyanbold}Build mesa version ${LATEST_MESA_VER}${normal}"
 echo -e "$ mkdir -p ${DL_DIR}"
-mkdir -p ${DL_DIR}
+mkdir -p "${DL_DIR}"
 echo -e "$ cd ${DL_DIR}"
 cd "${DL_DIR}" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
 ; exit 101; }
 
 echo -e "> Download latest mesa source package"
-echo -e "$ apt source --download-only mesa/sid"
+echo -e "$ apt source --download-only mesa/sid\n"
 apt source --download-only mesa/sid
 
+echo -e "\n$ cd ${BUILD_DIR}"
 cd "${BUILD_DIR}" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
 ; exit 102; }
+
+echo -e "> Extract latest mesa source package"
+DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
+echo -e "$ dpkg-source -x ${DSC_FILE} ${BUILD_DIR}\n"
+dpkg-source -x "${DSC_FILE}" "${BUILD_DIR}"
+
+echo -e "> Clean up"
+echo -e "$ rm -rf ${DL_DIR}"
 
 # End conditional build each mesa version only once
 fi
