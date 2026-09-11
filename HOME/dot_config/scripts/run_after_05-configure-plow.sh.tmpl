@@ -626,10 +626,16 @@ cd "${HOME}/git" 2> /dev/null \
 
 echo -e "> Extract latest mesa source package"
 DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
-echo -e "$ dpkg-source -x ${DSC_FILE} ${BUILD_DIR}\n"
-dpkg-source -x "${DSC_FILE}" "${BUILD_DIR}"
+echo -e "\
+$ dpkg-source --require-valid-signature
+              --keyring=/usr/share/keyrings/debian-keyring.gpg
+               -x ${DSC_FILE} ${BUILD_DIR}
+"
+dpkg-source --require-valid-signature
+            --keyring=/usr/share/keyrings/debian-keyring.gpg
+             -x ${DSC_FILE} ${BUILD_DIR}
 
-echo -e "> Clean up"
+echo -e "\n> Clean up"
 echo -e "$ rm -rf ${DL_DIR}"
 
 # TO-DO: Actually modify and build mesa here!
