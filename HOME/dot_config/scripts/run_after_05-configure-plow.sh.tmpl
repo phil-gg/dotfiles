@@ -619,8 +619,8 @@ echo -e "> Download latest mesa source package"
 echo -e "$ apt source --download-only mesa/sid\n"
 apt source --download-only mesa/sid
 
-echo -e "\n$ cd ${BUILD_DIR}"
-cd "${BUILD_DIR}" 2> /dev/null \
+echo -e "\n$ cd ${HOME}/git"
+cd "${HOME}/git" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
 ; exit 102; }
 
