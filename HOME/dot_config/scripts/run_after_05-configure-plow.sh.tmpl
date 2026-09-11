@@ -631,6 +631,7 @@ dpkg-source --no-check -x "${DSC_FILE}" "${BUILD_DIR}"
 
 echo -e "\n> Clean up"
 echo -e "$ rm -rf ${DL_DIR}"
+rm -rf "${DL_DIR}"
 
 # TO-DO: Actually modify and build mesa here!
 
