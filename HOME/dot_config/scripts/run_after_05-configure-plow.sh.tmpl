@@ -609,6 +609,7 @@ if ! -d "${BUILD_DIR}"; then
 
 echo -e "\n${cyanbold}Build mesa version ${LATEST_MESA_VER}${normal}"
 echo -e "$ mkdir -p ${DL_DIR}"
+mkdir -p ${DL_DIR}
 echo -e "$ cd ${DL_DIR}"
 cd "${DL_DIR}" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
