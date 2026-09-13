@@ -620,9 +620,9 @@ echo -e "> Download latest mesa source package"
 echo -e "$ apt source --download-only mesa/trixie-backports\n"
 apt source --download-only mesa/trixie-backports
 
-echo -e "> Extract latest mesa source package"
+echo -e "\n> Extract latest mesa source package"
 DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
-echo -e "$ dpkg-source --no-check -x ${DSC_FILE} ${BUILD_DIR}"
+echo -e "$ dpkg-source --no-check -x ${DSC_FILE} ${BUILD_DIR}\n"
 dpkg-source --no-check -x "${DSC_FILE}" "${BUILD_DIR}"
 
 echo -e "\n$ cd ${BUILD_DIR}"
@@ -635,8 +635,8 @@ echo -e "$ rm -rf ${DL_DIR}"
 rm -rf "${DL_DIR}"
 
 # modify debian/rules
-echo -e "\n> Modify debian/rules"
-awk -i inplace '
+echo -e "\n> Write a modified debian/rules to debian/rules.tmp with awk"
+awk '
 # Function to normalise whitespace
 function singlespaces(s) {
     gsub(/^[ \t]+|[ \t]+$/, "", s)
@@ -690,15 +690,20 @@ count > 0 {
 }
 # 4. Standard pass-through for all other lines
 { print }
-' "${BUILD_DIR}/debian/rules"
+' "${BUILD_DIR}/debian/rules" > "${BUILD_DIR}/debian/rules.tmp"
+
+echo -e "cat ${BUILD_DIR}/debian/rules.tmp > ${BUILD_DIR}/debian/rules"
+cat "${BUILD_DIR}/debian/rules.tmp" > "${BUILD_DIR}/debian/rules"
+echo -e "rm ${BUILD_DIR}/debian/rules.tmp"
+rm "${BUILD_DIR}/debian/rules.tmp"
 
 echo -e "\n> Install build dependencies"
 echo -e "$ sudo apt build-dep -y mesa/trixie-backports\n"
 sudo apt build-dep -y mesa/trixie-backports
 
 echo -e "\n> Build latest mesa packages"
-echo -e "$ DEB_BUILD_OPTIONS="terse" dpkg-buildpackage -b -uc -us\n"
-DEB_BUILD_OPTIONS="terse" dpkg-buildpackage -b -uc -us
+echo -e "$ DEB_BUILD_OPTIONS=terse dpkg-buildpackage -b -uc -us\n"
+DEB_BUILD_OPTIONS=terse dpkg-buildpackage -b -uc -us
 
 echo -e "\n> Check d3d12 is present in mesa vulkan drivers package"
 echo -e "$ dpkg-deb -c ../mesa-vulkan-drivers_*.deb | grep d3d12\n"
