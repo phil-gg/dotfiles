@@ -692,9 +692,9 @@ count > 0 {
 { print }
 ' "${BUILD_DIR}/debian/rules" > "${BUILD_DIR}/debian/rules.tmp"
 
-echo -e "cat ${BUILD_DIR}/debian/rules.tmp > ${BUILD_DIR}/debian/rules"
+echo -e "$ cat ${BUILD_DIR}/debian/rules.tmp > ${BUILD_DIR}/debian/rules"
 cat "${BUILD_DIR}/debian/rules.tmp" > "${BUILD_DIR}/debian/rules"
-echo -e "rm ${BUILD_DIR}/debian/rules.tmp"
+echo -e "$ rm ${BUILD_DIR}/debian/rules.tmp"
 rm "${BUILD_DIR}/debian/rules.tmp"
 
 echo -e "\n> Install build dependencies"
