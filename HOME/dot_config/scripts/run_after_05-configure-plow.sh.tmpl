@@ -599,7 +599,8 @@ fi
 # Build mesa from source
 
 LATEST_MESA_VER="$(
-apt-cache madison mesa |awk '/sid.*Sources/ {print $3}' | sort -V | tail -n 1
+apt-cache madison mesa |awk '/trixie-backports.*Sources/ {print $3}' |
+sort -V | tail -n 1
 )"
 BUILD_DIR="${HOME}/git/mesa/${LATEST_MESA_VER}"
 DL_DIR="${HOME}/git/mesa/dl-tmp"
@@ -616,8 +617,8 @@ cd "${DL_DIR}" 2> /dev/null \
 ; exit 101; }
 
 echo -e "> Download latest mesa source package"
-echo -e "$ apt source --download-only mesa/sid\n"
-apt source --download-only mesa/sid
+echo -e "$ apt source --download-only mesa/trixie-backports\n"
+apt source --download-only mesa/trixie-backports
 
 echo -e "> Extract latest mesa source package"
 DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
@@ -692,8 +693,8 @@ count > 0 {
 ' "${BUILD_DIR}/debian/rules"
 
 echo -e "\n> Install build dependencies"
-echo -e "$ sudo apt build-dep -y mesa/sid\n"
-sudo apt build-dep -y mesa/sid
+echo -e "$ sudo apt build-dep -y mesa/trixie-backports\n"
+sudo apt build-dep -y mesa/trixie-backports
 
 echo -e "\n> Build latest mesa packages"
 echo -e "$ dpkg-buildpackage -b -uc -us\n"
