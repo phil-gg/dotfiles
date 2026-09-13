@@ -619,15 +619,15 @@ echo -e "> Download latest mesa source package"
 echo -e "$ apt source --download-only mesa/sid\n"
 apt source --download-only mesa/sid
 
-echo -e "\n$ cd ${BUILD_DIR}"
-cd "${BUILD_DIR}" 2> /dev/null \
-|| { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
-; exit 102; }
-
 echo -e "> Extract latest mesa source package"
 DSC_FILE="${DL_DIR}/mesa_${LATEST_MESA_VER}.dsc"
 echo -e "$ dpkg-source --no-check -x ${DSC_FILE} ${BUILD_DIR}"
 dpkg-source --no-check -x "${DSC_FILE}" "${BUILD_DIR}"
+
+echo -e "\n$ cd ${BUILD_DIR}"
+cd "${BUILD_DIR}" 2> /dev/null \
+|| { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
+; exit 102; }
 
 echo -e "\n> Clean up"
 echo -e "$ rm -rf ${DL_DIR}"
