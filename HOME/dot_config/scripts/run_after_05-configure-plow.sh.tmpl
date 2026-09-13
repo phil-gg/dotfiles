@@ -619,8 +619,8 @@ echo -e "> Download latest mesa source package"
 echo -e "$ apt source --download-only mesa/sid\n"
 apt source --download-only mesa/sid
 
-echo -e "\n$ cd ${HOME}/git"
-cd "${HOME}/git" 2> /dev/null \
+echo -e "\n$ cd ${BUILD_DIR}"
+cd "${BUILD_DIR}" 2> /dev/null \
 || { echo -e "${redbold}> Failed to change directory, exiting${normal}"\
 ; exit 102; }
 
@@ -633,7 +633,85 @@ echo -e "\n> Clean up"
 echo -e "$ rm -rf ${DL_DIR}"
 rm -rf "${DL_DIR}"
 
-# TO-DO: Actually modify and build mesa here!
+# modify debian/rules
+echo -e "\n> Modify debian/rules"
+awk -i inplace '
+# Function to normalise whitespace
+function singlespaces(s) {
+    gsub(/^[ \t]+|[ \t]+$/, "", s)
+    gsub(/[ \t]+/, " ", s)
+    return s
+}
+# Start buffering from the target opening comment
+singlespaces($0) == "# WSL supports only amd64 and arm64" {
+    buf[1] = $0
+    count = 1
+    next
+}
+# Build and verify the original source 5-line sequence
+count > 0 {
+    count++
+    buf[count] = $0
+    sq = singlespaces($0)
+    # Validate each subsequent line against the expected normalised string
+    valid = 1
+    if (count == 2 && sq != "ifneq (,$(filter $(DEB_HOST_ARCH), amd64 arm64))") valid = 0
+    if (count == 3 && sq != "GALLIUM_DEFAULTS += d3d12") valid = 0
+    if (count == 4 && sq != "GALLIUM_DRIVERS += d3d12") valid = 0
+    # If the sequence breaks, flush the buffer unaltered and reset
+    if (!valid) {
+        for (i = 1; i <= count; i++) print buf[i]
+        count = 0
+        next
+    }
+    # Evaluate the final line of the expected sequence
+    if (count == 5) {
+        if (sq == "endif") {
+            # Success: Print the first 4 lines exactly as they were
+            for (i = 1; i <= 4; i++) print buf[i]
+            
+            # Copy the indentation used on line 4 for our new line 5
+            match(buf[4], /^[ \t]*/)
+            indent = substr(buf[4], RSTART, RLENGTH)
+            print indent "VULKAN_DRIVERS += microsoft-experimental"
+            
+            # Print the final endif
+            print buf[5]
+        } else {
+            # If line 5 is not endif (e.g. already Vulkan driver), flush the buffer without making changes
+            for (i = 1; i <= 5; i++) print buf[i]
+        }
+        count = 0
+        next
+    }
+    # Skip standard printing while we are buffering
+    next
+}
+# 4. Standard pass-through for all other lines
+{ print }
+' "${BUILD_DIR}/debian/rules"
+
+echo -e "\n> Install build dependencies"
+echo -e "$ sudo apt build-dep -y mesa/sid\n"
+sudo apt build-dep -y mesa/sid
+
+echo -e "\n> Build latest mesa packages"
+echo -e "$ dpkg-buildpackage -b -uc -us\n"
+dpkg-buildpackage -b -uc -us
+
+echo -e "\n> Check d3d12 is present in mesa vulkan drivers package"
+echo -e "$ dpkg-deb -c ../mesa-vulkan-drivers_*.deb | grep d3d12\n"
+dpkg-deb -c ../mesa-vulkan-drivers_*.deb | grep d3d12
+
+echo -e "\n> Move all the newly built packages"
+echo -e "$ mkdir -p ${BUILD_DIR}/deb"
+mkdir -p "${BUILD_DIR}/deb"
+echo -e "$ find ${HOME}/git/mesa/ -maxdepth 1 -type f -exec mv -t ${BUILD_DIR}/deb/ {} +"
+find "${HOME}/git/mesa/" -maxdepth 1 -type f -exec mv -t "${BUILD_DIR}/deb/" {} +
+
+echo -e "\n> Install locally built mesa packages"
+echo -e "$ sudo apt install -y ${BUILD_DIR}/deb/*.deb\n"
+sudo apt install -y "${BUILD_DIR}/deb/"*.deb
 
 # End conditional build each mesa version only once
 fi
