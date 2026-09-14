@@ -892,7 +892,7 @@ readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk 'NF && !seen[$0]+
 
 # Show array
 echo -e "\n${bluebold}PACKAGES list${normal}"
-printf '%s\n' "${PACKAGES[@]}" | column -x -c $(tput cols)
+printf '%s\n' "${PACKAGES[@]}"
 
 # Only run all this if you can markauto with aptitude
 if command -v aptitude &> /dev/null; then
@@ -972,7 +972,8 @@ vim-common
 
 # Show duplicates in chezmoi config
 pkgduplicates=$(
-comm -23 <(printf '%s\n' "${PACKAGES[@]}" | sort -u) <(printf '%s\n' "${MANUAL_PKGS[@]}") |
+comm -23 <(printf '%s\n' "${PACKAGES[@]}" | awk -F'/' '{print $1}' | sort -u) \
+         <(printf '%s\n' "${MANUAL_PKGS[@]}") |
 comm -23 - <(printf '%s\n' "${knowndups[@]}" | sort -u)
 )
 if [[ -n "$pkgduplicates" ]]; then
