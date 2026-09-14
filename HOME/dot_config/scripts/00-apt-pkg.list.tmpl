@@ -172,6 +172,7 @@ tr ',' '\n' | \
 sed -e 's/ ([^)]*)//g' -e 's/ \[[^]]*\]//g' -e 's/ <[^>]*>//g' | \
 awk -F'|' '{print $1}' | \
 tr -d ' ' | \
+sed 's/^debhelper-compat$/debhelper/' | \
 sort -u
 ` -}}
 {{- /* End of WSL-only conditional */ -}}
