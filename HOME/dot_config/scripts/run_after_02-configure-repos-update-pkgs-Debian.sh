@@ -987,12 +987,11 @@ ignorepkgs=(
 1password-cli
 bluedevil-dummy
 powerdevil-dummy
-libappindicatorfix
-directx-headers-dev
 )
 pkgwarning=$(
-comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") <(printf '%s\n' "${PACKAGES[@]}" |
-sort -u) | comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
+comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") \
+         <(printf '%s\n' "${PACKAGES[@]}" | awk -F'/' '{print $1}' | sort -u) |
+comm -23 - <(printf '%s\n' "${ignorepkgs[@]}" | sort -u)
 )
 if [[ -n "$pkgwarning" ]]; then
 # Keep the packages you are warning about, marked for installation
