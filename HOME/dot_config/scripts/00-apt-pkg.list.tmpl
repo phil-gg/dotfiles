@@ -5,8 +5,10 @@
 comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) \
          <(aptitude search -F '%p' '~E|~prequired|~pimportant' | xargs \
            apt-cache depends | awk '/Depends:|PreDepends:/ {print $NF}' | \
-           tr -d '<>' | sort -u)` -}}
-{{/* Extra essentials not marked essential priority or important by Debian */ -}}
+           tr -d '<>' | sort -u) \
+` -}}
+
+{{- /* Extra essentials not marked essential priority or important by Debian */}}
 sudo
 ca-certificates
 
@@ -124,11 +126,54 @@ kcolorchooser
 weston
 wl-clipboard
 
-{{- /* packages to build mesa from source (other than sudo apt build-dep mesa) */}}
+{{- /* Packages to build mesa from source (other than sudo apt build-dep mesa) */}}
 meson
 ninja-build
-directx-headers-dev/trixie-backports
 dpkg-dev
 libva-dev
 libwayland-dev
+directx-headers-dev/trixie-backports
+{{- /* Package list replacement for sudo apt build-dep -y mesa/trixie-backports */}}
+{{- output "bash" "-c" `\
+apt-cache showsrc mesa 2>/dev/null | awk -v target="$(
+apt-cache madison mesa | awk '/trixie-backports.*Sources/ {print $3}' |
+sort -V | tail -n 1)" '
+BEGIN { RS=""; FS="\n" }
+{
+    ver = ""
+    output = ""
+    collect = 0
+    for (i=1; i<=NF; i++) {
+        if ($i ~ /^Version:[ \t]*/) {
+            ver = $i
+            sub(/^Version:[ \t]*/, "", ver)
+        }
+        if ($i ~ /^Build-Depends(-[A-Za-z]+)?:/) {
+            collect = 1
+            output = output (output ? "\n" : "") $i
+            continue
+        }
+        if (collect) {
+            if ($i ~ /^[ \t]/) {
+                output = output "\n" $i
+            } else {
+                collect = 0
+            }
+        }
+    }
+    if (ver == target) {
+        print output
+        exit
+    }
+}
+' | \
+sed 's/^Build-Depends[-A-Za-z]*: //' | \
+tr ',' '\n' | \
+sed -e 's/ ([^)]*)//g' -e 's/ \[[^]]*\]//g' -e 's/ <[^>]*>//g' | \
+awk -F'|' '{print $1}' | \
+tr -d ' ' | \
+sort -u | \
+sed 's/$/\/trixie-backports/'
+` }}
+{{- /* End of WSL-only conditional */}}
 {{- end }}
