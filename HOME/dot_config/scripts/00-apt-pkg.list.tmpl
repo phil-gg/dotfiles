@@ -132,6 +132,20 @@ ninja-build
 dpkg-dev
 libva-dev
 libwayland-dev
+build-essential
+libegl-mesa0-dbgsym
+libegl1-mesa-dev
+libgbm-dev
+libgbm1-dbgsym
+libgl1-mesa-dev
+libgl1-mesa-dri-dbgsym
+libgles2-mesa-dev
+libglx-mesa0-dbgsym
+mesa-common-dev
+mesa-drm-shim-dbgsym
+mesa-libgallium-dbgsym
+mesa-opencl-icd-dbgsym
+mesa-vulkan-drivers-dbgsym
 directx-headers-dev/trixie-backports
 {{- /* Package list replacement for sudo apt build-dep -y mesa/trixie-backports */}}
 {{ output "bash" "-c" `\
