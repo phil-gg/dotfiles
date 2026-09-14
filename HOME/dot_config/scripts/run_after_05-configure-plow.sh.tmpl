@@ -657,8 +657,7 @@ count > 0 {
     # Validate each subsequent line against the expected normalised string
     valid = 1
     if (count == 2 && sq != "ifneq (,$(filter $(DEB_HOST_ARCH), amd64 arm64))") valid = 0
-    if (count == 3 && sq != "GALLIUM_DEFAULTS += d3d12") valid = 0
-    if (count == 4 && sq != "GALLIUM_DRIVERS += d3d12") valid = 0
+    if (count == 3 && sq != "GALLIUM_DRIVERS += d3d12") valid = 0
     # If the sequence breaks, flush the buffer unaltered and reset
     if (!valid) {
         for (i = 1; i <= count; i++) print buf[i]
@@ -666,21 +665,21 @@ count > 0 {
         next
     }
     # Evaluate the final line of the expected sequence
-    if (count == 5) {
+    if (count == 4) {
         if (sq == "endif") {
-            # Success: Print the first 4 lines exactly as they were
-            for (i = 1; i <= 4; i++) print buf[i]
+            # Success: Print the first 3 lines exactly as they were
+            for (i = 1; i <= 3; i++) print buf[i]
             
-            # Copy the indentation used on line 4 for our new line 5
-            match(buf[4], /^[ \t]*/)
-            indent = substr(buf[4], RSTART, RLENGTH)
+            # Copy the indentation used on line 3 for our new line 4
+            match(buf[3], /^[ \t]*/)
+            indent = substr(buf[3], RSTART, RLENGTH)
             print indent "VULKAN_DRIVERS += microsoft-experimental"
             
             # Print the final endif
-            print buf[5]
+            print buf[4]
         } else {
-            # If line 5 is not endif (e.g. already Vulkan driver), flush the buffer without making changes
-            for (i = 1; i <= 5; i++) print buf[i]
+            # If line 4 is not endif (e.g. already Vulkan driver), flush the buffer without making changes
+            for (i = 1; i <= 4; i++) print buf[i]
         }
         count = 0
         next
@@ -696,6 +695,10 @@ echo -e "$ cat ${BUILD_DIR}/debian/rules.tmp > ${BUILD_DIR}/debian/rules"
 cat "${BUILD_DIR}/debian/rules.tmp" > "${BUILD_DIR}/debian/rules"
 echo -e "$ rm ${BUILD_DIR}/debian/rules.tmp"
 rm "${BUILD_DIR}/debian/rules.tmp"
+
+echo -e "\n> Verify debian/rules modification"
+echo -e "$ grep -C 2 \"microsoft-experimental\" ${BUILD_DIR}/debian/rules\n"
+grep -C 2 "microsoft-experimental" "${BUILD_DIR}/debian/rules"
 
 echo -e "\n> Install build dependencies"
 echo -e "$ sudo apt build-dep -y mesa/trixie-backports\n"
