@@ -134,7 +134,7 @@ libva-dev
 libwayland-dev
 directx-headers-dev/trixie-backports
 {{- /* Package list replacement for sudo apt build-dep -y mesa/trixie-backports */}}
-{{- output "bash" "-c" `\
+{{ output "bash" "-c" `\
 apt-cache showsrc mesa 2>/dev/null | awk -v target="$(
 apt-cache madison mesa | awk '/trixie-backports.*Sources/ {print $3}' |
 sort -V | tail -n 1)" '
@@ -172,8 +172,7 @@ tr ',' '\n' | \
 sed -e 's/ ([^)]*)//g' -e 's/ \[[^]]*\]//g' -e 's/ <[^>]*>//g' | \
 awk -F'|' '{print $1}' | \
 tr -d ' ' | \
-sort -u | \
-sed 's/$/\/trixie-backports/'
-` }}
+sort -u '
+` -}}
 {{- /* End of WSL-only conditional */}}
 {{- end }}
