@@ -8,7 +8,7 @@ comm -23 <(aptitude search -F '%p' '~E|~prequired|~pimportant' | sort) \
            tr -d '<>' | sort -u) \
 ` -}}
 
-{{- /* Extra essentials not marked essential priority or important by Debian */}}
+{{- /* Extra essentials not marked essential priority or important by Debian */ -}}
 sudo
 ca-certificates
 
@@ -174,5 +174,5 @@ awk -F'|' '{print $1}' | \
 tr -d ' ' | \
 sort -u
 ` -}}
-{{- /* End of WSL-only conditional */}}
-{{- end }}
+{{- /* End of WSL-only conditional */ -}}
+{{- end -}}
