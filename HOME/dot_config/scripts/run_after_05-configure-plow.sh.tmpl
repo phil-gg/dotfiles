@@ -700,7 +700,25 @@ echo -e "\n> Verify debian/rules modification"
 echo -e "$ grep -C 2 \"microsoft-experimental\" ${BUILD_DIR}/debian/rules\n"
 grep -C 2 "microsoft-experimental" "${BUILD_DIR}/debian/rules"
 
-echo -e "> Install build dependencies"
+
+# modify debian/mesa-vulkan-drivers.install
+echo -e "> Add files to debian/mesa-vulkan-drivers.install"
+INSTALL_FILE="${BUILD_DIR}/debian/mesa-vulkan-drivers.install"
+for pattern in \
+"usr/bin/spirv2dxil" \
+"usr/lib/*/libspirv_to_dxil.so*" \
+"usr/lib/*/libspirv_to_dxil.a"
+do
+    if ! grep -qxF "${pattern}" "${INSTALL_FILE}"; then
+        echo "${pattern}" >> "${INSTALL_FILE}"
+    fi
+done
+
+echo -e "\n> Verify debian/mesa-vulkan-drivers.install modification"
+echo -e "$ cat ${INSTALL_FILE}\n"
+cat "${INSTALL_FILE}"
+
+echo -e "\n> Install build dependencies"
 echo -e "$ sudo apt build-dep -y mesa/trixie-backports\n"
 sudo apt build-dep -y mesa/trixie-backports
 
