@@ -892,7 +892,7 @@ readarray -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | awk 'NF && !seen[$0]+
 
 # Show array
 echo -e "\n${bluebold}PACKAGES list${normal}"
-printf '%s\n' "${PACKAGES[@]}"
+printf '%s\n' "${PACKAGES[@]}" | column -x -c $(tput cols)
 
 # Only run all this if you can markauto with aptitude
 if command -v aptitude &> /dev/null; then
@@ -998,7 +998,6 @@ if [[ -n "$pkgwarning" ]]; then
 mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${pkgwarning}"
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
 echo -e "${pkgwarning}"
-# This pipe on previous line makes it multi-column | column -x -c $(tput cols)
 fi
 
 # Make unmarked PACKAGES apt-mark manual in apt
