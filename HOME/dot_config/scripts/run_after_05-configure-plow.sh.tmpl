@@ -700,7 +700,7 @@ echo -e "\n> Verify debian/rules modification"
 echo -e "$ grep -C 2 \"microsoft-experimental\" ${BUILD_DIR}/debian/rules\n"
 grep -C 2 "microsoft-experimental" "${BUILD_DIR}/debian/rules"
 
-echo -e "\n> Install build dependencies"
+echo -e "> Install build dependencies"
 echo -e "$ sudo apt build-dep -y mesa/trixie-backports\n"
 sudo apt build-dep -y mesa/trixie-backports
 
