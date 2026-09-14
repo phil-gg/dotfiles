@@ -634,6 +634,14 @@ echo -e "> Clean up"
 echo -e "$ rm -rf ${DL_DIR}"
 rm -rf "${DL_DIR}"
 
+# modify debian/changelog
+if ! head -n 1 "${BUILD_DIR}/debian/changelog" | grep -q '+wsl)'; then
+echo -e "> Insert local +wsl version bump into debian/changelog"
+sed -i -e '1h' -e '1s/)/+wsl)/' -e '1G' -e '1s/\n/\n\n/' "${BUILD_DIR}/debian/changelog"
+fi
+echo -e "$ head -n 20 ${BUILD_DIR}/debian/changelog\n"
+head -n 20 "${BUILD_DIR}/debian/changelog"
+
 # modify debian/rules
 echo -e "\n> Write a modified debian/rules to debian/rules.tmp with awk"
 awk '
