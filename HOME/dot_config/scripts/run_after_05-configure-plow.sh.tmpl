@@ -599,7 +599,7 @@ fi
 # Build mesa from source
 
 LATEST_MESA_VER="$(
-apt-cache madison mesa |awk '/trixie-backports.*Sources/ {print $3}' |
+apt-cache madison mesa | awk '/trixie-backports.*Sources/ {print $3}' |
 sort -V | tail -n 1
 )"
 BUILD_DIR="${HOME}/git/mesa/${LATEST_MESA_VER}"
@@ -726,9 +726,9 @@ echo -e "\n> Build latest mesa packages"
 echo -e "$ DEB_BUILD_OPTIONS=terse dpkg-buildpackage -b -uc -us\n"
 DEB_BUILD_OPTIONS=terse dpkg-buildpackage -b -uc -us
 
-echo -e "\n> Check d3d12 is present in mesa vulkan drivers package"
-echo -e "$ dpkg-deb -c ../mesa-vulkan-drivers_*.deb | grep d3d12\n"
-dpkg-deb -c ../mesa-vulkan-drivers_*.deb | grep d3d12
+echo -e "\n> Check dzn is present in mesa-vulkan-drivers package"
+echo -e "$ dpkg-deb -c ${BUILD_DIR}/deb/mesa-vulkan-drivers_*.deb | grep dzn\n"
+dpkg-deb -c "${BUILD_DIR}/deb/mesa-vulkan-drivers_*.deb" | grep dzn
 
 echo -e "\n> Move all the newly built packages"
 echo -e "$ mkdir -p ${BUILD_DIR}/deb"
@@ -737,8 +737,8 @@ echo -e "$ find ${HOME}/git/mesa/ -maxdepth 1 -type f -exec mv -t ${BUILD_DIR}/d
 find "${HOME}/git/mesa/" -maxdepth 1 -type f -exec mv -t "${BUILD_DIR}/deb/" {} +
 
 echo -e "\n> Install locally built mesa packages"
-echo -e "$ sudo apt install -y ${BUILD_DIR}/deb/*.deb\n"
-sudo apt install -y "${BUILD_DIR}/deb/"*.deb
+echo -e "$ sudo apt install ${BUILD_DIR}/deb/*.deb -y --allow-downgrades\n"
+sudo apt install "${BUILD_DIR}/deb/"*.deb -y --allow-downgrades
 
 # End conditional build each mesa version only once
 fi
