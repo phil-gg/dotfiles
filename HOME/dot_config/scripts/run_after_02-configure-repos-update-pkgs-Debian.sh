@@ -997,7 +997,8 @@ if [[ -n "$pkgwarning" ]]; then
 # Keep the packages you are warning about, marked for installation
 mapfile -t -O "${#PACKAGES[@]}" PACKAGES <<< "${pkgwarning}"
 echo -e "\n${redbold}WARNING: Unexpected Debian packages installed${normal}"
-echo -e "${pkgwarning}" | column -x -c $(tput cols)
+echo -e "${pkgwarning}"
+# This pipe on previous line makes it multi-column | column -x -c $(tput cols)
 fi
 
 # Make unmarked PACKAGES apt-mark manual in apt
