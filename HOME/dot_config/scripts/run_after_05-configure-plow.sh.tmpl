@@ -642,7 +642,7 @@ echo -e "> Insert local +wsl version bump into debian/changelog"
 sed -i '1s/)/+wsl)/' "${BUILD_DIR}/debian/changelog"
 fi
 echo -e "$ head -n 20 ${BUILD_DIR}/debian/changelog\n"
-head -n 15 "${BUILD_DIR}/debian/changelog"
+head -n 20 "${BUILD_DIR}/debian/changelog"
 
 # modify debian/control
 if grep -qF '= ${binary:Version}' "${BUILD_DIR}/debian/control"; then
@@ -767,8 +767,8 @@ echo -e "$ find ${HOME}/git/mesa/ -maxdepth 1 -type f -exec mv -t ${BUILD_DIR}/d
 find "${HOME}/git/mesa/" -maxdepth 1 -type f -exec mv -t "${BUILD_DIR}/deb/" {} +
 
 echo -e "\n> Install locally built mesa packages"
-echo -e "$ sudo apt install ${BUILD_DIR}/deb/*.deb -y --allow-downgrades\n"
-sudo apt install "${BUILD_DIR}/deb/"*.deb -y --allow-downgrades
+echo -e "$ sudo apt install ${BUILD_DIR}/deb/*.deb -y --reinstall\n"
+sudo apt install "${BUILD_DIR}/deb/"*.deb -y --reinstall
 
 # End conditional build each mesa version only once
 fi
