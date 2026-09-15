@@ -790,6 +790,14 @@ echo -e "\n> Install locally built mesa packages"
 echo -e "$ sudo apt install ${BUILD_DIR}/deb/*.deb -y --reinstall\n"
 sudo apt install "${BUILD_DIR}/deb/"*.deb -y --reinstall
 
+echo -e "\n> Apt hold locally built mesa packages"
+echo -e "$ find ${BUILD_DIR}/deb/ -type f -name "*.deb" -exec \
+dpkg-deb --show --showformat='${Package}\n' {} \; | \
+sort -u | xargs sudo apt-mark hold"
+find "${BUILD_DIR}/deb/" -type f -name "*.deb" -exec \
+dpkg-deb --show --showformat='${Package}\n' {} \; |
+sort -u | xargs sudo apt-mark hold
+
 # End conditional build each mesa version only once
 fi
 
