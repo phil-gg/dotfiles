@@ -486,15 +486,10 @@ Pin: release o=Debian Backports, n=trixie-backports
 Pin-Priority: 510
 
 Explanation: Default (with no pin or target release) priority is 500
-Explanation: Stable backports sloppy is here at 130 for selected packages only
+Explanation: Stable backports sloppy is here at 120 for selected packages only
 Explanation: *NOTE* Remove all sloppy packages before distribution upgrade
 Package: *
 Pin: release o=Debian Backports, n=trixie-backports-sloppy
-Pin-Priority: 130
-
-Explanation: Sid/Unstable is here at 120 for selected packages only
-Package: *
-Pin: release o=Debian, n=sid
 Pin-Priority: 120
 
 Explanation: Raspberry Pi is here at 110 for selected packages only
@@ -503,7 +498,12 @@ Pin: origin \"archive.raspberrypi.org\"
 Pin-Priority: 110
 
 Explanation: Installed packages have priority 100
-Explanation: Currently NO packages are set with Pin-Priorities 1-100
+Explanation: Pin priorities < 100 do not auto-upgrade
+Explanation: Sid/Unstable packages need explicit rules (like chezmoi) to upgrade
+Package: *
+Pin: release o=Debian, n=sid
+Pin-Priority: 900
+
 Explanation: Warning; Pin-Priority=0 has undefined behaviour; do not use
 Explanation: Negative pin priorities prevent package installation
 ${WSL_PREFS}
