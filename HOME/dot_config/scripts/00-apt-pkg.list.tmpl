@@ -147,7 +147,6 @@ mesa-drm-shim-dbgsym
 mesa-libgallium-dbgsym
 mesa-opencl-icd-dbgsym
 mesa-vulkan-drivers-dbgsym
-directx-headers-dev/trixie-backports
 {{- /* Package list replacement for sudo apt build-dep -y mesa/trixie-backports */}}
 {{ output "bash" "-c" `\
 apt-cache showsrc mesa 2>/dev/null | awk -v target="$(
