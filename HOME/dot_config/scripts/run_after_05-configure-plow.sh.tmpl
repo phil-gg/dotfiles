@@ -644,6 +644,26 @@ fi
 echo -e "$ head -n 20 ${BUILD_DIR}/debian/changelog\n"
 head -n 15 "${BUILD_DIR}/debian/changelog"
 
+# modify debian/control
+if grep -qF '${binary:Version}' "${BUILD_DIR}/debian/control"; then
+echo -e "\n> Write a modified debian/control to debian/control.tmp with awk"
+awk -v ver="${LATEST_MESA_VER}" '
+{
+    gsub(/\$\{binary:Version\}/, ver)
+    print
+}
+' "${BUILD_DIR}/debian/control" > "${BUILD_DIR}/debian/control.tmp"
+
+echo -e "$ cat ${BUILD_DIR}/debian/control.tmp > ${BUILD_DIR}/debian/control"
+cat "${BUILD_DIR}/debian/control.tmp" > "${BUILD_DIR}/debian/control"
+echo -e "$ rm ${BUILD_DIR}/debian/control.tmp"
+rm "${BUILD_DIR}/debian/control.tmp"
+
+echo -e "\n> Verify debian/control modification"
+echo -e "$ grep \"${LATEST_MESA_VER}\" ${BUILD_DIR}/debian/control\n"
+grep "${LATEST_MESA_VER}" "${BUILD_DIR}/debian/control"
+fi
+
 # modify debian/rules
 echo -e "\n> Write a modified debian/rules to debian/rules.tmp with awk"
 awk '
