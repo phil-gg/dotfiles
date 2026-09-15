@@ -800,6 +800,13 @@ fi
 # Log level suppresses DRI2 errors (don't matter as WSL2 uses DRI3)
 EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 
+# Test vulkan
+
+echo -e "\n${cyanbold}Show vulkaninfo${normal}"
+echo -e "$ DISPLAY= vulkaninfo --summary"
+DISPLAY= vulkaninfo --summary 2>&1 |
+awk 'BEGIN {print ""} /==/ {found=1} found {print}'
+
 # Define systemd unit to fix /tmp/.X11-unix for Xwayland nested in Plow
 
 PLOW_X_SERVICE="\
