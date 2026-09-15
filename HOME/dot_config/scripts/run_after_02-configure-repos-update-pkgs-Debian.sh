@@ -502,7 +502,7 @@ Explanation: Pin priorities < 100 do not auto-upgrade
 Explanation: Sid/Unstable packages need explicit rules (like chezmoi) to upgrade
 Package: *
 Pin: release o=Debian, n=sid
-Pin-Priority: 900
+Pin-Priority: 90
 
 Explanation: Warning; Pin-Priority=0 has undefined behaviour; do not use
 Explanation: Negative pin priorities prevent package installation
