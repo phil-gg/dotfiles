@@ -664,6 +664,26 @@ echo -e "$ grep \"${LATEST_MESA_VER}\" ${BUILD_DIR}/debian/control\n"
 grep "${LATEST_MESA_VER}" "${BUILD_DIR}/debian/control"
 fi
 
+# modify debian/control.in
+if grep -qF '= ${binary:Version}' "${BUILD_DIR}/debian/control.in"; then
+echo -e "\n> Write a modified debian/control.in to debian/control.in.tmp with awk"
+awk -v ver=">= ${LATEST_MESA_VER}" '
+{
+    gsub(/= [$][{]binary:Version[}]/, ver)
+    print
+}
+' "${BUILD_DIR}/debian/control.in" > "${BUILD_DIR}/debian/control.in.tmp"
+
+echo -e "$ cat ${BUILD_DIR}/debian/control.in.tmp > ${BUILD_DIR}/debian/control.in"
+cat "${BUILD_DIR}/debian/control.in.tmp" > "${BUILD_DIR}/debian/control.in"
+echo -e "$ rm ${BUILD_DIR}/debian/control.in.tmp"
+rm "${BUILD_DIR}/debian/control.in.tmp"
+
+echo -e "\n> Verify debian/control.in modification"
+echo -e "$ grep \"${LATEST_MESA_VER}\" ${BUILD_DIR}/debian/control.in\n"
+grep "${LATEST_MESA_VER}" "${BUILD_DIR}/debian/control.in"
+fi
+
 # modify debian/rules
 echo -e "\n> Write a modified debian/rules to debian/rules.tmp with awk"
 awk '
