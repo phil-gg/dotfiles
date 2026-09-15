@@ -1354,10 +1354,9 @@ CRASHES="${ONEPASS_DIR}/crashes"
 if [[ -d "${CRASHPAD}" ]] || [[ -d "${CRASHES}" ]] || \
    ! lsattr "${CRASHPAD}" 2>/dev/null | grep -q "\-i\-" || \
    ! lsattr "${CRASHES}" 2>/dev/null | grep -q "\-i\-"; then
-
 # Ensure the parent directory exists
+echo -e "\n${cyanbold}Disable 1Password crash reporter${normal}"
 mkdir -p "${ONEPASS_DIR}"
-
 for target in "${CRASHPAD}" "${CRASHES}"; do
     # If it exists and is a directory, unlock (just in case) and remove it
     if [[ -d "${target}" ]]; then
@@ -1367,7 +1366,6 @@ for target in "${CRASHPAD}" "${CRASHES}"; do
 
     # If it is not locked, create/lock it
     if ! lsattr "${target}" 2>/dev/null | grep -q "\-i\-"; then
-        echo -e "\n${cyanbold}Disable 1Password crash reporter${normal}"
         echo -e "$ touch ${target}"
         touch "${target}"
         echo -e "$ sudo chattr +i ${target}"
