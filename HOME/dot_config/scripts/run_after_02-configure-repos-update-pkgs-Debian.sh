@@ -968,7 +968,6 @@ tar
 tzdata
 udev
 vim-common
-debhelper
 )
 
 # Show duplicates in chezmoi config
