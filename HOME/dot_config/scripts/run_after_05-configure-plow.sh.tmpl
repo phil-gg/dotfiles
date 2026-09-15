@@ -645,11 +645,11 @@ echo -e "$ head -n 20 ${BUILD_DIR}/debian/changelog\n"
 head -n 15 "${BUILD_DIR}/debian/changelog"
 
 # modify debian/control
-if grep -qF '${binary:Version}' "${BUILD_DIR}/debian/control"; then
+if grep -qF '= ${binary:Version}' "${BUILD_DIR}/debian/control"; then
 echo -e "\n> Write a modified debian/control to debian/control.tmp with awk"
-awk -v ver="${LATEST_MESA_VER}" '
+awk -v ver=">= ${LATEST_MESA_VER}" '
 {
-    gsub(/\$\{binary:Version\}/, ver)
+    gsub(/= \$[{]binary:Version[}]/, ver)
     print
 }
 ' "${BUILD_DIR}/debian/control" > "${BUILD_DIR}/debian/control.tmp"
