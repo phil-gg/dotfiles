@@ -968,6 +968,27 @@ tar
 tzdata
 udev
 vim-common
+build-essential
+debhelper
+flatbuffers-compiler
+libclang-19-dev
+libclc-19
+libclc-19-dev
+libdrm-dev
+libglvnd-core-dev
+librust-syn-dev
+libx11-dev
+libxcb-dri3-dev
+libxcb-randr0-dev
+libxcb-sync-dev
+libxext-dev
+libzstd-dev
+linux-libc-dev
+python3-setuptools
+python3-yaml
+spirv-tools
+x11proto-dev
+zlib1g-dev
 )
 
 # Show duplicates in chezmoi config
