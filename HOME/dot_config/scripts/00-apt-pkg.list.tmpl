@@ -124,6 +124,7 @@ kcolorchooser
 {{- /* Packages that are only needed on WSL */}}
 {{- if and $wsl $wsl.isDir }}
 weston
+nvidia-smi
 wl-clipboard
 
 {{- /* Packages to build mesa from source (other than sudo apt build-dep mesa) */}}
