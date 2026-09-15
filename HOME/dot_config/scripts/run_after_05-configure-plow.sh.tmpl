@@ -790,7 +790,8 @@ echo -e "$ eglinfo -B\n"
 
 eglinfo -B -p gbm
 
-eglinfo -B -p wayland
+eglinfo -B -p wayland 2>&1 |
+awk '/^libEGL warning: / { skip = 1; next } skip { skip = 0; next } 1'
 
 # Only test x11 from within kde plow session
 if [[ "${KDE_FULL_SESSION}" == "true" ]]; then
