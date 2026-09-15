@@ -851,7 +851,7 @@ EGL_LOG_LEVEL=fatal eglinfo -B -p surfaceless
 
 # Test vulkan
 
-echo -e "\n${cyanbold}Show vulkaninfo${normal}"
+echo -e "${cyanbold}Show vulkaninfo${normal}"
 echo -e "$ DISPLAY= vulkaninfo --summary"
 DISPLAY= vulkaninfo --summary 2>&1 |
 awk 'BEGIN {print ""} /==/ {found=1} found {print}'
@@ -1006,7 +1006,7 @@ WantedBy=plasma-workspace.target
 
 # Configure system-wide systemd user units
 
-echo -e "${bluebold}Define systemd & dbus services for Plow${normal}"
+echo -e "\n${bluebold}Define systemd & dbus services for Plow${normal}"
 
 # Set file locations once as variables
 
