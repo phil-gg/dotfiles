@@ -907,87 +907,7 @@ readarray -t MANUAL_PKGS < <(apt-mark showmanual | awk -F':' '{print $1}' | sort
 
 # Create the knowndups variable
 knowndups=(
-adduser
 apt
-base-files
-base-passwd
-ca-certificates
-cron
-cron-daemon-common
-curl
-debconf
-debian-archive-keyring
-debianutils
-directx-headers-dev/sid
-dmidecode
-dolphin
-dpkg
-dpkg-dev
-fdisk
-firefox-devedition
-git
-gpg
-init-system-helpers
-iproute2
-keyboard-configuration
-kio-fuse
-kmod
-ksystemstats
-kwin-wayland
-libayatana-appindicator3-1
-libc-bin
-libegl1
-libpam-modules
-libpam-modules-bin
-libpam-runtime
-libpci3
-libwayland-dev
-login.defs
-man-db
-mawk
-mount
-netbase
-ninja-build
-nordvpn
-passwd
-perl-base
-plasma-nm
-procps
-python3
-python3-pyside6.qtcore
-python3-pyside6.qtgui
-readline-common
-sed
-sensible-utils
-sudo
-systemd
-systemd-sysv
-systemsettings
-sysvinit-utils
-tar
-tzdata
-udev
-vim-common
-debhelper
-flatbuffers-compiler
-libclang-19-dev
-libclc-19
-libclc-19-dev
-libdrm-dev
-libglvnd-core-dev
-librust-syn-dev
-libx11-dev
-libxcb-dri3-dev
-libxcb-randr0-dev
-libxcb-sync-dev
-libxext-dev
-libzstd-dev
-linux-libc-dev
-python3-setuptools
-python3-yaml
-spirv-tools
-x11proto-dev
-zlib1g-dev
 )
 
 # Show duplicates in chezmoi config
@@ -1007,6 +927,8 @@ ignorepkgs=(
 1password-cli
 bluedevil-dummy
 powerdevil-dummy
+$(find ~/git/mesa -type f -name "*.deb" -exec \
+dpkg-deb --show --showformat='${Package}\n' {} \; 2> /dev/null | sort -u)
 )
 pkgwarning=$(
 comm -23 <(printf '%s\n' "${MANUAL_PKGS[@]}") \
