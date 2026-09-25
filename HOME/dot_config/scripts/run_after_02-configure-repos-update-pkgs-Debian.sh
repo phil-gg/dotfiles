@@ -444,6 +444,11 @@ Pin: release o=Debian, n=sid
 Pin-Priority: 999
 
 Explanation: Target release priority is 990
+Explanation: Force use of vendor apt repo for kernel and drivers on raspberry pi
+Package: linux-image-rpi-2712 linux-headers-rpi-2712 linux-image-rpi-2711 linux-headers-rpi-2711 linux-image-rpi-v8 linux-headers-rpi-v8 raspberrypi-bootloader raspberrypi-sys-mods raspi-firmware rp1-*
+Pin: origin \"archive.raspberrypi.org\"
+Pin-Priority: 990
+
 Explanation: Trixie/Stable is here at 980 just less than target release priority
 Package: *
 Pin: release o=Debian, n=trixie-security
