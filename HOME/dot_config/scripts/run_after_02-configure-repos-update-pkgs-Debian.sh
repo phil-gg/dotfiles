@@ -778,23 +778,12 @@ if [[ -d "/run/WSL" ]]; then
 create_dummy_pkg() {
 local TARGET_PKG="$1"
 local DUMMY_PKG="${TARGET_PKG}-dummy"
-local TMP_DIR="$(mktemp -d)"
-chmod 755 "${TMP_DIR}"
 
 DUMMY_REQD="$(dpkg -l "${DUMMY_PKG}" 2> /dev/null | grep -oP "^ii\\s+${DUMMY_PKG}")"
 DPKG_ERROR=$?
 
 if [ -z "${DUMMY_REQD}" ] || [ "${DPKG_ERROR}" -ne 0 ]; then
 echo -e "\n${cyanbold}Installing ${DUMMY_PKG} package${normal}"
-
-echo -e "$ mkdir -p ${TMP_DIR}"
-mkdir -p "${TMP_DIR}"
-
-# equivs-build always outputs package to current working directory
-echo -e "$ cd ${TMP_DIR}"
-cd "${TMP_DIR}" 2> /dev/null \
-|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 112; }
 
 DUMMY_PAYLOAD="\
 Section: misc
@@ -808,8 +797,21 @@ Conflicts: ${TARGET_PKG}
 Architecture: all
 Description: Dependency resolving dummy pkg for deliberately missing ${TARGET_PKG}
 "
+
+# Build and install in subshell with tmp dir and trap
+(
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TMP_DIR}"' EXIT
+chmod 755 "${TMP_DIR}"
+
+# equivs-build always outputs package to current working directory
+echo -e "$ cd ${TMP_DIR}"
+cd "${TMP_DIR}" 2> /dev/null \
+|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
+; exit 112; }
+
 # Show payload variable without expansion here (with backslash escapes)
-echo -e "$ printf \"%s\" \"\${DUMMY_PAYLOAD}\" | sudo tee ${DUMMY_PKG} > /dev/null"
+echo -e "$ printf \"%s\" \"\${DUMMY_PAYLOAD}\" | tee ${DUMMY_PKG} > /dev/null"
 printf "%s" "${DUMMY_PAYLOAD}" | tee "${DUMMY_PKG}" > /dev/null
 echo -e "$ cat ${DUMMY_PKG}\n"
 cat "${DUMMY_PKG}"
@@ -820,13 +822,8 @@ equivs-build "${DUMMY_PKG}"
 echo -e "\n$ sudo apt install -y ./${DUMMY_PKG}_1.0_all.deb\n"
 sudo apt install -y ./"${DUMMY_PKG}_1.0_all.deb"
 
-echo -e "$ cd ~/git/${github_username}/${github_project}"
-cd "${HOME}/git/${github_username}/${github_project}" 2> /dev/null \
-|| { echo -e "  ${redbold}Failed to change directory, exiting${normal}"\
-; exit 113; }
-
-echo -e "$ rm -rf ${TMP_DIR}"
-rm -rf "${TMP_DIR}"
+# Close subshell with error propagation back to this script
+) || exit $?
 
 fi
 }
@@ -837,7 +834,7 @@ fi
 
 if ! command -v equivs-build &> /dev/null; then
 echo -e "${redbold}> Missing equivs package dependency, exiting${normal}"
-exit 114
+exit 113
 else
 create_dummy_pkg "powerdevil"
 create_dummy_pkg "bluedevil"
@@ -1384,7 +1381,7 @@ fi
 
 if ! command -v chezmoi &> /dev/null; then
 echo -e "${redbold}> Missing chezmoi package dependency, exiting${normal}"
-exit 115
+exit 114
 fi
 
 git_dir="${HOME}/git/${github_username}/${github_project}"
