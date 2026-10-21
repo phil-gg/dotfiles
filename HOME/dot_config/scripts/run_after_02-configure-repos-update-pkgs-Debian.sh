@@ -284,9 +284,10 @@ curl -fsSL "${PKG_DIR}" \
 echo -e "> Installing ${PKG_FILE}\n"
 # Install in subshell with tmp file and trap
 (
-    TMP_DEB="$(mktemp)"
+    TMP_DEB="$(mktemp --suffix=.deb)"
     trap 'rm -f "${TMP_DEB}"' EXIT
     curl -fsSL -o "${TMP_DEB}" "${PKG_DIR}${PKG_FILE}"
+    chmod 644 "${TMP_DEB}"
     sudo apt install -y "${TMP_DEB}"
 )
 fi
