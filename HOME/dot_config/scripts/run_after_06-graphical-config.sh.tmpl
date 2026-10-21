@@ -49,7 +49,7 @@ WALLET_PATH="${WALLET_DIR}/${WALLET_FILE}"
 if [ ! -s "${WALLET_PATH}" ]; then
 echo -e "\n${cyanbold}Create kdewallet${normal}"
 echo -e "> Opening GUI wizard to create kdewallet"
-echo -e "> 1. Choose blowfish encryption & reuse your system login password"
+echo -e "> 1. Choose blowfish encryption"
 echo -e "> 2. (a) On WSL, use a blank password (noting the security implications of this)"
 echo -e "> 2. (b) With a session-mgr & libpam, reuse your system login password\n"
 echo -e "> These settings should allow for wallet auto-unlock on login\n"
@@ -98,8 +98,8 @@ echo -e "> 5. Close the Settings window & fully terminate 1Password GUI app"
 echo -e "> 6. Return to this terminal (the script will automatically resume)\n"
 
 # Trigger 1Password GUI app in the background
-echo -e "$ 1password &> /dev/null &\n"
-1password &> /dev/null &
+echo -e "$ /opt/1Password/1password --disable-crash-reports &> /dev/null &\n"
+/opt/1Password/1password --disable-crash-reports &> /dev/null &
 
 # Give the Electron app a few seconds to spin up
 sleep 3
