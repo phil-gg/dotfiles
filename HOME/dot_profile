@@ -46,3 +46,14 @@ if [ -d "$HOME/.local/bin" ]; then
             ;; # private bin is missing from PATH, prepend it
     esac
 fi
+
+# Add WSL lib dir to PATH when needed
+if [ -d /run/WSL ]; then
+    case ":$PATH:" in
+        *":/usr/lib/wsl/lib:"*) 
+            ;; # WSL lib dir is already in PATH, do nothing
+        *) 
+            PATH="/usr/lib/wsl/lib:$PATH" 
+            ;; # WSL lib dir is missing from PATH, prepend it
+    esac
+fi
